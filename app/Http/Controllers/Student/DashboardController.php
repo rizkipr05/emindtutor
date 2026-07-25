@@ -41,7 +41,13 @@ class DashboardController extends Controller
             ->latest()
             ->take(5)
             ->get();
+        $overview = [
+            'announcements' => $announcements->count(),
+            'courses' => $courses->count(),
+            'payments' => $student ? $student->invoices()->where('status_bayaran', 'paid')->count() : 0,
+            'paidAccess' => $student ? $student->invoices()->where('status_bayaran', 'paid')->whereNotNull('course_id')->count() : 0,
+        ];
 
-        return view('student.dashboard.index', compact('student', 'courses', 'announcements', 'profileMissing'));
+        return view('student.dashboard.index', compact('student', 'courses', 'announcements', 'profileMissing', 'overview'));
     }
 }

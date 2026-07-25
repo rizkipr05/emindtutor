@@ -11,6 +11,7 @@ return [
     // Sections
     'info_heading' => 'Maklumat Guru',
     'stats_heading' => 'Statistik',
+    'overview_heading' => 'Ringkasan Pantas',
     'unavailability_heading' => 'Waktu Guru Tidak Terima Kelas',
 
     // Unavailability messages
@@ -33,6 +34,8 @@ return [
     'stat_students' => 'Bilangan Pelajar',
     'stat_classes_this_week' => 'Kelas Minggu Ini',
     'stat_attendance_rate' => 'Kadar Kehadiran Pelajar',
+    'overview_announcements' => 'Pengumuman Dihantar',
+    'overview_unavailabilities' => 'Slot Tidak Tersedia',
     'announcement_create_title' => 'Buat Pengumuman',
     'announcement_create_desc' => 'Pengumuman ini akan muncul di dashboard pelajar dalam syarikat anda.',
     'announcement_title_label' => 'Tajuk Pengumuman',

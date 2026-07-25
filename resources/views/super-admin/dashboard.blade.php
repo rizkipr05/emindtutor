@@ -10,6 +10,44 @@
     <p class="text-lg opacity-90">{{ __('super_admin/dashboard.intro') }}</p>
     </div>
 
+    <div class="mt-10">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('super_admin/dashboard.metrics_heading') }}</h2>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.total_companies') }}</p>
+                <p class="text-3xl font-bold text-blue-600">{{ $metrics['totalCompanies'] }}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.active_companies') }}</p>
+                <p class="text-3xl font-bold text-emerald-600">{{ $metrics['activeCompanies'] }}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.total_packages') }}</p>
+                <p class="text-3xl font-bold text-indigo-600">{{ $metrics['totalPackages'] }}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.paid_invoices') }}</p>
+                <p class="text-3xl font-bold text-amber-600">{{ $metrics['paidInvoices'] }}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.total_staff') }}</p>
+                <p class="text-3xl font-bold text-violet-600">{{ $metrics['totalStaff'] }}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.total_users') }}</p>
+                <p class="text-3xl font-bold text-cyan-600">{{ $metrics['totalUsers'] }}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.total_announcements') }}</p>
+                <p class="text-3xl font-bold text-rose-600">{{ $metrics['totalAnnouncements'] }}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+                <p class="text-sm text-gray-500">Invoices</p>
+                <p class="text-3xl font-bold text-slate-700">{{ $metrics['totalInvoices'] }}</p>
+            </div>
+        </div>
+    </div>
+
     <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition">
             <div class="text-indigo-500 mb-3">
@@ -33,6 +71,51 @@
             </div>
             <h2 class="text-lg font-semibold">{{ __('super_admin/dashboard.cards.reports.title') }}</h2>
             <p class="text-gray-500 text-sm">{{ __('super_admin/dashboard.cards.reports.desc') }}</p>
+        </div>
+    </div>
+
+    <div class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-bold mb-4">{{ __('super_admin/dashboard.recent_companies_heading') }}</h2>
+            @if($recentCompanies->isEmpty())
+                <p class="text-gray-500">{{ __('super_admin/dashboard.table.empty') }}</p>
+            @else
+                <div class="space-y-3">
+                    @foreach($recentCompanies as $company)
+                        <div class="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3">
+                            <div>
+                                <p class="font-semibold text-gray-900">{{ $company->user->name ?? '-' }}</p>
+                                <p class="text-sm text-gray-500">{{ $company->user->email ?? '-' }}</p>
+                            </div>
+                            <span class="text-sm font-medium {{ $company->status ? 'text-emerald-600' : 'text-red-600' }}">
+                                {{ $company->status ? __('super_admin/dashboard.table.status') . ': Active' : __('super_admin/dashboard.table.status') . ': Inactive' }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-bold mb-4">{{ __('super_admin/dashboard.recent_invoices_heading') }}</h2>
+            @if($recentInvoices->isEmpty())
+                <p class="text-gray-500">{{ __('super_admin/dashboard.table.empty') }}</p>
+            @else
+                <div class="space-y-3">
+                    @foreach($recentInvoices as $invoice)
+                        <div class="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3">
+                            <div>
+                                <p class="font-semibold text-gray-900">{{ $invoice->company->user->name ?? '-' }}</p>
+                                <p class="text-sm text-gray-500">{{ $invoice->package->nama_pakej ?? '-' }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-900">RM {{ number_format($invoice->jumlah ?? 0, 2) }}</p>
+                                <p class="text-sm text-gray-500">{{ optional($invoice->tarikh_terbit)->format('d M Y') }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 </div>

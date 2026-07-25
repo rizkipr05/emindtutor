@@ -4,6 +4,7 @@ return [
     // Sections / titles
     'student_info' => 'Student Information',
     'courses_taken' => 'Courses Taken',
+    'overview_heading' => 'Quick Overview',
 
     // Info labels
     'label_name' => 'Name',
@@ -14,6 +15,10 @@ return [
     // Course card
     'paid' => 'Paid',
     'view_detail' => 'View Detail',
+    'overview_announcements' => 'Announcements',
+    'overview_courses' => 'Courses',
+    'overview_payments' => 'Paid Payments',
+    'overview_access' => 'Active Access',
 
     // Empty state
     'no_courses' => 'No Courses Yet',

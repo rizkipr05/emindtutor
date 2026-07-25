@@ -18,6 +18,32 @@
             <div class="w-16 sm:w-20 lg:w-24 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto rounded-full"></div>
         </div>
 
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('admin/dashboard.summary_heading') }}</h2>
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white rounded-xl shadow p-5">
+                    <p class="text-sm text-gray-500">{{ __('admin/dashboard.summary_courses') }}</p>
+                    <p class="text-3xl font-bold text-indigo-600">{{ $summary['courses'] }}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-5">
+                    <p class="text-sm text-gray-500">{{ __('admin/dashboard.summary_teachers') }}</p>
+                    <p class="text-3xl font-bold text-emerald-600">{{ $summary['teachers'] }}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-5">
+                    <p class="text-sm text-gray-500">{{ __('admin/dashboard.summary_students') }}</p>
+                    <p class="text-3xl font-bold text-amber-600">{{ $summary['students'] }}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-5">
+                    <p class="text-sm text-gray-500">{{ __('admin/dashboard.summary_staff') }}</p>
+                    <p class="text-3xl font-bold text-violet-600">{{ $summary['staff'] }}</p>
+                </div>
+                <div class="bg-white rounded-xl shadow p-5">
+                    <p class="text-sm text-gray-500">{{ __('admin/dashboard.summary_announcements') }}</p>
+                    <p class="text-3xl font-bold text-rose-600">{{ $summary['announcements'] }}</p>
+                </div>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
 
             <!-- Maklumat Syarikat -->

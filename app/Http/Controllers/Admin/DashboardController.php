@@ -7,7 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use App\Models\CompanyInvoice;
+use App\Models\Course;
+use App\Models\Announcement;
 use App\Models\Staff;
+use App\Models\Student;
+use App\Models\Teacher;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -42,6 +46,13 @@ class DashboardController extends Controller
         }
 
         $showReviewPopup = app(ReviewController::class)->shouldShowReviewPopup();
+        $summary = [
+            'courses' => Course::where('company_id', $company->id)->count(),
+            'teachers' => Teacher::where('company_id', $company->id)->count(),
+            'students' => Student::where('company_id', $company->id)->count(),
+            'staff' => Staff::where('company_id', $company->id)->count(),
+            'announcements' => Announcement::where('created_by', $user->id)->count(),
+        ];
 
 
         return view('admin.dashboard', [
@@ -49,7 +60,8 @@ class DashboardController extends Controller
             'user'         => $user,
             'subscription' => $activeSubscription,
             'remainingDays'=> $remainingDays,
-            'showReviewPopup' => $showReviewPopup
+            'showReviewPopup' => $showReviewPopup,
+            'summary'      => $summary,
         ]);
     }
 

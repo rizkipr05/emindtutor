@@ -28,4 +28,10 @@ return [
     'company_link_active' => 'Pautan Aktif',
     'company_link_visit' => 'Melawat',
     'edit_company' => 'Sunting Maklumat Syarikat',
+    'summary_heading' => 'Ringkasan Syarikat',
+    'summary_courses' => 'Kursus',
+    'summary_teachers' => 'Guru',
+    'summary_students' => 'Pelajar',
+    'summary_staff' => 'Staff',
+    'summary_announcements' => 'Pengumuman',
 ];

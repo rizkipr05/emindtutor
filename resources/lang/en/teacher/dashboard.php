@@ -11,6 +11,7 @@ return [
     // Sections
     'info_heading' => 'Teacher Information',
     'stats_heading' => 'Statistics',
+    'overview_heading' => 'Quick Overview',
     'unavailability_heading' => 'Times You Cannot Accept Classes',
 
     // Info labels
@@ -23,6 +24,8 @@ return [
     'stat_students' => 'Number of Students',
     'stat_classes_this_week' => 'Classes This Week',
     'stat_attendance_rate' => 'Student Attendance Rate',
+    'overview_announcements' => 'Announcements Sent',
+    'overview_unavailabilities' => 'Unavailable Slots',
     'announcement_create_title' => 'Create Announcement',
     'announcement_create_desc' => 'This announcement will appear on the student dashboard in your company.',
     'announcement_title_label' => 'Announcement Title',

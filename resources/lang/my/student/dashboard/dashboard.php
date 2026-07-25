@@ -4,6 +4,7 @@ return [
     // Sections / titles
     'student_info' => 'Maklumat Murid',
     'courses_taken' => 'Daftar Course Yang Diambil',
+    'overview_heading' => 'Ringkasan Pantas',
 
     // Info labels
     'label_name' => 'Nama',
@@ -14,6 +15,10 @@ return [
     // Course card
     'paid' => 'Sudah Dibayar',
     'view_detail' => 'Lihat Detail',
+    'overview_announcements' => 'Pengumuman',
+    'overview_courses' => 'Course',
+    'overview_payments' => 'Bayaran Dibayar',
+    'overview_access' => 'Akses Aktif',
 
     // Empty state
     'no_courses' => 'Belum Ada Course',

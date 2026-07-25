@@ -15,6 +15,7 @@ use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\PublicKeyCredentialLoader;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
+use App\Services\RoleRedirector;
 
 class WebAuthnController extends Controller
 {
@@ -79,18 +80,9 @@ class WebAuthnController extends Controller
                 $request->session()->regenerate();
 
                 // Redirect logic based on AuthController
-                $redirect = route('dashboard.index');
-                if($user->role == 'admin') {
-                    $redirect = route('a.dashboard.index');
-                } else if($user->role == 'teacher') {
-                    $redirect = route('t.dashboard.index');
-                } else if($user->role == 'student') {
-                    $redirect = route('s.dashboard.index');
-                }
-
                 return response()->json([
                     'success' => true,
-                    'redirect' => $redirect
+                    'redirect' => RoleRedirector::urlForUser($user)
                 ]);
             }
         } catch (\Exception $e) {
@@ -175,16 +167,7 @@ class WebAuthnController extends Controller
 
     private function redirectUrlFor(User $user): string
     {
-        $redirect = route('dashboard.index');
-        if($user->role == 'admin') {
-            $redirect = route('a.dashboard.index');
-        } else if($user->role == 'teacher') {
-            $redirect = route('t.dashboard.index');
-        } else if($user->role == 'student') {
-            $redirect = route('s.dashboard.index');
-        }
-
-        return $redirect;
+        return RoleRedirector::urlForUser($user);
     }
 
     private function normalizeEmail(string $email): string

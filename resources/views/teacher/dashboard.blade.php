@@ -13,6 +13,35 @@
             <p class="text-gray-600 text-sm sm:text-base">{{ __('teacher/dashboard.welcome_back', ['site' => 'EMindTutor']) }}</p>
         </div>
 
+        <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-2 bg-slate-100 rounded-xl">
+                    <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('teacher/dashboard.overview_heading') }}</h2>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div class="rounded-xl bg-blue-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('teacher/dashboard.stat_students') }}</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ $overview['students'] }}</p>
+                </div>
+                <div class="rounded-xl bg-green-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('teacher/dashboard.stat_classes_this_week') }}</p>
+                    <p class="text-2xl font-bold text-green-600">{{ $overview['activeClasses'] }}</p>
+                </div>
+                <div class="rounded-xl bg-amber-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('teacher/dashboard.overview_announcements') }}</p>
+                    <p class="text-2xl font-bold text-amber-600">{{ $overview['announcements'] }}</p>
+                </div>
+                <div class="rounded-xl bg-violet-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('teacher/dashboard.overview_unavailabilities') }}</p>
+                    <p class="text-2xl font-bold text-violet-600">{{ $overview['unavailabilities'] }}</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Maklumat Guru -->
         <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
             <div class="flex items-center gap-3 mb-6">

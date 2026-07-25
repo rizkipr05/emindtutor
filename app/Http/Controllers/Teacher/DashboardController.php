@@ -103,6 +103,12 @@ class DashboardController extends Controller
             ->latest()
             ->take(5)
             ->get();
+        $overview = [
+            'announcements' => $recentAnnouncements->count(),
+            'unavailabilities' => $unavailabilities->count(),
+            'activeClasses' => $classesThisWeek,
+            'students' => $studentsCount,
+        ];
 
         return view('teacher.dashboard', compact(
             'teacher',
@@ -110,7 +116,8 @@ class DashboardController extends Controller
             'classesThisWeek',
             'attendanceRate',
             'unavailabilities',
-            'recentAnnouncements'
+            'recentAnnouncements',
+            'overview'
         ));
     }
 

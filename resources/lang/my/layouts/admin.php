@@ -21,4 +21,5 @@ return [
     'new' => 'Baru',
     'komunikasi' => 'Maklumat',
     'ulasan' => 'Ulasan',
+    'subscription_inactive_notice' => 'Tiada langganan aktif ditemui. Sebahagian ciri admin mungkin memerlukan pakej yang aktif.',
 ];

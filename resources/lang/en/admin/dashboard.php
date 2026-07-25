@@ -28,4 +28,10 @@ return [
     'company_link_active' => 'Active Link',
     'company_link_visit' => 'Visit',
     'edit_company' => 'Edit Company Info',
+    'summary_heading' => 'Company Overview',
+    'summary_courses' => 'Courses',
+    'summary_teachers' => 'Teachers',
+    'summary_students' => 'Students',
+    'summary_staff' => 'Staff',
+    'summary_announcements' => 'Announcements',
 ];

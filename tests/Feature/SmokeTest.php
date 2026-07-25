@@ -45,7 +45,10 @@ class SmokeTest extends TestCase
 
         $this->actingAs($user)
             ->get('/superadmin')
-            ->assertOk();
+            ->assertOk()
+            ->assertSee(__('super_admin/dashboard.metrics_heading'))
+            ->assertSee(__('super_admin/dashboard.recent_companies_heading'))
+            ->assertSee(__('super_admin/dashboard.recent_invoices_heading'));
     }
 
     public function test_admin_dashboard_is_available_when_company_is_linked(): void
@@ -64,7 +67,32 @@ class SmokeTest extends TestCase
 
         $this->actingAs($user)
             ->get('/admin')
-            ->assertOk();
+            ->assertOk()
+            ->assertDontSee(route('t.dashboard.index'))
+            ->assertSee(__('admin/dashboard.summary_heading'));
+    }
+
+    public function test_admin_menu_is_visible_even_without_active_subscription(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        Company::create([
+            'user_id' => $user->id,
+            'nama_wakil_syarikat' => 'No Subscription Company',
+            'alamat' => 'Jalan Test 1',
+            'no_telefon' => '0123456789',
+            'status' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee(route('admin.courses.index'))
+            ->assertSee(route('admin.teachers.index'))
+            ->assertSee(route('admin.students.approved'))
+            ->assertSee(route('admin.staff.index'));
     }
 
     public function test_teacher_dashboard_is_available_for_teacher_users(): void
@@ -101,7 +129,8 @@ class SmokeTest extends TestCase
 
         $this->actingAs($user)
             ->get('/teacher')
-            ->assertOk();
+            ->assertOk()
+            ->assertSee(__('teacher/dashboard.overview_heading'));
     }
 
     public function test_student_dashboard_is_available_for_student_users(): void
@@ -137,6 +166,7 @@ class SmokeTest extends TestCase
 
         $this->actingAs($user)
             ->get('/student')
-            ->assertOk();
+            ->assertOk()
+            ->assertSee(__('student/dashboard/dashboard.overview_heading'));
     }
 }

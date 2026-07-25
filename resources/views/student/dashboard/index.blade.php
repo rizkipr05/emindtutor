@@ -18,6 +18,35 @@
             </div>
         @endif
 
+        <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-2 bg-slate-100 rounded-xl">
+                    <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('student/dashboard/dashboard.overview_heading') }}</h2>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div class="rounded-xl bg-amber-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('student/dashboard/dashboard.overview_announcements') }}</p>
+                    <p class="text-2xl font-bold text-amber-600">{{ $overview['announcements'] }}</p>
+                </div>
+                <div class="rounded-xl bg-blue-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('student/dashboard/dashboard.overview_courses') }}</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ $overview['courses'] }}</p>
+                </div>
+                <div class="rounded-xl bg-green-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('student/dashboard/dashboard.overview_payments') }}</p>
+                    <p class="text-2xl font-bold text-green-600">{{ $overview['payments'] }}</p>
+                </div>
+                <div class="rounded-xl bg-violet-50 p-4">
+                    <p class="text-sm text-gray-500">{{ __('student/dashboard/dashboard.overview_access') }}</p>
+                    <p class="text-2xl font-bold text-violet-600">{{ $overview['paidAccess'] }}</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Pengumuman Terbaru -->
         <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between gap-4 mb-6">

@@ -12,6 +12,7 @@ use App\Models\Company;
 use App\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Mail;
 use RuntimeException;
+use App\Services\RoleRedirector;
 
 
 class AuthController extends Controller
@@ -78,20 +79,9 @@ class AuthController extends Controller
 
         // Redirect ke halaman home dengan pesan sukses (gunakan terjemahan)
         $msg = __('messages.success_saved');
-        if(Auth::user()->role == 'super admin') {
-            return redirect()->route('dashboard.index')->with('success', $msg);
-        }
-        if(Auth::user()->role == 'admin') {
-            return redirect()->route('a.dashboard.index')->with('success', $msg);
-        }
-        if(Auth::user()->role == 'teacher') {
-            return redirect()->route('t.dashboard.index')->with('success', $msg);
-        }
-        if(Auth::user()->role == 'student') {
-            return redirect()->route('s.dashboard.index')->with('success', $msg);
-        }
-
-        // return redirect()->route('a.dashboard.index')->with('success', 'Profil berjaya dikemaskini.');
+        return redirect()
+            ->route(RoleRedirector::routeNameForRole($user->role))
+            ->with('success', $msg);
 
     }
 
@@ -130,20 +120,9 @@ class AuthController extends Controller
 
     protected function redirectByRole(string $role, string $message)
     {
-        if ($role == 'super admin') {
-            return redirect()->route('dashboard.index')->with('success', $message);
-        }
-        if ($role == 'admin') {
-            return redirect()->route('a.dashboard.index')->with('success', $message);
-        }
-        if ($role == 'teacher') {
-            return redirect()->route('t.dashboard.index')->with('success', $message);
-        }
-        if ($role == 'student') {
-            return redirect()->route('s.dashboard.index')->with('success', $message);
-        }
+        $routeName = RoleRedirector::routeNameForRole($role);
 
-        return redirect()->route('login')->with('success', $message);
+        return redirect()->route($routeName)->with('success', $message);
     }
 
     public function register()
