@@ -1,0 +1,24 @@
+<?php
+
+return [
+    'main_navigation' => 'Navigasi Utama',
+    'company_info' => 'Maklumat Syarikat',
+    'course_setting' => 'Kos Setting',
+    'teacher_management' => 'Pengurusan Guru',
+    'all_teacher' => 'Semua Guru',
+    'allowance' => 'Elaun',
+    'rules' => 'Peraturan',
+    'student_management' => 'Pengurusan Pelajar',
+    'all_student' => 'Semua Pelajar',
+    'new_student' => 'Pelajar Baru',
+    'import_student' => 'Import Pelajar',
+    'attendance_report' => 'Laporan Kehadiran & Prestasi',
+    'payment_fee' => 'Bayaran & Yuran',
+    'staff_management' => 'Pengurusan Staff',
+    'back_to_superadmin' => 'Kembali ke Superadmin',
+    'logout' => 'Log Keluar',
+    'admin_title' => 'EMindTutor | Admin',
+    'new' => 'Baru',
+    'komunikasi' => 'Maklumat',
+    'ulasan' => 'Ulasan',
+];

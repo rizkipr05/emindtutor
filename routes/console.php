@@ -1,0 +1,185 @@
+<?php
+
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
+use App\Models\Subscription;
+use App\Models\CompanyInvoice;
+use App\Models\Student;
+use App\Models\StudentInvoice;
+use App\Services\FonnteService;
+use App\Mail\InvoiceTagihanMail;
+use Illuminate\Support\Facades\Mail;
+
+Artisan::command('inspire', function () {
+    $this->comment(Inspiring::quote());
+})->purpose('Display an inspiring quote');
+
+
+Schedule::daily()->call(function () {
+
+    $today = now()->toDateString();
+
+    $invoices = CompanyInvoice::whereDate('tarikh_tamat', $today)
+        ->where('status_bayaran', 'paid')
+        ->where('status', 'active')
+        ->where('reminder_expired_sent', false)
+        ->get();
+
+    foreach ($invoices as $inv) {
+
+        FonnteService::sendMessage(
+            $inv->company->no_telefon,
+            "Langganan anda telah tamat hari ini. Sila perbaharui segera untuk mengelakkan gangguan akses."
+        );
+
+        if ($inv->company->email) {
+            Mail::to($inv->company->email)->send(new CompanyInvoiceExpiredMail($inv));
+        }
+
+        $inv->update([
+            'status' => 'inactive',
+            'reminder_expired_sent' => true
+        ]);
+
+        // Update status di tabel company juga
+        $inv->company->update([
+            'status' => 'inactive'
+        ]);
+    }
+
+});
+
+
+// ======================================================
+// 2. Reminder hari ke-3 setelah expired
+// ======================================================
+Schedule::daily()->call(function () {
+
+    $targetDate = now()->subDays(3)->toDateString();
+
+    $invoices = CompanyInvoice::where('status', 'inactive')
+        ->where('reminder_expired_sent', true)
+        ->where('reminder_3_days_sent', false)
+        ->whereDate('tarikh_tamat', $targetDate)
+        ->get();
+
+    foreach ($invoices as $inv) {
+
+        // CEK JIKA SUDAH ADA INVOICE ACTIVE BARU
+        $sudahRenew = CompanyInvoice::where('company_id', $inv->company_id)
+            ->where('id', '!=', $inv->id)
+            ->where('status_bayaran', 'paid')
+            ->where('status', 'active')
+            ->exists();
+
+        if ($sudahRenew) {
+            // Tidak perlu kirim reminder 3 hari
+            $inv->update(['reminder_3_days_sent' => true]);
+            continue;
+        }
+
+        // Masih belum renew → kirim broadcast
+        FonnteService::sendMessage(
+            $inv->company->no_telefon,
+            "Peringatan: Langganan anda telah tamat sejak 3 hari yang lalu. Sila perbaharui segera untuk mengelakkan gangguan akses kepada sistem."
+        );
+
+        $inv->update([
+            'reminder_3_days_sent' => true,
+        ]);
+    }
+
+});
+
+
+// ======================================================
+// 3. Hari ke-7 → jadikan company inactive
+// ======================================================
+Schedule::daily()->call(function () {
+
+    $targetDate = now()->subDays(7)->toDateString();
+
+    $invoices = CompanyInvoice::where('status', 'inactive')
+        ->where('reminder_7_days_processed', false)
+        ->whereDate('tarikh_tamat', $targetDate)
+        ->get();
+
+    foreach ($invoices as $inv) {
+
+        // Cek apakah company sudah renew
+        $sudahRenew = CompanyInvoice::where('company_id', $inv->company_id)
+            ->where('id', '!=', $inv->id)
+            ->where('status_bayaran', 'paid')
+            ->where('status', 'active')
+            ->exists();
+
+        if ($sudahRenew) {
+            $inv->update(['reminder_7_days_processed' => true]);
+            continue;
+        }
+
+        // Belum renew: ubah status company
+        $inv->company->update(['status' => 'inactive']);
+
+        // Kirim pesan
+        FonnteService::sendMessage(
+            $inv->company->no_telefon,
+            "Akaun syarikat anda telah dinyahaktifkan kerana tidak memperbaharui langganan selepas 7 hari tamat tempoh."
+        );
+
+        $inv->update(['reminder_7_days_processed' => true]);
+    }
+
+});
+
+// Cek setiap hari untuk student yang expired
+Schedule::daily()->call(function () {
+    
+    $expiredToday = Student::where('status', 'active')
+        ->whereDate('sub_end', '<=', now()->toDateString())
+        ->get();
+
+    foreach ($expiredToday as $student) {
+        // Ambil invoice terakhir untuk referensi kursus
+        $lastInv = $student->invoices()->latest()->first();
+        
+        if (!$lastInv) continue; // Skip jika tidak ada data invoice lama
+
+        // Cek apakah sudah ada invoice yang belum dibayar (upcoming)
+        $exists = StudentInvoice::where('student_id', $student->id)
+            ->where('status_bayaran', 'upcoming')
+            ->exists();
+
+        if (!$exists) {
+            $newInvoice = StudentInvoice::create([
+                'student_id'     => $student->id,
+                'course_id'      => $lastInv->course_id, // Ambil dari invoice sebelumnya
+                'nomor_invoice'  => 'INV-STU-' . strtoupper(Str::random(6)) . '-' . now()->format('Ymd'),
+                'jumlah'         => $lastInv->course->fee, 
+                'status_bayaran' => 'upcoming',
+                'tarikh_terbit'  => now()->toDateString(),
+                'tarikh_tamat'   => now()->addDays(7)->toDateString() // Tambah kurung ()
+            ]);
+
+            $student->update(['status' => 'expired']);
+
+            // --- KIRIM EMAIL DI SINI ---
+            Mail::to($student->user->email)->send(new InvoiceTagihanMail($newInvoice));
+        }
+    }
+});
+
+// Cek setiap hari untuk invoice yang sudah lewat jatuh tempo tapi belum dibayar → ubah status jadi overdue
+Schedule::daily()->call(function () {
+    // Cari invoice yang statusnya 'upcoming' tapi sudah lewat tanggal jatuh tempo
+    $overdueInvoices = StudentInvoice::where('status_bayaran', 'upcoming')
+        ->whereDate('tarikh_tamat', '<', now()->toDateString())
+        ->get();
+
+    foreach ($overdueInvoices as $invoice) {
+        $invoice->update([
+            'status_bayaran' => 'overdue'
+        ]);
+    }
+});

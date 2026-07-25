@@ -1,0 +1,16 @@
+/**
+  * Frontend Styling - Checkout Page Only
+  * Author : Ahmad Syauqi
+  */
+
+  .wpwfw-pv {
+    overflow: visible!important
+  }
+
+  .wpwfw-pv .intl-tel-input {
+    width: 100%!important
+  }
+
+  .wpwfw-pv .intl-tel-input input {
+    padding-left: 55px!important
+  }

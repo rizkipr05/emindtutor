@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebElementEntity>
+   <description></description>
+   <name>input_Schedule Day  Time_days0durasi_menit</name>
+   <tag></tag>
+   <elementGuidId>ed9c76d6-8ad9-4d8c-b030-b50469c4fe3c</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>XPATH</key>
+         <value>//input[@name='days[0][durasi_menit]']</value>
+      </entry>
+      <entry>
+         <key>CSS</key>
+         <value>input[name=&quot;days[0][durasi_menit]&quot;]</value>
+      </entry>
+   </selectorCollection>
+   <selectorMethod>XPATH</selectorMethod>
+   <smartLocatorCollection>
+      <entry>
+         <key>SMART_LOCATOR</key>
+         <value>internal:attr=[placeholder=&quot;Duration (minutes)&quot;i]</value>
+      </entry>
+   </smartLocatorCollection>
+   <smartLocatorEnabled>false</smartLocatorEnabled>
+   <useRalativeImagePath>true</useRalativeImagePath>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>tag</name>
+      <type>Main</type>
+      <value>input</value>
+      <webElementGuid>10b6a11a-25c8-4af5-8fba-2535c7d42045</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>type</name>
+      <type>Main</type>
+      <value>number</value>
+      <webElementGuid>6ef8583b-2b69-413a-931a-650396149d98</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>name</name>
+      <type>Main</type>
+      <value>days[0][durasi_menit]</value>
+      <webElementGuid>80833a48-a286-4a7d-a4ed-a195e001d251</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>placeholder</name>
+      <type>Main</type>
+      <value>Duration (minutes)</value>
+      <webElementGuid>99aa83c5-843e-4a90-bbc7-1bf7cff0ae1e</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>class</name>
+      <type>Main</type>
+      <value>border border-gray-300 rounded px-2 py-1 text-sm w-32</value>
+      <webElementGuid>61e3b66e-aeb8-496d-8040-c30502209705</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath</name>
+      <type>Main</type>
+      <value>id(&quot;jadwal-container&quot;)/div[@class=&quot;flex items-center gap-3 p-3 bg-gray-50 rounded-md&quot;]/input[@class=&quot;border border-gray-300 rounded px-2 py-1 text-sm w-32&quot;]</value>
+      <webElementGuid>cabfde8c-e8f0-45cf-b572-f7c6f49785b8</webElementGuid>
+   </webElementProperties>
+   <webElementXpaths>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:attributes</name>
+      <type>Main</type>
+      <value>//input[@name='days[0][durasi_menit]']</value>
+      <webElementGuid>1330e6bf-bf27-4541-b798-6475cd13d5ae</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:idRelative</name>
+      <type>Main</type>
+      <value>//div[@id='jadwal-container']/div/input[2]</value>
+      <webElementGuid>ed011938-cd96-466b-b637-0a222ac76d88</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:position</name>
+      <type>Main</type>
+      <value>//input[2]</value>
+      <webElementGuid>5189a2b1-a095-476e-973c-b3b781083492</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:customAttributes</name>
+      <type>Main</type>
+      <value>//input[@type = 'number' and @name = 'days[0][durasi_menit]' and @placeholder = 'Duration (minutes)']</value>
+      <webElementGuid>d19de847-b618-44df-bf7d-bb57f47a6ebb</webElementGuid>
+   </webElementXpaths>
+</WebElementEntity>

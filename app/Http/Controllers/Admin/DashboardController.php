@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Company;
+use App\Models\CompanyInvoice;
+use App\Models\Staff;
+use Carbon\Carbon;
+
+class DashboardController extends Controller
+{
+    public function index()
+    {
+        $user = Auth::user();
+
+        $company = $this->resolveCompany($user);
+
+        if (!$company) {
+            return redirect()->route('login')
+                ->with('error', 'Akun admin ini belum terhubung dengan syarikat.');
+        }
+
+        $today = now()->toDateString();
+
+        // Ambil langganan aktif, sudah dibayar, dan dalam rentang tanggal
+        $activeSubscription = CompanyInvoice::where('company_id', $company->id)
+            ->where('status', 'active')
+            ->where('status_bayaran', 'paid')
+            ->whereDate('tarikh_terbit', '<=', $today)
+            ->whereDate('tarikh_tamat', '>=', $today)
+            ->latest()
+            ->with('package')
+            ->first();
+        $remainingDays = 0;
+        if($activeSubscription){
+            $today = Carbon::today();
+            $endDate = Carbon::parse($activeSubscription->tarikh_tamat);
+            $remainingDays = $today->diffInDays($endDate) + 1;
+        }
+
+        $showReviewPopup = app(ReviewController::class)->shouldShowReviewPopup();
+
+
+        return view('admin.dashboard', [
+            'company'      => $company,
+            'user'         => $user,
+            'subscription' => $activeSubscription,
+            'remainingDays'=> $remainingDays,
+            'showReviewPopup' => $showReviewPopup
+        ]);
+    }
+
+    public function edit()
+    {
+        $user = Auth::user()->load('company');
+        return view('admin.edit', compact('user'));
+    }
+
+    // Tambah atau ubah link perusahaan
+    public function addLink(Request $request, $id)
+    {
+        $request->validate([
+            'link' => 'nullable|url', // boleh kosong, harus URL valid jika diisi
+        ]);
+
+        $company = Company::findOrFail($id);
+        $company->link = $request->link;
+        $company->save();
+
+        return redirect()->back()->with('success', 'Link perusahaan berhasil diperbarui.');
+    }
+
+    private function resolveCompany($user): ?Company
+    {
+        return Company::where('user_id', $user->id)->first()
+            ?? Staff::with('company')->where('user_id', $user->id)->first()?->company;
+    }
+}

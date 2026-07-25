@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebElementEntity>
+   <description></description>
+   <name>a_MY</name>
+   <tag></tag>
+   <elementGuidId>bb534956-ea10-4016-bfba-f506385080eb</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>XPATH</key>
+         <value>//div[@id='mainHeader']/header/div/div/nav/div/a[2]</value>
+      </entry>
+      <entry>
+         <key>CSS</key>
+         <value></value>
+      </entry>
+   </selectorCollection>
+   <selectorMethod>XPATH</selectorMethod>
+   <smartLocatorCollection>
+      <entry>
+         <key>SMART_LOCATOR</key>
+         <value>internal:role=link[name=&quot;MY&quot;i]</value>
+      </entry>
+   </smartLocatorCollection>
+   <smartLocatorEnabled>false</smartLocatorEnabled>
+   <useRalativeImagePath>true</useRalativeImagePath>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>tag</name>
+      <type>Main</type>
+      <value>a</value>
+      <webElementGuid>3fd2c6c3-55e9-4a32-b890-9e72a555c3e7</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>href</name>
+      <type>Main</type>
+      <value>https://emindtutor.com/set-language/my</value>
+      <webElementGuid>207488f2-3062-42c9-985c-746c265ef917</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>class</name>
+      <type>Main</type>
+      <value>font-medium px-3 py-1 rounded-full transition-all duration-200 text-xs
+                                   text-slate-600 hover:text-orange-600 hover:bg-white</value>
+      <webElementGuid>e4e189f8-3964-49e5-86af-7a3ad38bdddb</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>text</name>
+      <type>Main</type>
+      <value>
+                            MY
+                        </value>
+      <webElementGuid>a1adcbbf-ca85-42e9-9c4a-3ac763f0f6c5</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath</name>
+      <type>Main</type>
+      <value>id(&quot;mainHeader&quot;)/header[@class=&quot;bg-white/95 backdrop-blur-md text-black shadow-xl rounded-2xl&quot;]/div[@class=&quot;max-w-7xl mx-auto px-4 sm:px-6&quot;]/div[@class=&quot;flex justify-between items-center py-4&quot;]/nav[@class=&quot;hidden md:flex items-center space-x-6 text-sm font-medium&quot;]/div[@class=&quot;flex items-center space-x-2 pl-4 border-l border-gradient-to-b from-cyan-200 to-orange-200&quot;]/a[@class=&quot;font-medium px-3 py-1 rounded-full transition-all duration-200 text-xs
+                                   text-slate-600 hover:text-orange-600 hover:bg-white&quot;]</value>
+      <webElementGuid>ef89e167-922d-4ae0-8b70-eeb7ff9103c2</webElementGuid>
+   </webElementProperties>
+   <webElementXpaths>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:idRelative</name>
+      <type>Main</type>
+      <value>//div[@id='mainHeader']/header/div/div/nav/div/a[2]</value>
+      <webElementGuid>96b83b2f-4afc-4cd4-83b5-f3b6983b477a</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:link</name>
+      <type>Main</type>
+      <value>//a[contains(text(),'MY')]</value>
+      <webElementGuid>c5a8be0a-f729-479f-a1c7-1a17da26da6e</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>(.//*[normalize-space(text()) and normalize-space(.)='|'])[1]/following::a[1]</value>
+      <webElementGuid>923837e7-c87f-48ca-ad8e-17ebff11b411</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>(.//*[normalize-space(text()) and normalize-space(.)='EN'])[1]/following::a[1]</value>
+      <webElementGuid>9b74c719-b263-427e-8c55-e4eb5e88691e</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>(.//*[normalize-space(text()) and normalize-space(.)='Login'])[1]/preceding::a[1]</value>
+      <webElementGuid>fcb2d2c2-9df8-4581-8f13-7e963aa0b5ad</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>(.//*[normalize-space(text()) and normalize-space(.)='Sign Up'])[1]/preceding::a[2]</value>
+      <webElementGuid>cf85ae74-cc9c-4d5e-95ba-4ab9f18d7a29</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>//*/text()[normalize-space(.)='MY']/parent::*</value>
+      <webElementGuid>9e75b396-e407-4e6f-a8cf-299b265359dd</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:href</name>
+      <type>Main</type>
+      <value>//a[contains(@href, 'https://emindtutor.com/set-language/my')]</value>
+      <webElementGuid>8a81a515-d710-4ff5-b4cc-4556ee891b88</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:position</name>
+      <type>Main</type>
+      <value>//div/a[2]</value>
+      <webElementGuid>9a36d668-9577-4234-85f6-9fe390a45c8b</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:customAttributes</name>
+      <type>Main</type>
+      <value>//a[@href = 'https://emindtutor.com/set-language/my' and (text() = '
+                            MY
+                        ' or . = '
+                            MY
+                        ')]</value>
+      <webElementGuid>4448dfa8-a5c1-445a-8fdc-c86ba97a4d10</webElementGuid>
+   </webElementXpaths>
+</WebElementEntity>

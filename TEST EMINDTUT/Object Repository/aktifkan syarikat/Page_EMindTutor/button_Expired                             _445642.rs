@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebElementEntity>
+   <description></description>
+   <name>button_Expired                             _445642</name>
+   <tag></tag>
+   <elementGuidId>6240ee14-ff50-4cee-a6bc-1ff3a946f424</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>XPATH</key>
+         <value>(//button[@type='submit'])[2]</value>
+      </entry>
+      <entry>
+         <key>CSS</key>
+         <value></value>
+      </entry>
+   </selectorCollection>
+   <selectorMethod>XPATH</selectorMethod>
+   <smartLocatorCollection>
+      <entry>
+         <key>SMART_LOCATOR</key>
+         <value>internal:role=button[name=&quot;Deactivate&quot;i] >> nth=1</value>
+      </entry>
+   </smartLocatorCollection>
+   <smartLocatorEnabled>false</smartLocatorEnabled>
+   <useRalativeImagePath>true</useRalativeImagePath>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>tag</name>
+      <type>Main</type>
+      <value>button</value>
+      <webElementGuid>bcf33f07-44e9-4006-aeee-bc6e3ee6d342</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>type</name>
+      <type>Main</type>
+      <value>submit</value>
+      <webElementGuid>6b5d0fb3-1304-44db-9bcf-0ae3a5a44ee1</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>class</name>
+      <type>Main</type>
+      <value>w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md text-white transition-colors duration-200 bg-red-600 hover:bg-red-700</value>
+      <webElementGuid>95a1e480-3364-4931-ab8a-212acae8a02f</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>title</name>
+      <type>Main</type>
+      <value>Deactivate</value>
+      <webElementGuid>96a7adba-0949-45d9-8e6d-4658a925036b</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath</name>
+      <type>Main</type>
+      <value>/html[1]/body[@class=&quot;bg-slate-50&quot;]/div[@class=&quot;flex min-h-screen relative&quot;]/main[@class=&quot;flex-1 p-4 md:p-8 overflow-x-hidden&quot;]/div[@class=&quot;min-h-screen bg-gray-50 py-8&quot;]/div[@class=&quot;max-w-7xl mx-auto px-4 sm:px-6 lg:px-8&quot;]/div[@class=&quot;grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6&quot;]/div[@class=&quot;bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full&quot;]/div[@class=&quot;px-6 py-4 bg-gray-50 rounded-b-lg mt-auto&quot;]/div[@class=&quot;flex flex-wrap gap-2&quot;]/form[@class=&quot;inline-block flex-1&quot;]/button[@class=&quot;w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md text-white transition-colors duration-200 bg-red-600 hover:bg-red-700&quot;]</value>
+      <webElementGuid>84cb9ade-dca0-4cb8-a40a-1ef91f8a4acc</webElementGuid>
+   </webElementProperties>
+   <webElementXpaths>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:attributes</name>
+      <type>Main</type>
+      <value>(//button[@type='submit'])[2]</value>
+      <webElementGuid>c427be0b-f3ed-4496-85b0-f07a328e03cd</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>(.//*[normalize-space(text()) and normalize-space(.)='Expired'])[1]/following::button[1]</value>
+      <webElementGuid>35ae6097-fc9f-4a6e-810c-c40eb05a7764</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>(.//*[normalize-space(text()) and normalize-space(.)='Company Ex. 3'])[1]/preceding::button[1]</value>
+      <webElementGuid>7eec2f7f-4c69-4198-bc20-bd456fd70de7</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:neighbor</name>
+      <type>Main</type>
+      <value>(.//*[normalize-space(text()) and normalize-space(.)='Active'])[3]/preceding::button[1]</value>
+      <webElementGuid>8e9c5c36-e45b-4b92-ac64-62b4b39bb05b</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:position</name>
+      <type>Main</type>
+      <value>//div[2]/div[3]/div/form/button</value>
+      <webElementGuid>4da990da-55c9-4586-9a6e-9d9614da1f55</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:customAttributes</name>
+      <type>Main</type>
+      <value>//button[@type = 'submit' and @title = 'Deactivate']</value>
+      <webElementGuid>695df560-0b3f-42da-9670-1dfd5d87b21d</webElementGuid>
+   </webElementXpaths>
+</WebElementEntity>

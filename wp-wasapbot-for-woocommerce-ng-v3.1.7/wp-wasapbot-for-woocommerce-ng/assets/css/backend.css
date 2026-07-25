@@ -1,0 +1,105 @@
+.wpwfw-logo {
+    font-size: 24px;
+    color: white;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    position: -webkit-sticky;
+    /* position: sticky; */
+    top: 48px;
+    margin-left: 10px;
+}
+
+.wpwfw-logo-title {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    font-family: 'Pathway Gothic One';
+    margin: 18px 30px 0 10px;
+}
+
+.wpwfw-version {
+    font-size: 12px;
+    margin-top: 2px;
+    font-weight: 400;
+    font-family: 'Poppins'
+}
+
+/* Enhanced Status Display Styles */
+.wpwfw_dashboard .status-success {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.wpwfw_dashboard .status-error {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.wpwfw_dashboard .status-pending {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.wpwfw_dashboard .status-success i,
+.wpwfw_dashboard .status-error i,
+.wpwfw_dashboard .status-pending i {
+    margin-right: 5px;
+}
+
+.wpwfw_dashboard table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.wpwfw_dashboard th {
+    background-color: #f8f9fa;
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.wpwfw_dashboard td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.wpwfw_dashboard td small {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.wpwfw_dashboard .wc-action-button {
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.wpwfw_dashboard .wc-action-button:hover {
+    text-decoration: none;
+    opacity: 0.9;
+}
+
+@media screen and (max-width: 979.20px) {
+    .wpwfw-logo-title {
+        display: none;
+    }
+    
+    .wpwfw_dashboard table {
+        font-size: 12px;
+    }
+    
+    .wpwfw_dashboard th,
+    .wpwfw_dashboard td {
+        padding: 8px 4px;
+    }
+}

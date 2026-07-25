@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebElementEntity>
+   <description></description>
+   <name>path</name>
+   <tag></tag>
+   <elementGuidId>0d8c700c-5910-47e2-a43a-19efbc40376d</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>XPATH</key>
+         <value></value>
+      </entry>
+      <entry>
+         <key>CSS</key>
+         <value></value>
+      </entry>
+   </selectorCollection>
+   <selectorMethod>XPATH</selectorMethod>
+   <smartLocatorCollection>
+      <entry>
+         <key>SMART_LOCATOR</key>
+         <value>internal:role=row[name=&quot;resolusi baru 30 Days RM 210.00 Active&quot;i] >> internal:role=link >> nth=0</value>
+      </entry>
+   </smartLocatorCollection>
+   <smartLocatorEnabled>false</smartLocatorEnabled>
+   <useRalativeImagePath>true</useRalativeImagePath>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>tag</name>
+      <type>Main</type>
+      <value>path</value>
+      <webElementGuid>ba5f5f95-ac63-4c7a-bff1-2a466ee65342</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>stroke-linecap</name>
+      <type>Main</type>
+      <value>round</value>
+      <webElementGuid>72c29c9b-8b3a-4114-8d7c-da691d1db6ec</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>stroke-linejoin</name>
+      <type>Main</type>
+      <value>round</value>
+      <webElementGuid>ca7b9381-74b2-4cbf-baeb-0f4e7ab87928</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>stroke-width</name>
+      <type>Main</type>
+      <value>2</value>
+      <webElementGuid>ac3a41ae-26e8-479d-b046-5ebddb31d450</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>d</name>
+      <type>Main</type>
+      <value>M15 12a3 3 0 11-6 0 3 3 0 016 0z</value>
+      <webElementGuid>f7b2565f-3e93-4afc-bd5a-d46b1017b350</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath</name>
+      <type>Main</type>
+      <value>/html[1]/body[@class=&quot;bg-slate-50&quot;]/div[@class=&quot;flex min-h-screen relative&quot;]/main[@class=&quot;flex-1 p-4 md:p-8 overflow-x-hidden&quot;]/div[@class=&quot;min-h-screen&quot;]/div[@class=&quot;container mx-auto sm:px-4 lg:px-6 sm:py-8 lg:py-10&quot;]/div[@class=&quot;hidden lg:block bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden&quot;]/div[@class=&quot;overflow-x-auto&quot;]/table[@class=&quot;min-w-full&quot;]/tbody[@class=&quot;divide-y divide-gray-100&quot;]/tr[@class=&quot;transition-all duration-300 
+                                    hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50&quot;]/td[@class=&quot;px-6 py-4 text-center&quot;]/div[@class=&quot;flex items-center justify-center space-x-2&quot;]/a[@class=&quot;inline-flex items-center px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-300 text-sm font-medium&quot;]/svg[@class=&quot;w-5 h-5&quot;]/path[1]</value>
+      <webElementGuid>00418cb9-88d8-4d7d-a6f7-a62b3999f5c8</webElementGuid>
+   </webElementProperties>
+</WebElementEntity>

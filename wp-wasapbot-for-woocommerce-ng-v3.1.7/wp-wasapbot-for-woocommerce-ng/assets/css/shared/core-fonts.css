@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pathway+Gothic+One&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css');
+
+/* Fallback FontAwesome loading */
+@import url('https://use.fontawesome.com/releases/v6.2.1/css/all.css');
+
+/* Emergency fallback if both CDNs fail */
+.fa-solid:before, .fas:before {
+    font-family: "Font Awesome 6 Free", "FontAwesome", sans-serif;
+    font-weight: 900;
+}
+
+.fa-check:before { content: "\f00c"; }
+.fa-xmark:before, .fa-times:before { content: "\f00d"; }
+.fa-spinner:before { content: "\f110"; }
+.fa-clock:before { content: "\f017"; }
+
+/* CSS fallback icons if FontAwesome completely fails */
+.wpwfw-fallback-check:before { 
+    content: "✓"; 
+    color: #28a745; 
+    font-weight: bold; 
+}
+.wpwfw-fallback-error:before { 
+    content: "✗"; 
+    color: #dc3545; 
+    font-weight: bold; 
+}
+.wpwfw-fallback-clock:before { 
+    content: "⏰"; 
+}

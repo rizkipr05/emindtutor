@@ -1,0 +1,34 @@
+/* Order Meta Box Styles */
+.wpwfw-order-meta {
+    padding: 10px;
+}
+
+.wpwfw-order-meta .status-success {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.wpwfw-order-meta .status-error {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.wpwfw-order-meta .status-pending {
+    color: #fbbf24;
+    font-weight: 600;
+}
+
+.wpwfw-processing-indicator {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.wpwfw-spinner {
+    animation: wpwfw-spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes wpwfw-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'title' => 'Course List',
+    'subtitle' => ':type · :count courses available',
+    'add_course' => 'Add Course',
+    'tab' => [
+        'individu' => 'Individual',
+        'kumpulan' => 'Group',
+    ],
+    'filter_individual' => 'Individual',
+    'filter_group' => 'Group',
+    'empty_title' => 'No courses available',
+    'empty_desc' => 'No :type courses have been added yet.',
+    'add_first_course' => 'Add First Course',
+    'table_name' => 'Course Name',
+    'table_fee' => 'Fee',
+    'table_mode' => 'Teaching Mode',
+    'table_min_sessions' => 'Minimum Sessions',
+    'table_action' => 'Action',
+    'mode_online' => 'Online',
+    'mode_offline' => 'Offline',
+    'mode_hybrid' => 'Hybrid',
+    'unit_session' => 'Session',
+    'unit_hour' => 'Hour',
+    'unit_day' => 'Day',
+    'view' => 'View',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'delete_confirm' => 'Delete this course?',
+    'none' => '—',
+];
