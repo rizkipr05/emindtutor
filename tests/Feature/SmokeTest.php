@@ -3,13 +3,17 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
+use App\Models\Course;
 use App\Models\Student;
+use App\Models\StudentInvoice;
 use App\Models\Staff;
 use App\Models\Teacher;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SmokeTest extends TestCase
@@ -204,6 +208,103 @@ class SmokeTest extends TestCase
             ->assertOk()
             ->assertSee(__('admin/staff/index.owner.title'))
             ->assertSee('owner.empty@example.com');
+    }
+
+    public function test_student_payment_is_limited_to_the_invoice_owner_and_webhook_activates_course_access(): void
+    {
+        Storage::fake('public');
+
+        $companyOwner = User::factory()->create(['role' => 'admin']);
+        $company = Company::create([
+            'user_id' => $companyOwner->id,
+            'nama_wakil_syarikat' => 'Payment Test Company',
+            'alamat' => 'Jalan Test 11',
+            'no_telefon' => '0123456777',
+            'status' => true,
+        ]);
+        $course = Course::create([
+            'company_id' => $company->id,
+            'nama_kos' => 'Mathematics',
+            'fee' => 100,
+            'max_student' => 20,
+            'teaching_mode' => 'online',
+            'sessions_duration_unit' => 'minute',
+            'jenis' => 'individu',
+        ]);
+
+        $studentUser = User::factory()->create(['role' => 'student']);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'company_id' => $company->id,
+            'ic_number' => '990101-01-1001',
+            'phone' => '0123456776',
+            'address' => 'Kuala Lumpur',
+            'is_approved' => 'yes',
+        ]);
+        $otherStudentUser = User::factory()->create(['role' => 'student']);
+        $otherStudent = Student::create([
+            'user_id' => $otherStudentUser->id,
+            'company_id' => $company->id,
+            'ic_number' => '990101-01-1002',
+            'phone' => '0123456775',
+            'address' => 'Kuala Lumpur',
+            'is_approved' => 'yes',
+        ]);
+
+        $ownInvoice = StudentInvoice::create([
+            'student_id' => $student->id,
+            'course_id' => $course->id,
+            'nomor_invoice' => 'STU-OWN-001',
+            'jumlah' => 100,
+            'status_bayaran' => 'upcoming',
+        ]);
+        $otherInvoice = StudentInvoice::create([
+            'student_id' => $otherStudent->id,
+            'course_id' => $course->id,
+            'nomor_invoice' => 'STU-OTHER-001',
+            'jumlah' => 100,
+            'status_bayaran' => 'upcoming',
+        ]);
+
+        $this->actingAs($studentUser)
+            ->get(route('student.payments.create', $otherInvoice))
+            ->assertNotFound();
+
+        $this->actingAs($studentUser)
+            ->post(route('student.payments.store'), [
+                'student_invoice_id' => $ownInvoice->id,
+                'dibayar_pada' => now()->toDateString(),
+                'bukti_bayar' => UploadedFile::fake()->image('proof.jpg'),
+            ])
+            ->assertRedirect(route('student.payments.index'));
+
+        $this->assertDatabaseHas('student_payments', [
+            'student_invoice_id' => $ownInvoice->id,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($studentUser)
+            ->post(route('student.payments.store'), [
+                'student_invoice_id' => $ownInvoice->id,
+                'dibayar_pada' => now()->toDateString(),
+                'bukti_bayar' => UploadedFile::fake()->image('duplicate.jpg'),
+            ])
+            ->assertSessionHasErrors('student_invoice_id');
+
+        $this->withHeader('x-callback-token', (string) config('services.xendit.webhook_secret'))
+            ->postJson(route('payment.webhook'), [
+            'external_id' => $otherInvoice->nomor_invoice,
+            'status' => 'PAID',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('student_invoices', [
+            'id' => $otherInvoice->id,
+            'status_bayaran' => 'paid',
+        ]);
+        $this->assertDatabaseHas('students', [
+            'id' => $otherStudent->id,
+            'status' => 'active',
+        ]);
     }
 
     public function test_teacher_dashboard_is_available_for_teacher_users(): void

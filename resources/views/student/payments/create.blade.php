@@ -147,7 +147,7 @@
                             <span class="text-red-500">*</span>
                         </div>
                         <input type="date" name="dibayar_pada" id="dibayar_pada" 
-                               value="{{ old('dibayar_pada') }}" 
+                               value="{{ old('dibayar_pada', now()->toDateString()) }}" required
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 @error('dibayar_pada') border-red-300 focus:ring-red-500 focus:border-red-500 @enderror">
                         <p class="text-xs text-gray-500 mt-1">{{ __('student/payments/create.date.helper') }}</p>
                         @error('dibayar_pada')
@@ -172,7 +172,7 @@
                                 <label for="bukti_bayar" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
                                     {{-- Teks ini akan berubah --}}
                                     <span id="upload-text">{{ __('student/payments/create.upload.button') }}</span>
-                                    <input type="file" name="bukti_bayar" id="bukti_bayar" class="sr-only" accept="image/*,.pdf">
+                                    <input type="file" name="bukti_bayar" id="bukti_bayar" class="sr-only" accept="image/*,.pdf" required>
                                 </label>
                                 <p id="upload-or" class="pl-1">{{ __('student/payments/create.upload.or') }}</p>
                             </div>

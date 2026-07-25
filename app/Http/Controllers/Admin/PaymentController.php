@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Http; // Tambahkan Import ini
 use Illuminate\Support\Facades\Log;
 use App\Models\SubscriptionPackage;
 use App\Models\CompanyInvoice;
+use App\Models\StudentInvoice;
 use App\Models\CompanyPayment;
 use App\Models\Subscription;
 use App\Models\Discount;
@@ -172,13 +173,16 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
-        // ... kode validasi token kamu (jika ada) ...
+        $webhookSecret = config('services.xendit.webhook_secret');
+        if ($webhookSecret && ! hash_equals($webhookSecret, (string) $request->header('x-callback-token'))) {
+            abort(403, 'Invalid Xendit callback token.');
+        }
 
         $data = $request->all();
 
         // 1. Terima status PAID atau SETTLED
-        if (isset($data['status']) && ($data['status'] === 'PAID' || $data['status'] === 'SETTLED')) {
-            $externalId = $data['external_id'];
+        if (isset($data['status'], $data['external_id']) && in_array($data['status'], ['PAID', 'SETTLED'], true)) {
+            $externalId = (string) $data['external_id'];
             
             // 2. Cari Invoice
             // Pastikan eager load 'package' untuk ambil durasi hari
@@ -208,6 +212,25 @@ class PaymentController extends Controller
                 if ($emailTujuan) {
                     Mail::to($emailTujuan)->send(new CompanyReceiptMail($invoice));
                 }
+            }
+
+            $studentInvoice = StudentInvoice::with('student')
+                ->where('external_id', $externalId)
+                ->orWhere('nomor_invoice', $externalId)
+                ->first();
+
+            if ($studentInvoice && $studentInvoice->status_bayaran !== 'paid') {
+                $paidAt = isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : Carbon::now();
+
+                $studentInvoice->update([
+                    'status_bayaran' => 'paid',
+                    'tarikh_terbit' => $paidAt->toDateString(),
+                    'tarikh_tamat' => $paidAt->copy()->addDays(30)->toDateString(),
+                ]);
+
+                $studentInvoice->student?->update([
+                    'status' => 'active',
+                ]);
             }
         }
 

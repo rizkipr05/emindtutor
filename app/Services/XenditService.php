@@ -23,9 +23,10 @@ class XenditService
             'external_id' => $studentInvoice->nomor_invoice,
             'amount' => (float) $studentInvoice->jumlah,
             'payer_email' => $studentInvoice->student->user->email,
-            'description' => "Pembayaran Kursus: " . $studentInvoice->course->nama_kursus,
+            'description' => "Pembayaran Kursus: " . ($studentInvoice->course->nama_kos ?? 'Kursus'),
             'invoice_duration' => 86400, // Aktif selama 24 jam
-            'success_redirect_url' => route('student.invoices.index'),
+            'success_redirect_url' => route('student.payments.index'),
+            'failure_redirect_url' => route('student.payments.index'),
         ]);
 
         try {

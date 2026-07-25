@@ -8,6 +8,8 @@ use App\Models\StudentInvoice;
 use App\Models\StudentPayment;
 use App\Models\CompanyBankDetail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 
 class PaymentController extends Controller
@@ -30,9 +32,22 @@ class PaymentController extends Controller
 
     public function create($invoiceId)
     {
-        $invoice = StudentInvoice::where('id', $invoiceId)->firstOrFail();
-        // dd(Auth::user()->students->company_id);
-        $bankDetails = CompanyBankDetail::where('company_id', Auth::user()->students->company_id)
+        $student = Auth::user()->students;
+        abort_unless($student, 403);
+
+        $invoice = StudentInvoice::query()
+            ->whereKey($invoiceId)
+            ->where('student_id', $student->id)
+            ->where('status_bayaran', 'upcoming')
+            ->firstOrFail();
+
+        if ($invoice->payment()->whereIn('status', ['pending', 'success'])->exists()) {
+            return redirect()
+                ->route('student.payments.index')
+                ->with('error', 'Pembayaran untuk invoice ini sedang diproses atau sudah selesai.');
+        }
+
+        $bankDetails = CompanyBankDetail::where('company_id', $student->company_id)
             ->latest()
             ->get();
 
@@ -52,33 +67,37 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->bukti_bayar);
-        // Validasi input
         $validated = $request->validate([
-            'student_invoice_id' => 'required|exists:student_invoices,id',
-            'dibayar_pada' => 'nullable|date',
-            'bukti_bayar' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'student_invoice_id' => 'required|integer',
+            'dibayar_pada' => 'required|date',
+            'bukti_bayar' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // dd("hi");
+        $student = Auth::user()->students;
+        abort_unless($student, 403);
 
-        // Handle upload bukti bayar (jika ada)
-        if ($request->hasFile('bukti_bayar')) {
-            $path = $request->file('bukti_bayar')->store('bukti_bayar', 'public');
-            $validated['bukti_bayar'] = $path;
-        }
-                $classPhotoPath = null;
-        if ($request->hasFile('class_photo')) {
-            $classPhotoPath = $request->file('class_photo')->store('class_photos', 'public');
-        }
+        $payment = DB::transaction(function () use ($request, $validated, $student) {
+            $invoice = StudentInvoice::query()
+                ->whereKey($validated['student_invoice_id'])
+                ->where('student_id', $student->id)
+                ->where('status_bayaran', 'upcoming')
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Tambahkan status default pending
-        $validated['status'] = 'pending';
-        // dd($validated);
+            if ($invoice->payment()->whereIn('status', ['pending', 'success'])->exists()) {
+                throw ValidationException::withMessages([
+                    'student_invoice_id' => 'Pembayaran untuk invoice ini sedang diproses atau sudah selesai.',
+                ]);
+            }
 
-        // Simpan data
-        $payment = StudentPayment::create($validated);
-        // dd($payment);
+            return StudentPayment::create([
+                'student_invoice_id' => $invoice->id,
+                'dibayar_pada' => $validated['dibayar_pada'],
+                'bukti_bayar' => $request->file('bukti_bayar')->store('bukti_bayar', 'public'),
+                'status' => 'pending',
+            ]);
+        });
+
         return redirect()->route('student.payments.index')->with('success', 'Payment berhasil ditambahkan!');
     }
 
