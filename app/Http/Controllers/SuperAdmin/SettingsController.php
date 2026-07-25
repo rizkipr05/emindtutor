@@ -8,41 +8,198 @@ use App\Models\Company;
 use App\Models\CompanyInvoice;
 use App\Models\StaffEmind;
 use App\Models\SubscriptionPackage;
+use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
     public function index(Request $request, ?string $section = null)
     {
-        $section = $section ?: 'overview';
+        $section = $this->normalizeSection($section);
 
+        return view('super-admin.settings.index', $this->buildPageData($section));
+    }
+
+    public function update(Request $request, ?string $section = null)
+    {
+        $section = $this->normalizeSection($section);
+        $sections = $this->buildSections();
+        $fields = $sections[$section]['fields'];
+
+        $rules = [];
+        foreach ($fields as $field) {
+            $rules[$field['name']] = $this->validationRulesFor($field);
+        }
+
+        $validated = $request->validate($rules);
+
+        foreach ($fields as $field) {
+            $value = $this->resolveFieldValue($request, $field, $validated);
+
+            SystemSetting::updateOrCreate(
+                ['setting_key' => $field['name']],
+                [
+                    'setting_group' => $section,
+                    'setting_label' => $field['label'],
+                    'setting_type' => $field['type'],
+                    'setting_value' => $value,
+                ]
+            );
+        }
+
+        return redirect()
+            ->route('superadmin.settings.index', ['section' => $section])
+            ->with('success', __('super_admin/settings.messages.saved'));
+    }
+
+    private function buildPageData(string $section): array
+    {
         $stats = [
             'companies' => Company::count(),
             'activeCompanies' => Company::where('status', true)->count(),
             'packages' => SubscriptionPackage::count(),
-            'trialPackage' => SubscriptionPackage::where('is_trial', true)->value('nama_pakej') ?? '-',
             'invoices' => CompanyInvoice::count(),
             'paidInvoices' => CompanyInvoice::where('status_bayaran', 'paid')->count(),
             'staff' => StaffEmind::count(),
             'announcements' => Announcement::count(),
-            'locale' => app()->getLocale(),
-            'appName' => config('app.name', 'EMindTutor'),
         ];
 
-        $sections = [
+        $settings = SystemSetting::query()->get()->keyBy('setting_key');
+        $sections = $this->buildSections();
+
+        foreach ($sections as $key => &$definition) {
+            foreach ($definition['fields'] as &$field) {
+                $field['value'] = $this->fieldValue($settings, $field);
+            }
+            unset($field);
+        }
+        unset($definition);
+
+        $navSections = $this->navSections();
+
+        return [
+            'sections' => $sections,
+            'navSections' => $navSections,
+            'currentSection' => $sections[$section],
+            'currentSectionKey' => $section,
+            'managementPanel' => $this->managementPanel($section),
+            'stats' => $stats,
+        ];
+    }
+
+    private function managementPanel(string $section): ?array
+    {
+        return match ($section) {
+            'companies' => [
+                'title' => __('super_admin/settings.management.companies.title'),
+                'subtitle' => __('super_admin/settings.management.companies.subtitle'),
+                'create_url' => route('companies.create'),
+                'manage_url' => route('companies.index'),
+                'records' => Company::with('user')->latest()->take(5)->get()->map(fn (Company $company) => [
+                    'title' => $company->user?->name ?? $company->nama_wakil_syarikat,
+                    'meta' => $company->user?->email ?? $company->no_telefon,
+                    'status' => $company->status ? __('super_admin/settings.management.active') : __('super_admin/settings.management.inactive'),
+                    'edit_url' => route('companies.edit', $company),
+                    'delete_url' => route('companies.destroy', $company),
+                ]),
+            ],
+            'packages' => [
+                'title' => __('super_admin/settings.management.packages.title'),
+                'subtitle' => __('super_admin/settings.management.packages.subtitle'),
+                'create_url' => route('subscription-packages.create'),
+                'manage_url' => route('subscription-packages.index'),
+                'records' => SubscriptionPackage::latest()->take(5)->get()->map(fn (SubscriptionPackage $package) => [
+                    'title' => $package->nama_pakej,
+                    'meta' => $package->duration_days . ' ' . __('super_admin/settings.management.days') . ' · ' . number_format((float) $package->harga, 0),
+                    'status' => $package->status,
+                    'edit_url' => route('subscription-packages.edit', $package),
+                    'delete_url' => route('subscription-packages.destroy', $package),
+                ]),
+            ],
+            'staff' => [
+                'title' => __('super_admin/settings.management.staff.title'),
+                'subtitle' => __('super_admin/settings.management.staff.subtitle'),
+                'create_url' => route('superadmin.staff.create'),
+                'manage_url' => route('superadmin.staff.index'),
+                'records' => StaffEmind::with('user')->latest()->take(5)->get()->map(fn (StaffEmind $staff) => [
+                    'title' => $staff->user?->name ?? $staff->ic_number,
+                    'meta' => $staff->user?->email ?? $staff->phone,
+                    'status' => $staff->status,
+                    'edit_url' => route('superadmin.staff.edit', $staff),
+                    'delete_url' => route('superadmin.staff.destroy', $staff),
+                ]),
+            ],
+            'billing' => [
+                'title' => __('super_admin/settings.management.billing.title'),
+                'subtitle' => __('super_admin/settings.management.billing.subtitle'),
+                'manage_url' => route('invoices.index'),
+                'records' => CompanyInvoice::with('company.user')->latest()->take(5)->get()->map(fn (CompanyInvoice $invoice) => [
+                    'title' => $invoice->nomor_invoice,
+                    'meta' => $invoice->company?->user?->name ?? '-',
+                    'status' => $invoice->status_bayaran,
+                ]),
+            ],
+            'communications' => [
+                'title' => __('super_admin/settings.management.communications.title'),
+                'subtitle' => __('super_admin/settings.management.communications.subtitle'),
+                'create_url' => route('broadcasts.create'),
+                'manage_url' => route('broadcasts.index'),
+                'records' => Announcement::latest()->take(5)->get()->map(fn (Announcement $announcement) => [
+                    'title' => $announcement->title,
+                    'meta' => $announcement->target_audience,
+                    'status' => __('super_admin/settings.management.sent'),
+                    'view_url' => route('broadcasts.show', $announcement->id),
+                ]),
+            ],
+            default => null,
+        };
+    }
+
+    private function buildSections(): array
+    {
+        $packageOptions = SubscriptionPackage::query()
+            ->orderBy('nama_pakej')
+            ->pluck('nama_pakej', 'id')
+            ->toArray();
+
+        $defaultPackageId = SubscriptionPackage::query()->where('is_trial', true)->value('id');
+        if ($defaultPackageId === null) {
+            $defaultPackageId = SubscriptionPackage::query()->value('id');
+        }
+
+        return [
             'overview' => [
                 'title' => __('super_admin/settings.sections.overview.title'),
                 'subtitle' => __('super_admin/settings.sections.overview.subtitle'),
                 'badge' => __('super_admin/settings.sections.overview.badge'),
-                'details' => [
-                    ['label' => __('super_admin/settings.overview.app_label'), 'value' => $stats['appName']],
-                    ['label' => __('super_admin/settings.overview.locale_label'), 'value' => strtoupper($stats['locale'])],
-                    ['label' => __('super_admin/settings.metrics.companies'), 'value' => $stats['companies']],
-                    ['label' => __('super_admin/settings.metrics.active_companies_label'), 'value' => $stats['activeCompanies']],
-                    ['label' => __('super_admin/settings.metrics.packages'), 'value' => $stats['packages']],
-                    ['label' => __('super_admin/settings.metrics.paid_invoices_label'), 'value' => $stats['paidInvoices']],
-                    ['label' => __('super_admin/settings.metrics.staff'), 'value' => $stats['staff']],
-                    ['label' => __('super_admin/settings.metrics.announcements_label'), 'value' => $stats['announcements']],
+                'fields' => [
+                    [
+                        'name' => 'app_name',
+                        'label' => __('super_admin/settings.forms.app_name'),
+                        'type' => 'text',
+                        'default' => config('app.name', 'EMindTutor'),
+                        'placeholder' => config('app.name', 'EMindTutor'),
+                        'help' => __('super_admin/settings.forms.app_name_help'),
+                    ],
+                    [
+                        'name' => 'default_locale',
+                        'label' => __('super_admin/settings.forms.default_locale'),
+                        'type' => 'select',
+                        'default' => app()->getLocale() ?: 'en',
+                        'options' => [
+                            'en' => 'English',
+                            'my' => 'Bahasa Melayu',
+                        ],
+                        'help' => __('super_admin/settings.forms.default_locale_help'),
+                    ],
+                    [
+                        'name' => 'support_email',
+                        'label' => __('super_admin/settings.forms.support_email'),
+                        'type' => 'email',
+                        'default' => config('mail.from.address', 'support@emindtutor.test'),
+                        'placeholder' => 'support@emindtutor.test',
+                        'help' => __('super_admin/settings.forms.support_email_help'),
+                    ],
                 ],
                 'features' => [
                     ['label' => __('layouts/superadmin.companies'), 'desc' => __('super_admin/settings.actions.manage_companies.desc'), 'url' => route('companies.index')],
@@ -52,107 +209,78 @@ class SettingsController extends Controller
                     ['label' => __('layouts/superadmin.stats'), 'desc' => __('super_admin/settings.actions.open_reports.desc'), 'url' => route('superadmin.stats.index')],
                     ['label' => __('layouts/superadmin.communications'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
                 ],
-                'highlights' => [
-                    ['label' => __('super_admin/settings.metrics.companies'), 'value' => $stats['companies'], 'hint' => __('super_admin/settings.metrics.active_companies', ['count' => $stats['activeCompanies']])],
-                    ['label' => __('super_admin/settings.metrics.packages'), 'value' => $stats['packages'], 'hint' => __('super_admin/settings.metrics.trial_package', ['name' => $stats['trialPackage']])],
-                    ['label' => __('super_admin/settings.metrics.invoices'), 'value' => $stats['invoices'], 'hint' => __('super_admin/settings.metrics.paid_invoices', ['count' => $stats['paidInvoices']])],
-                    ['label' => __('super_admin/settings.metrics.staff'), 'value' => $stats['staff'], 'hint' => __('super_admin/settings.metrics.announcements', ['count' => $stats['announcements']])],
-                ],
-                'actions' => [
-                    [
-                        'title' => __('super_admin/settings.actions.manage_companies.title'),
-                        'desc' => __('super_admin/settings.actions.manage_companies.desc'),
-                        'url' => route('companies.index'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.manage_packages.title'),
-                        'desc' => __('super_admin/settings.actions.manage_packages.desc'),
-                        'url' => route('subscription-packages.index'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.manage_billing.title'),
-                        'desc' => __('super_admin/settings.actions.manage_billing.desc'),
-                        'url' => route('invoices.index'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.manage_staff.title'),
-                        'desc' => __('super_admin/settings.actions.manage_staff.desc'),
-                        'url' => route('superadmin.staff.index'),
-                    ],
-                ],
             ],
             'companies' => [
                 'title' => __('super_admin/settings.sections.companies.title'),
                 'subtitle' => __('super_admin/settings.sections.companies.subtitle'),
-                'badge' => __('super_admin/settings.sections.companies.badge', ['count' => $stats['companies']]),
-                'details' => [
-                    ['label' => __('super_admin/settings.metrics.companies'), 'value' => $stats['companies']],
-                    ['label' => __('super_admin/settings.metrics.active_companies_label'), 'value' => $stats['activeCompanies']],
-                    ['label' => __('super_admin/settings.company.login_as'), 'value' => __('super_admin/settings.company.enabled')],
-                    ['label' => __('super_admin/settings.company.status'), 'value' => __('super_admin/settings.sidebar.active')],
+                'badge' => __('super_admin/settings.sections.companies.badge', ['count' => Company::count()]),
+                'fields' => [
+                    [
+                        'name' => 'allow_login_as',
+                        'label' => __('super_admin/settings.forms.allow_login_as'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.allow_login_as_help'),
+                    ],
+                    [
+                        'name' => 'auto_activate_companies',
+                        'label' => __('super_admin/settings.forms.auto_activate_companies'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.auto_activate_companies_help'),
+                    ],
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.manage_companies.title'), 'desc' => __('super_admin/settings.actions.manage_companies.desc'), 'url' => route('companies.index')],
                     ['label' => __('super_admin/settings.actions.create_company.title'), 'desc' => __('super_admin/settings.actions.create_company.desc'), 'url' => route('companies.create')],
-                    ['label' => __('super_admin/settings.company.login_as'), 'desc' => __('super_admin/settings.company.login_as_hint'), 'url' => route('companies.index')],
-                ],
-                'highlights' => [
-                    ['label' => __('super_admin/settings.metrics.companies'), 'value' => $stats['companies'], 'hint' => __('super_admin/settings.metrics.active_companies', ['count' => $stats['activeCompanies']])],
-                    ['label' => __('super_admin/settings.company.controls'), 'value' => __('super_admin/settings.company.login_as'), 'hint' => __('super_admin/settings.company.login_as_hint')],
-                ],
-                'actions' => [
-                    [
-                        'title' => __('super_admin/settings.actions.manage_companies.title'),
-                        'desc' => __('super_admin/settings.actions.manage_companies.desc'),
-                        'url' => route('companies.index'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.create_company.title'),
-                        'desc' => __('super_admin/settings.actions.create_company.desc'),
-                        'url' => route('companies.create'),
-                    ],
                 ],
             ],
             'packages' => [
                 'title' => __('super_admin/settings.sections.packages.title'),
                 'subtitle' => __('super_admin/settings.sections.packages.subtitle'),
-                'badge' => __('super_admin/settings.sections.packages.badge', ['count' => $stats['packages']]),
-                'details' => [
-                    ['label' => __('super_admin/settings.metrics.packages'), 'value' => $stats['packages']],
-                    ['label' => __('super_admin/settings.package.trial_label'), 'value' => $stats['trialPackage']],
-                    ['label' => __('super_admin/settings.package.subscription_toggle'), 'value' => __('super_admin/settings.package.enabled')],
-                    ['label' => __('super_admin/settings.package.status'), 'value' => __('super_admin/settings.sidebar.active')],
+                'badge' => __('super_admin/settings.sections.packages.badge', ['count' => SubscriptionPackage::count()]),
+                'fields' => [
+                    [
+                        'name' => 'trial_package_id',
+                        'label' => __('super_admin/settings.forms.trial_package'),
+                        'type' => 'select',
+                        'default' => $defaultPackageId,
+                        'options' => $packageOptions,
+                        'required' => ! empty($packageOptions),
+                        'help' => __('super_admin/settings.forms.trial_package_help'),
+                    ],
+                    [
+                        'name' => 'allow_package_management',
+                        'label' => __('super_admin/settings.forms.allow_package_management'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.allow_package_management_help'),
+                    ],
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.manage_packages.title'), 'desc' => __('super_admin/settings.actions.manage_packages.desc'), 'url' => route('subscription-packages.index')],
                     ['label' => __('super_admin/settings.actions.manage_subscription_toggle.title'), 'desc' => __('super_admin/settings.actions.manage_subscription_toggle.desc'), 'url' => route('langganan.index')],
                 ],
-                'highlights' => [
-                    ['label' => __('super_admin/settings.metrics.packages'), 'value' => $stats['packages'], 'hint' => __('super_admin/settings.package.trial', ['name' => $stats['trialPackage']])],
-                    ['label' => __('super_admin/settings.package.subscription_toggle'), 'value' => __('super_admin/settings.package.enabled'), 'hint' => __('super_admin/settings.package.subscription_toggle_hint')],
-                ],
-                'actions' => [
-                    [
-                        'title' => __('super_admin/settings.actions.manage_packages.title'),
-                        'desc' => __('super_admin/settings.actions.manage_packages.desc'),
-                        'url' => route('subscription-packages.index'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.manage_subscription_toggle.title'),
-                        'desc' => __('super_admin/settings.actions.manage_subscription_toggle.desc'),
-                        'url' => route('langganan.index'),
-                    ],
-                ],
             ],
             'billing' => [
                 'title' => __('super_admin/settings.sections.billing.title'),
                 'subtitle' => __('super_admin/settings.sections.billing.subtitle'),
-                'badge' => __('super_admin/settings.sections.billing.badge', ['count' => $stats['paidInvoices']]),
-                'details' => [
-                    ['label' => __('super_admin/settings.metrics.invoices'), 'value' => $stats['invoices']],
-                    ['label' => __('super_admin/settings.metrics.paid_invoices_label'), 'value' => $stats['paidInvoices']],
-                    ['label' => __('super_admin/settings.billing.manual_verify'), 'value' => __('super_admin/settings.billing.reconcile')],
-                    ['label' => __('super_admin/settings.billing.receipt_access'), 'value' => __('super_admin/settings.quick_links.open')],
+                'badge' => __('super_admin/settings.sections.billing.badge', ['count' => CompanyInvoice::count()]),
+                'fields' => [
+                    [
+                        'name' => 'allow_manual_verification',
+                        'label' => __('super_admin/settings.forms.allow_manual_verification'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.allow_manual_verification_help'),
+                    ],
+                    [
+                        'name' => 'invoice_reminder_days',
+                        'label' => __('super_admin/settings.forms.invoice_reminder_days'),
+                        'type' => 'number',
+                        'default' => '7',
+                        'help' => __('super_admin/settings.forms.invoice_reminder_days_help'),
+                    ],
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.manage_billing.title'), 'desc' => __('super_admin/settings.actions.manage_billing.desc'), 'url' => route('invoices.index')],
@@ -160,122 +288,178 @@ class SettingsController extends Controller
                     ['label' => __('super_admin/settings.actions.export_pdf.title'), 'desc' => __('super_admin/settings.actions.export_pdf.desc'), 'url' => route('superadmin.stats.export-pdf')],
                     ['label' => __('super_admin/settings.actions.export_excel.title'), 'desc' => __('super_admin/settings.actions.export_excel.desc'), 'url' => route('superadmin.stats.export-excel')],
                 ],
-                'highlights' => [
-                    ['label' => __('super_admin/settings.metrics.invoices'), 'value' => $stats['invoices'], 'hint' => __('super_admin/settings.billing.paid_invoices', ['count' => $stats['paidInvoices']])],
-                    ['label' => __('super_admin/settings.billing.reconcile'), 'value' => __('super_admin/settings.billing.manual_verify'), 'hint' => __('super_admin/settings.billing.reconcile_hint')],
-                ],
-                'actions' => [
-                    [
-                        'title' => __('super_admin/settings.actions.manage_billing.title'),
-                        'desc' => __('super_admin/settings.actions.manage_billing.desc'),
-                        'url' => route('invoices.index'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.subscription_list.title'),
-                        'desc' => __('super_admin/settings.actions.subscription_list.desc'),
-                        'url' => route('langganan.index'),
-                    ],
-                ],
             ],
             'staff' => [
                 'title' => __('super_admin/settings.sections.staff.title'),
                 'subtitle' => __('super_admin/settings.sections.staff.subtitle'),
-                'badge' => __('super_admin/settings.sections.staff.badge', ['count' => $stats['staff']]),
-                'details' => [
-                    ['label' => __('super_admin/settings.metrics.staff'), 'value' => $stats['staff']],
-                    ['label' => __('super_admin/settings.staff.access_level'), 'value' => __('super_admin/settings.staff.admin_only')],
-                    ['label' => __('super_admin/settings.staff.security'), 'value' => __('super_admin/settings.staff.security_hint')],
-                    ['label' => __('super_admin/settings.staff.status'), 'value' => __('super_admin/settings.sidebar.active')],
+                'badge' => __('super_admin/settings.sections.staff.badge', ['count' => StaffEmind::count()]),
+                'fields' => [
+                    [
+                        'name' => 'enable_staff_module',
+                        'label' => __('super_admin/settings.forms.enable_staff_module'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.enable_staff_module_help'),
+                    ],
+                    [
+                        'name' => 'auto_activate_staff',
+                        'label' => __('super_admin/settings.forms.auto_activate_staff'),
+                        'type' => 'toggle',
+                        'default' => '0',
+                        'help' => __('super_admin/settings.forms.auto_activate_staff_help'),
+                    ],
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.manage_staff.title'), 'desc' => __('super_admin/settings.actions.manage_staff.desc'), 'url' => route('superadmin.staff.index')],
-                ],
-                'highlights' => [
-                    ['label' => __('super_admin/settings.metrics.staff'), 'value' => $stats['staff'], 'hint' => __('super_admin/settings.staff.note')],
-                    ['label' => __('super_admin/settings.staff.security'), 'value' => __('super_admin/settings.staff.admin_only'), 'hint' => __('super_admin/settings.staff.security_hint')],
-                ],
-                'actions' => [
-                    [
-                        'title' => __('super_admin/settings.actions.manage_staff.title'),
-                        'desc' => __('super_admin/settings.actions.manage_staff.desc'),
-                        'url' => route('superadmin.staff.index'),
-                    ],
                 ],
             ],
             'reports' => [
                 'title' => __('super_admin/settings.sections.reports.title'),
                 'subtitle' => __('super_admin/settings.sections.reports.subtitle'),
                 'badge' => __('super_admin/settings.sections.reports.badge'),
-                'details' => [
-                    ['label' => __('super_admin/settings.reports.current_scope'), 'value' => __('super_admin/settings.reports.company_scope')],
-                    ['label' => __('super_admin/settings.reports.exports_label'), 'value' => __('super_admin/settings.reports.pdf_excel')],
-                    ['label' => __('super_admin/settings.reports.pdf_export'), 'value' => __('super_admin/settings.actions.export_pdf.title')],
-                    ['label' => __('super_admin/settings.reports.excel_export'), 'value' => __('super_admin/settings.actions.export_excel.title')],
+                'fields' => [
+                    [
+                        'name' => 'allow_pdf_export',
+                        'label' => __('super_admin/settings.forms.allow_pdf_export'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.allow_pdf_export_help'),
+                    ],
+                    [
+                        'name' => 'allow_excel_export',
+                        'label' => __('super_admin/settings.forms.allow_excel_export'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.allow_excel_export_help'),
+                    ],
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.open_reports.title'), 'desc' => __('super_admin/settings.actions.open_reports.desc'), 'url' => route('superadmin.stats.index')],
                     ['label' => __('super_admin/settings.actions.export_pdf.title'), 'desc' => __('super_admin/settings.actions.export_pdf.desc'), 'url' => route('superadmin.stats.export-pdf')],
                     ['label' => __('super_admin/settings.actions.export_excel.title'), 'desc' => __('super_admin/settings.actions.export_excel.desc'), 'url' => route('superadmin.stats.export-excel')],
                 ],
-                'highlights' => [
-                    ['label' => __('super_admin/settings.reports.current_scope'), 'value' => __('super_admin/settings.reports.company_scope'), 'hint' => __('super_admin/settings.reports.company_scope_hint')],
-                    ['label' => __('super_admin/settings.reports.exports'), 'value' => __('super_admin/settings.reports.pdf_excel'), 'hint' => __('super_admin/settings.reports.exports_hint')],
-                ],
-                'actions' => [
-                    [
-                        'title' => __('super_admin/settings.actions.open_reports.title'),
-                        'desc' => __('super_admin/settings.actions.open_reports.desc'),
-                        'url' => route('superadmin.stats.index'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.export_pdf.title'),
-                        'desc' => __('super_admin/settings.actions.export_pdf.desc'),
-                        'url' => route('superadmin.stats.export-pdf'),
-                    ],
-                    [
-                        'title' => __('super_admin/settings.actions.export_excel.title'),
-                        'desc' => __('super_admin/settings.actions.export_excel.desc'),
-                        'url' => route('superadmin.stats.export-excel'),
-                    ],
-                ],
             ],
             'communications' => [
                 'title' => __('super_admin/settings.sections.communications.title'),
                 'subtitle' => __('super_admin/settings.sections.communications.subtitle'),
-                'badge' => __('super_admin/settings.sections.communications.badge', ['count' => $stats['announcements']]),
-                'details' => [
-                    ['label' => __('super_admin/settings.metrics.announcements_label'), 'value' => $stats['announcements']],
-                    ['label' => __('super_admin/settings.communications.channel'), 'value' => __('super_admin/settings.communications.broadcasts')],
-                    ['label' => __('super_admin/settings.communications.audience'), 'value' => __('super_admin/settings.communications.broadcast_scope')],
-                    ['label' => __('super_admin/settings.communications.status'), 'value' => __('super_admin/settings.sidebar.active')],
+                'badge' => __('super_admin/settings.sections.communications.badge', ['count' => Announcement::count()]),
+                'fields' => [
+                    [
+                        'name' => 'enable_broadcasts',
+                        'label' => __('super_admin/settings.forms.enable_broadcasts'),
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => __('super_admin/settings.forms.enable_broadcasts_help'),
+                    ],
+                    [
+                        'name' => 'default_audience',
+                        'label' => __('super_admin/settings.forms.default_audience'),
+                        'type' => 'select',
+                        'default' => 'all',
+                        'options' => [
+                            'all' => __('super_admin/settings.forms.default_audience_options.all'),
+                            'companies' => __('super_admin/settings.forms.default_audience_options.companies'),
+                            'teachers' => __('super_admin/settings.forms.default_audience_options.teachers'),
+                            'students' => __('super_admin/settings.forms.default_audience_options.students'),
+                        ],
+                        'help' => __('super_admin/settings.forms.default_audience_help'),
+                    ],
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.open_communications.title'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
                 ],
-                'highlights' => [
-                    ['label' => __('super_admin/settings.metrics.announcements'), 'value' => $stats['announcements'], 'hint' => __('super_admin/settings.communications.broadcast_scope')],
-                    ['label' => __('super_admin/settings.communications.channel'), 'value' => __('super_admin/settings.communications.broadcasts'), 'hint' => __('super_admin/settings.communications.channel_hint')],
-                ],
-                'actions' => [
-                    [
-                        'title' => __('super_admin/settings.actions.open_communications.title'),
-                        'desc' => __('super_admin/settings.actions.open_communications.desc'),
-                        'url' => route('broadcasts.index'),
-                    ],
-                ],
             ],
         ];
+    }
 
-        $allowedSections = array_keys($sections);
-        if (!in_array($section, $allowedSections, true)) {
-            $section = 'overview';
+    private function navSections(): array
+    {
+        return [
+            'overview' => [
+                'label' => __('super_admin/settings.sections.overview.title'),
+                'caption' => __('super_admin/settings.sections.overview.subtitle'),
+                'icon' => 'M4 7.25A3.25 3.25 0 017.25 4h9.5A3.25 3.25 0 0120 7.25v9.5A3.25 3.25 0 0116.75 20h-9.5A3.25 3.25 0 014 16.75v-9.5zM8.5 8.5h7v1.5h-7zm0 3h7V13h-7zm0 3h4V16h-4z',
+            'tone' => 'from-cyan-500 to-teal-500',
+        ],
+        'companies' => [
+            'label' => __('super_admin/settings.sections.companies.title'),
+            'caption' => __('super_admin/settings.forms.allow_login_as'),
+            'icon' => 'M5 20h14a1 1 0 001-1v-8a1 1 0 00-1-1h-2V6.5A2.5 2.5 0 0014.5 4h-5A2.5 2.5 0 007 6.5V10H5a1 1 0 00-1 1v8a1 1 0 001 1zm5-13.5V6.5a1.5 1.5 0 011.5-1.5h5a1.5 1.5 0 011.5 1.5V10z',
+            'tone' => 'from-indigo-500 to-blue-500',
+        ],
+        'packages' => [
+            'label' => __('super_admin/settings.sections.packages.title'),
+            'caption' => __('super_admin/settings.forms.trial_package'),
+            'icon' => 'M12 2l7 4v6c0 5-3.5 9.5-7 10-3.5-.5-7-5-7-10V6l7-4zm0 5.2a2.8 2.8 0 100 5.6 2.8 2.8 0 000-5.6z',
+            'tone' => 'from-violet-500 to-fuchsia-500',
+        ],
+        'billing' => [
+            'label' => __('super_admin/settings.sections.billing.title'),
+            'caption' => __('super_admin/settings.forms.allow_manual_verification'),
+            'icon' => 'M7 4h10a1 1 0 011 1v14l-4-2-4 2-4-2-4 2V5a1 1 0 011-1h4zm1.5 4.5h7v1.5h-7zm0 3h7V13h-7z',
+            'tone' => 'from-amber-500 to-orange-500',
+        ],
+        'staff' => [
+            'label' => __('super_admin/settings.sections.staff.title'),
+            'caption' => __('super_admin/settings.forms.enable_staff_module'),
+            'icon' => 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H5z',
+            'tone' => 'from-rose-500 to-pink-500',
+        ],
+        'reports' => [
+            'label' => __('super_admin/settings.sections.reports.title'),
+            'caption' => __('super_admin/settings.forms.allow_pdf_export'),
+            'icon' => 'M4 19.5h16M6 16V9m4 7V6m4 10v-5m4 5V8',
+            'tone' => 'from-sky-500 to-cyan-500',
+        ],
+        'communications' => [
+            'label' => __('super_admin/settings.sections.communications.title'),
+            'caption' => __('super_admin/settings.forms.enable_broadcasts'),
+            'icon' => 'M3 6.75A2.75 2.75 0 015.75 4h12.5A2.75 2.75 0 0121 6.75v7.5A2.75 2.75 0 0118.25 17H9l-5 3v-3H5.75A2.75 2.75 0 013 14.25z',
+            'tone' => 'from-emerald-500 to-teal-500',
+        ],
+    ];
+    }
+
+    private function normalizeSection(?string $section): string
+    {
+        $section = $section ?: 'overview';
+
+        return array_key_exists($section, $this->buildSections()) ? $section : 'overview';
+    }
+
+    private function fieldValue($settings, array $field): string
+    {
+        $setting = $settings->get($field['name']);
+        $value = $setting?->setting_value;
+
+        if ($value === null || $value === '') {
+            $value = $field['default'] ?? '';
         }
 
-        return view('super-admin.settings.index', [
-            'sections' => $sections,
-            'currentSection' => $sections[$section],
-            'currentSectionKey' => $section,
-            'stats' => $stats,
-        ]);
+        return (string) $value;
     }
+
+    private function validationRulesFor(array $field): array
+    {
+        return match ($field['type']) {
+            'email' => ['required', 'email', 'max:255'],
+            'number' => ['required', 'integer', 'min:0'],
+            'select' => array_values(array_filter([
+                ($field['required'] ?? true) ? 'required' : 'nullable',
+                'string',
+                ! empty($field['options']) ? 'in:' . implode(',', array_keys($field['options'])) : null,
+            ])),
+            'toggle' => ['boolean'],
+            default => ['required', 'string', 'max:255'],
+        };
+    }
+
+    private function resolveFieldValue(Request $request, array $field, array $validated): string
+    {
+        return match ($field['type']) {
+            'toggle' => $request->boolean($field['name']) ? '1' : '0',
+            default => (string) ($validated[$field['name']] ?? ''),
+        };
+    }
+
 }

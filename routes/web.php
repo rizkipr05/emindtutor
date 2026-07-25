@@ -186,6 +186,7 @@ Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])
     Route::get('/statistics/export/excel/{period}/{startDate}/{endDate}', [StatsController::class, 'exportExcel'])->name('superadmin.stats.export.excel');
 
     Route::get('/settings/{section?}', [SettingsController::class, 'index'])->name('superadmin.settings.index');
+    Route::post('/settings/{section?}', [SettingsController::class, 'update'])->name('superadmin.settings.update');
 
     Route::controller(StaffEmindController::class)->prefix('staff')->name('superadmin.staff.')->group(function () {
         Route::get('/', 'index')->name('index');

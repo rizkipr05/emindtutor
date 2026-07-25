@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Student;
 use App\Models\Staff;
 use App\Models\Teacher;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -63,7 +64,38 @@ class SmokeTest extends TestCase
             ->assertOk()
             ->assertSee(__('super_admin/settings.heading'))
             ->assertSee(__('super_admin/settings.sections.overview.title'))
-            ->assertSee(__('super_admin/settings.quick_links.title'));
+            ->assertSee(__('super_admin/settings.features.title'));
+    }
+
+    public function test_superadmin_settings_can_be_saved(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'super admin',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('superadmin.settings.update', ['section' => 'overview']), [
+                'app_name' => 'EMindTutor Prime',
+                'default_locale' => 'my',
+                'support_email' => 'support@example.com',
+            ])
+            ->assertRedirect(route('superadmin.settings.index', ['section' => 'overview']))
+            ->assertSessionHas('success', __('super_admin/settings.messages.saved'));
+
+        $this->assertDatabaseHas('system_settings', [
+            'setting_key' => 'app_name',
+            'setting_value' => 'EMindTutor Prime',
+        ]);
+
+        $this->assertDatabaseHas('system_settings', [
+            'setting_key' => 'default_locale',
+            'setting_value' => 'my',
+        ]);
+
+        $this->assertDatabaseHas('system_settings', [
+            'setting_key' => 'support_email',
+            'setting_value' => 'support@example.com',
+        ]);
     }
 
     public function test_admin_dashboard_is_available_when_company_is_linked(): void

@@ -4,80 +4,39 @@
 
 @section('content')
 @php
-    $navSections = [
-        'overview' => [
-            'label' => __('super_admin/settings.sections.overview.title'),
-            'caption' => __('super_admin/settings.sections.overview.subtitle'),
-            'icon' => 'M4 7.25A3.25 3.25 0 017.25 4h9.5A3.25 3.25 0 0120 7.25v9.5A3.25 3.25 0 0116.75 20h-9.5A3.25 3.25 0 014 16.75v-9.5zM8.5 8.5h7v1.5h-7zm0 3h7V13h-7zm0 3h4V16h-4z',
-            'tone' => 'from-cyan-500 to-teal-500',
-        ],
-        'companies' => [
-            'label' => __('super_admin/settings.sections.companies.title'),
-            'caption' => __('super_admin/settings.sections.companies.subtitle'),
-            'icon' => 'M5 20h14a1 1 0 001-1v-8a1 1 0 00-1-1h-2V6.5A2.5 2.5 0 0014.5 4h-5A2.5 2.5 0 007 6.5V10H5a1 1 0 00-1 1v8a1 1 0 001 1zm5-13.5V6.5a1.5 1.5 0 011.5-1.5h5a1.5 1.5 0 011.5 1.5V10z',
-            'tone' => 'from-indigo-500 to-blue-500',
-        ],
-        'packages' => [
-            'label' => __('super_admin/settings.sections.packages.title'),
-            'caption' => __('super_admin/settings.sections.packages.subtitle'),
-            'icon' => 'M12 2l7 4v6c0 5-3.5 9.5-7 10-3.5-.5-7-5-7-10V6l7-4zm0 5.2a2.8 2.8 0 100 5.6 2.8 2.8 0 000-5.6z',
-            'tone' => 'from-violet-500 to-fuchsia-500',
-        ],
-        'billing' => [
-            'label' => __('super_admin/settings.sections.billing.title'),
-            'caption' => __('super_admin/settings.sections.billing.subtitle'),
-            'icon' => 'M7 4h10a1 1 0 011 1v14l-4-2-4 2-4-2-4 2V5a1 1 0 011-1h4zm1.5 4.5h7v1.5h-7zm0 3h7V13h-7z',
-            'tone' => 'from-amber-500 to-orange-500',
-        ],
-        'staff' => [
-            'label' => __('super_admin/settings.sections.staff.title'),
-            'caption' => __('super_admin/settings.sections.staff.subtitle'),
-            'icon' => 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H5z',
-            'tone' => 'from-rose-500 to-pink-500',
-        ],
-        'reports' => [
-            'label' => __('super_admin/settings.sections.reports.title'),
-            'caption' => __('super_admin/settings.sections.reports.subtitle'),
-            'icon' => 'M4 19.5h16M6 16V9m4 7V6m4 10v-5m4 5V8',
-            'tone' => 'from-sky-500 to-cyan-500',
-        ],
-        'communications' => [
-            'label' => __('super_admin/settings.sections.communications.title'),
-            'caption' => __('super_admin/settings.sections.communications.subtitle'),
-            'icon' => 'M3 6.75A2.75 2.75 0 015.75 4h12.5A2.75 2.75 0 0121 6.75v7.5A2.75 2.75 0 0118.25 17H9l-5 3v-3H5.75A2.75 2.75 0 013 14.25z',
-            'tone' => 'from-emerald-500 to-teal-500',
-        ],
-    ];
-
-    $sectionRows = $currentSection['details'] ?? [];
+    $sectionFields = $currentSection['fields'] ?? [];
     $featureItems = $currentSection['features'] ?? [];
 @endphp
 
+<style>
+    .superadmin-settings-layout {
+        display: block;
+    }
+
+    @media (min-width: 1024px) {
+        .superadmin-settings-layout {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .superadmin-settings-sidebar {
+            position: sticky;
+            top: 1.5rem;
+        }
+    }
+</style>
+
 <div class="px-4 py-6 sm:px-6 lg:px-8">
-    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div class="flex items-center gap-3">
-            <a href="{{ route('dashboard.index') }}" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-200 bg-white text-cyan-600 shadow-sm transition hover:bg-cyan-50">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </a>
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">{{ __('super_admin/settings.breadcrumb.superadmin') }}</p>
-                <h1 class="text-3xl font-bold text-slate-900">{{ __('super_admin/settings.heading') }}</h1>
-            </div>
+    @if(session('success'))
+        <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm">
+            {{ session('success') }}
         </div>
+    @endif
 
-        <div class="flex items-center gap-2 text-sm text-slate-500">
-            <a href="{{ route('dashboard.index') }}" class="text-cyan-600 hover:underline">{{ __('super_admin/settings.breadcrumb.home') }}</a>
-            <span>/</span>
-            <a href="{{ route('superadmin.settings.index') }}" class="text-cyan-600 hover:underline">{{ __('super_admin/settings.breadcrumb.settings') }}</a>
-            <span>/</span>
-            <span class="font-semibold text-slate-800">{{ $currentSection['title'] }}</span>
-        </div>
-    </div>
-
-    <div class="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside class="rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+    <div class="superadmin-settings-layout">
+        <aside class="superadmin-settings-sidebar w-full rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4">
                 <h2 class="text-lg font-bold text-slate-900">{{ __('super_admin/settings.sidebar.title') }}</h2>
                 <p class="mt-1 text-sm text-slate-500">{{ __('super_admin/settings.sidebar.subtitle') }}</p>
@@ -104,8 +63,32 @@
             </nav>
         </aside>
 
-        <section class="space-y-6">
-            <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+        <section class="min-w-0 space-y-6">
+            <div class="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('dashboard.index') }}" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-200 bg-white text-cyan-600 shadow-sm transition hover:bg-cyan-50">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">{{ __('super_admin/settings.breadcrumb.superadmin') }}</p>
+                        <h1 class="text-3xl font-bold text-slate-900">{{ __('super_admin/settings.heading') }}</h1>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                    <a href="{{ route('dashboard.index') }}" class="text-cyan-600 hover:underline">{{ __('super_admin/settings.breadcrumb.home') }}</a>
+                    <span>/</span>
+                    <a href="{{ route('superadmin.settings.index') }}" class="text-cyan-600 hover:underline">{{ __('super_admin/settings.breadcrumb.settings') }}</a>
+                    <span>/</span>
+                    <span class="font-semibold text-slate-800">{{ $currentSection['title'] }}</span>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('superadmin.settings.update', ['section' => $currentSectionKey]) }}" class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+                @csrf
+
                 <div class="border-b border-slate-200 px-6 py-5">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
@@ -118,96 +101,161 @@
                     </div>
                 </div>
 
-                <div class="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-                    <div class="p-6">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            @foreach($sectionRows as $row)
-                                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                                    <p class="text-sm font-semibold text-slate-500">{{ $row['label'] }}</p>
-                                    <p class="mt-2 text-xl font-bold text-slate-900">{{ $row['value'] }}</p>
-                                </div>
-                            @endforeach
+                <div class="p-6">
+                    <div class="grid gap-4 lg:grid-cols-2">
+                        @foreach($sectionFields as $field)
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                @if(($field['type'] ?? 'text') === 'toggle')
+                                    <input type="hidden" name="{{ $field['name'] }}" value="0">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <div class="min-w-0">
+                                            <label for="{{ $field['name'] }}" class="block text-sm font-semibold text-slate-900">{{ $field['label'] }}</label>
+                                            @if(!empty($field['help']))
+                                                <p class="mt-1 text-sm text-slate-500">{{ $field['help'] }}</p>
+                                            @endif
+                                        </div>
+                                        <label class="relative inline-flex cursor-pointer items-center">
+                                            <input
+                                                id="{{ $field['name'] }}"
+                                                type="checkbox"
+                                                name="{{ $field['name'] }}"
+                                                value="1"
+                                                class="sr-only peer"
+                                                {{ old($field['name'], $field['value'] ?? ($field['default'] ?? '0')) === '1' ? 'checked' : '' }}
+                                            >
+                                            <div class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-cyan-500"></div>
+                                            <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span>
+                                        </label>
+                                    </div>
+                                @else
+                                    <label for="{{ $field['name'] }}" class="block text-sm font-semibold text-slate-900">{{ $field['label'] }}</label>
+
+                                    @if(($field['type'] ?? 'text') === 'select')
+                                        <select
+                                            id="{{ $field['name'] }}"
+                                            name="{{ $field['name'] }}"
+                                            class="mt-3 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100"
+                                        >
+                                            @foreach(($field['options'] ?? []) as $optionValue => $optionLabel)
+                                                <option value="{{ $optionValue }}" {{ old($field['name'], $field['value'] ?? ($field['default'] ?? '')) == $optionValue ? 'selected' : '' }}>
+                                                    {{ $optionLabel }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    @elseif(($field['type'] ?? 'text') === 'textarea')
+                                        <textarea
+                                            id="{{ $field['name'] }}"
+                                            name="{{ $field['name'] }}"
+                                            rows="4"
+                                            class="mt-3 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100"
+                                        >{{ old($field['name'], $field['value'] ?? ($field['default'] ?? '')) }}</textarea>
+                                    @else
+                                        <input
+                                            id="{{ $field['name'] }}"
+                                            type="{{ $field['type'] ?? 'text' }}"
+                                            name="{{ $field['name'] }}"
+                                            value="{{ old($field['name'], $field['value'] ?? ($field['default'] ?? '')) }}"
+                                            placeholder="{{ $field['placeholder'] ?? '' }}"
+                                            class="mt-3 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100"
+                                            @if(($field['type'] ?? 'text') === 'number') min="0" @endif
+                                        >
+                                    @endif
+
+                                    @if(!empty($field['help']))
+                                        <p class="mt-2 text-sm text-slate-500">{{ $field['help'] }}</p>
+                                    @endif
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-6 flex flex-col items-start justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
+                        <p class="text-sm text-slate-500">{{ __('super_admin/settings.forms.save_note') }}</p>
+                        <button type="submit" class="inline-flex items-center rounded-xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700">
+                            {{ __('super_admin/settings.forms.save') }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            @if($managementPanel)
+                <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+                    <div class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">{{ $managementPanel['title'] }}</h3>
+                            <p class="mt-1 text-sm leading-6 text-slate-500">{{ $managementPanel['subtitle'] }}</p>
                         </div>
-
-                        <div class="mt-6 rounded-2xl border border-cyan-100 bg-gradient-to-br from-cyan-50 to-sky-50 p-5">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <h3 class="text-lg font-bold text-slate-900">{{ __('super_admin/settings.features.title') }}</h3>
-                                    <p class="mt-1 text-sm text-slate-500">{{ __('super_admin/settings.features.subtitle') }}</p>
-                                </div>
-                                <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-cyan-700 shadow-sm">
-                                    {{ __('super_admin/settings.quick_links.open') }}
-                                </span>
-                            </div>
-
-                            <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                                @foreach($featureItems as $feature)
-                                    <a href="{{ $feature['url'] }}" class="group flex items-start gap-3 rounded-2xl border border-cyan-100 bg-white px-4 py-3 transition hover:border-cyan-200 hover:shadow-sm">
-                                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-700">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                        </span>
-                                        <span class="min-w-0">
-                                            <span class="block text-sm font-semibold text-slate-900 group-hover:text-cyan-700">{{ $feature['label'] }}</span>
-                                            <span class="mt-1 block text-sm text-slate-500">{{ $feature['desc'] }}</span>
-                                        </span>
-                                    </a>
-                                @endforeach
-                            </div>
+                        <div class="flex flex-wrap gap-2">
+                            @if(!empty($managementPanel['create_url']))
+                                <a href="{{ $managementPanel['create_url'] }}" class="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-700">
+                                    + {{ __('super_admin/settings.management.add') }}
+                                </a>
+                            @endif
+                            <a href="{{ $managementPanel['manage_url'] }}" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                                {{ __('super_admin/settings.management.manage_all') }}
+                            </a>
                         </div>
                     </div>
 
-                    <div class="border-t border-slate-200 bg-slate-50/70 p-6 lg:border-l lg:border-t-0">
-                        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                            <div class="flex items-center justify-between gap-3">
-                                <div>
-                                    <h3 class="text-lg font-bold text-slate-900">{{ __('super_admin/settings.quick_links.title') }}</h3>
-                                    <p class="mt-1 text-sm text-slate-500">{{ __('super_admin/settings.bottom.desc') }}</p>
+                    <div class="divide-y divide-slate-100">
+                        @forelse($managementPanel['records'] as $record)
+                            <div class="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-bold text-slate-900">{{ $record['title'] }}</p>
+                                    <p class="mt-1 truncate text-sm text-slate-500">{{ $record['meta'] }}</p>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ $record['status'] }}</span>
+                                    @if(!empty($record['view_url']))
+                                        <a href="{{ $record['view_url'] }}" class="rounded-lg px-3 py-2 text-xs font-bold text-cyan-700 hover:bg-cyan-50">{{ __('super_admin/settings.management.view') }}</a>
+                                    @endif
+                                    @if(!empty($record['edit_url']))
+                                        <a href="{{ $record['edit_url'] }}" class="rounded-lg px-3 py-2 text-xs font-bold text-cyan-700 hover:bg-cyan-50">{{ __('super_admin/settings.management.edit') }}</a>
+                                    @endif
+                                    @if(!empty($record['delete_url']))
+                                        <form method="POST" action="{{ $record['delete_url'] }}" onsubmit="return confirm('{{ __('super_admin/settings.management.delete_confirm') }}')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="rounded-lg px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50">{{ __('super_admin/settings.management.delete') }}</button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
+                        @empty
+                            <div class="px-6 py-10 text-center text-sm text-slate-500">{{ __('super_admin/settings.management.empty') }}</div>
+                        @endforelse
+                    </div>
+                </div>
+            @endif
 
-                            <div class="mt-4 space-y-3">
-                                <a href="{{ route('companies.index') }}" class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-cyan-200 hover:bg-cyan-50">
-                                    <span>
-                                        <span class="block text-sm font-semibold text-slate-900">{{ __('super_admin/settings.quick_links.companies') }}</span>
-                                        <span class="block text-xs text-slate-500">{{ __('super_admin/settings.quick_links.companies_desc') }}</span>
-                                    </span>
-                                    <span class="text-sm font-semibold text-cyan-700">{{ __('super_admin/settings.quick_links.open') }}</span>
-                                </a>
-                                <a href="{{ route('invoices.index') }}" class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-amber-200 hover:bg-amber-50">
-                                    <span>
-                                        <span class="block text-sm font-semibold text-slate-900">{{ __('super_admin/settings.quick_links.billing') }}</span>
-                                        <span class="block text-xs text-slate-500">{{ __('super_admin/settings.quick_links.billing_desc') }}</span>
-                                    </span>
-                                    <span class="text-sm font-semibold text-cyan-700">{{ __('super_admin/settings.quick_links.open') }}</span>
-                                </a>
-                                <a href="{{ route('superadmin.stats.index') }}" class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-indigo-200 hover:bg-indigo-50">
-                                    <span>
-                                        <span class="block text-sm font-semibold text-slate-900">{{ __('super_admin/settings.quick_links.reports') }}</span>
-                                        <span class="block text-xs text-slate-500">{{ __('super_admin/settings.quick_links.reports_desc') }}</span>
-                                    </span>
-                                    <span class="text-sm font-semibold text-cyan-700">{{ __('super_admin/settings.quick_links.open') }}</span>
-                                </a>
-                            </div>
+            <div class="overflow-hidden rounded-[1.5rem] border border-cyan-100 bg-gradient-to-br from-cyan-50 to-sky-50 shadow-sm">
+                <div class="border-b border-cyan-100 px-6 py-5">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">{{ __('super_admin/settings.features.title') }}</h3>
+                            <p class="mt-1 text-sm text-slate-500">{{ __('super_admin/settings.features.subtitle') }}</p>
                         </div>
+                        <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-cyan-700 shadow-sm">
+                            {{ $currentSection['badge'] }}
+                        </span>
+                    </div>
+                </div>
 
-                        <div class="mt-4 rounded-2xl border border-slate-900 bg-slate-950 p-5 text-white shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-bold">{{ __('super_admin/settings.bottom.title') }}</h3>
-                                <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">{{ $currentSection['badge'] }}</span>
-                            </div>
-                            <div class="mt-4 grid grid-cols-2 gap-3">
-                                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                                    <p class="text-xs uppercase tracking-wide text-slate-400">{{ __('super_admin/settings.bottom.active_companies') }}</p>
-                                    <p class="mt-2 text-2xl font-black">{{ $stats['activeCompanies'] }}</p>
-                                </div>
-                                <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                                    <p class="text-xs uppercase tracking-wide text-slate-400">{{ __('super_admin/settings.bottom.paid_invoices') }}</p>
-                                    <p class="mt-2 text-2xl font-black">{{ $stats['paidInvoices'] }}</p>
-                                </div>
-                            </div>
-                        </div>
+                <div class="p-6">
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        @foreach($featureItems as $feature)
+                            <a href="{{ $feature['url'] }}" class="group flex items-start gap-3 rounded-2xl border border-cyan-100 bg-white px-4 py-3 transition hover:border-cyan-200 hover:shadow-sm">
+                                <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-700">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </span>
+                                <span class="min-w-0">
+                                    <span class="block text-sm font-semibold text-slate-900 group-hover:text-cyan-700">{{ $feature['label'] }}</span>
+                                    <span class="mt-1 block text-sm text-slate-500">{{ $feature['desc'] }}</span>
+                                </span>
+                            </a>
+                        @endforeach
                     </div>
                 </div>
             </div>
