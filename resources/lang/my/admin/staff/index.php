@@ -19,6 +19,22 @@ return [
         'inactive' => 'Tidak Aktif',
     ],
 
+    'labels' => [
+        'email' => 'Email',
+        'role' => 'Peranan',
+        'company' => 'Syarikat',
+    ],
+
+    'owner' => [
+        'title' => 'Akaun Utama',
+        'description' => 'Ini ialah akaun pemilik syarikat yang terhubung dengan dashboard ini.',
+        'name' => 'Nama Pemilik',
+        'email' => 'Email Pemilik',
+        'phone' => 'Telefon Syarikat',
+        'company' => 'Syarikat',
+        'role' => 'Peranan',
+    ],
+
     'confirm_delete' => 'Apakah Anda yakin ingin menghapus staff :name?',
 
     'js' => [

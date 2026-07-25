@@ -9,6 +9,36 @@
             <p class="text-slate-600">{{ __('admin/staff/index.subtitle') }}</p>
         </div>
 
+        @if($company)
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 lg:p-6 mb-6">
+                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-wide text-teal-600">{{ __('admin/staff/index.owner.title') }}</p>
+                        <h2 class="mt-1 text-xl font-bold text-slate-900">{{ $company->user->name ?? '-' }}</h2>
+                        <p class="text-slate-600 mt-1">{{ __('admin/staff/index.owner.description') }}</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:min-w-[32rem]">
+                        <div class="rounded-xl bg-slate-50 p-4">
+                            <p class="text-xs font-medium uppercase text-slate-500">{{ __('admin/staff/index.owner.email') }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900 break-all">{{ $company->user->email ?? '-' }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 p-4">
+                            <p class="text-xs font-medium uppercase text-slate-500">{{ __('admin/staff/index.owner.phone') }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $company->pic_telefon ?? $company->no_telefon ?? '-' }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 p-4">
+                            <p class="text-xs font-medium uppercase text-slate-500">{{ __('admin/staff/index.owner.company') }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ $company->user->name ?? '-' }}</p>
+                        </div>
+                        <div class="rounded-xl bg-slate-50 p-4">
+                            <p class="text-xs font-medium uppercase text-slate-500">{{ __('admin/staff/index.owner.role') }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">Admin</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Flash Message --}}
         @if(session('success'))
             <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-xl mb-6 flex items-center shadow-sm">
@@ -97,7 +127,27 @@
                                                     <h3 class="text-base lg:text-lg font-semibold text-slate-900 truncate">
                                                         {{ $item->user->name }}
                                                     </h3>
-                                                    <p class="text-sm text-slate-600 flex items-center mt-1">
+                                                    <div class="mt-1 space-y-1 text-sm text-slate-600">
+                                                        <p class="flex items-center">
+                                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12H8m8 0a4 4 0 110-8 4 4 0 010 8zm-8 0a4 4 0 110-8 4 4 0 010 8zm-8 8a8 8 0 0116 0H0z"></path>
+                                                            </svg>
+                                                            {{ $item->user->email }}
+                                                        </p>
+                                                        <p class="flex items-center">
+                                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                            </svg>
+                                                            {{ ucfirst($item->user->role) }}
+                                                        </p>
+                                                        <p class="flex items-center">
+                                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
+                                                            </svg>
+                                                            {{ optional(optional($item->company)->user)->name ?? __('admin/staff/index.labels.company') }}
+                                                        </p>
+                                                    </div>
+                                                    <p class="text-sm text-slate-600 flex items-center mt-2">
                                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                                         </svg>

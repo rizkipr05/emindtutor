@@ -14,13 +14,20 @@ class StaffController extends Controller
 {
     public function index()
     {
-        // $staff = Staff::with(['user', 'company'])->get();
-        $companyId = Auth::user()->company->id;
+        $company = Auth::user()->company
+            ?? Staff::with('company.user')->where('user_id', Auth::id())->first()?->company;
+
+        if ($company) {
+            $company->loadMissing('user');
+        }
+
+        $companyId = $company?->id;
 
         $staff = Staff::with(['user', 'company'])
             ->where('company_id', $companyId)
             ->get();
-        return view('admin.staff.index', compact('staff'));
+
+        return view('admin.staff.index', compact('staff', 'company'));
     }   
 
     public function create()

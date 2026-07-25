@@ -19,6 +19,22 @@ return [
         'inactive' => 'Inactive',
     ],
 
+    'labels' => [
+        'email' => 'Email',
+        'role' => 'Role',
+        'company' => 'Company',
+    ],
+
+    'owner' => [
+        'title' => 'Main Account',
+        'description' => 'This is the company owner account linked to this dashboard.',
+        'name' => 'Owner Name',
+        'email' => 'Owner Email',
+        'phone' => 'Company Phone',
+        'company' => 'Company',
+        'role' => 'Role',
+    ],
+
     'confirm_delete' => 'Are you sure you want to delete staff :name?',
 
     'js' => [

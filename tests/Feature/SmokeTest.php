@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Company;
 use App\Models\Student;
+use App\Models\Staff;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -93,6 +94,70 @@ class SmokeTest extends TestCase
             ->assertSee(route('admin.teachers.index'))
             ->assertSee(route('admin.students.approved'))
             ->assertSee(route('admin.staff.index'));
+    }
+
+    public function test_admin_staff_page_shows_related_user_data(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $company = Company::create([
+            'user_id' => $user->id,
+            'nama_wakil_syarikat' => 'Staff Page Company',
+            'alamat' => 'Jalan Test 9',
+            'no_telefon' => '0123456799',
+            'status' => true,
+        ]);
+
+        $staffUser = User::factory()->create([
+            'name' => 'Staff One',
+            'email' => 'staff.one@example.com',
+            'role' => 'admin',
+        ]);
+
+        Staff::create([
+            'user_id' => $staffUser->id,
+            'company_id' => $company->id,
+            'phone' => '0123456780',
+            'ic_number' => '900101-01-4321',
+            'allowance' => 1000,
+            'allowance_type' => 'per_month',
+            'bank_name' => 'Test Bank',
+            'bank_account_number' => '111222333',
+            'bank_account_holder' => 'Staff One',
+            'account_holders_ic_number' => '900101-01-4321',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.staff.index'))
+            ->assertOk()
+            ->assertSee('staff.one@example.com')
+            ->assertSee('Staff One')
+            ->assertSee('Admin');
+    }
+
+    public function test_admin_staff_page_shows_company_owner_when_no_staff_exists(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'admin',
+            'email' => 'owner.empty@example.com',
+        ]);
+
+        Company::create([
+            'user_id' => $user->id,
+            'nama_wakil_syarikat' => 'Empty Staff Company',
+            'alamat' => 'Jalan Test 10',
+            'no_telefon' => '0123456798',
+            'status' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.staff.index'))
+            ->assertOk()
+            ->assertSee(__('admin/staff/index.owner.title'))
+            ->assertSee('owner.empty@example.com');
     }
 
     public function test_teacher_dashboard_is_available_for_teacher_users(): void
