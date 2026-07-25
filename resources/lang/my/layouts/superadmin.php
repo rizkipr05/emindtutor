@@ -8,6 +8,7 @@ return [
     'invoices' => 'Invois',
     'stats' => 'Laporan',
     'staff' => 'Staf Emindtutor',
+    'settings' => 'System Setting',
     'communications' => 'Hebahan',
     'logout' => 'Log Keluar',
 ];

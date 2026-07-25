@@ -52,6 +52,20 @@ class SmokeTest extends TestCase
             ->assertSee(__('super_admin/dashboard.recent_invoices_heading'));
     }
 
+    public function test_superadmin_settings_page_is_available_for_superadmin_users(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'super admin',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('superadmin.settings.index'))
+            ->assertOk()
+            ->assertSee(__('super_admin/settings.heading'))
+            ->assertSee(__('super_admin/settings.sections.overview.title'))
+            ->assertSee(__('super_admin/settings.quick_links.title'));
+    }
+
     public function test_admin_dashboard_is_available_when_company_is_linked(): void
     {
         $user = User::factory()->create([

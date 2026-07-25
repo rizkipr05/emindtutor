@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\SuperAdmin\CompanyInvoiceController;
 use App\Http\Controllers\SuperAdmin\StatsController;
 use App\Http\Controllers\SuperAdmin\StaffEmindController;
+use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubAktifController;
 use App\Http\Controllers\Compro\AboutController;
 use App\Http\Controllers\Compro\CompanyController as ComproCompanyController;
@@ -183,6 +184,8 @@ Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])
     Route::get('/statistics', [StatsController::class, 'index'])->name('superadmin.stats.index');
     Route::get('/statistics/export/pdf/{period}/{startDate}/{endDate}', [StatsController::class, 'exportPdf'])->name('superadmin.stats.export.pdf');
     Route::get('/statistics/export/excel/{period}/{startDate}/{endDate}', [StatsController::class, 'exportExcel'])->name('superadmin.stats.export.excel');
+
+    Route::get('/settings/{section?}', [SettingsController::class, 'index'])->name('superadmin.settings.index');
 
     Route::controller(StaffEmindController::class)->prefix('staff')->name('superadmin.staff.')->group(function () {
         Route::get('/', 'index')->name('index');

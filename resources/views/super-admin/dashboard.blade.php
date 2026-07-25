@@ -57,13 +57,13 @@
             <p class="text-gray-500 text-sm">{{ __('super_admin/dashboard.cards.staff.desc') }}</p>
         </div>
 
-        <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition">
+        <a href="{{ route('superadmin.settings.index') }}" class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition block">
             <div class="text-green-500 mb-3">
                 <i class="fas fa-cogs text-3xl"></i>
             </div>
             <h2 class="text-lg font-semibold">{{ __('super_admin/dashboard.cards.settings.title') }}</h2>
             <p class="text-gray-500 text-sm">{{ __('super_admin/dashboard.cards.settings.desc') }}</p>
-        </div>
+        </a>
 
         <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition">
             <div class="text-yellow-500 mb-3">
