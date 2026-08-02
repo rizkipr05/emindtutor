@@ -35,10 +35,13 @@ return [
         ],
     ],
 
-    'xendit' => [
-        'secret_key' => env('XENDIT_SECRET_KEY'), // <--- Ini yang dibaca di Controller
-        'base_url' => env('XENDIT_BASE_URL'),
-        'webhook_secret' => env('XENDIT_WEBHOOK_SECRET'),
+    'toyyibpay' => [
+        'user_secret_key' => env('TOYYIBPAY_USER_SECRET_KEY'),
+        'category_code' => env('TOYYIBPAY_CATEGORY_CODE'),
+        'base_url' => env('TOYYIBPAY_BASE_URL', 'https://toyyibpay.com'),
+        'api_url' => env('TOYYIBPAY_API_URL', 'https://toyyibpay.com'),
+        'payment_channel' => env('TOYYIBPAY_PAYMENT_CHANNEL', 0),
+        'expiry_days' => env('TOYYIBPAY_EXPIRY_DAYS', 1),
     ],
 
 ];

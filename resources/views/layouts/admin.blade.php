@@ -134,6 +134,7 @@
             <nav class="space-y-3">
                 <!-- Selalu tampil -->
                 <a href="{{ route('a.dashboard.index') }}" class="block p-2 rounded {{ request()->routeIs('a.dashboard.index', 'admin.maklumat.edit') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.company_info") }}</a>
+                <a href="{{ route('admin.payment-gateway.edit') }}" class="block p-2 rounded {{ request()->routeIs('admin.payment-gateway.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">Payment Gateway</a>
 
                 <!-- Charts & analytics -->
                 <div x-data="{ open: false }" class="space-y-1">

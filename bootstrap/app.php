@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         
         $middleware->validateCsrfTokens(except: [
-            'payment/xendit-webhook',
+            'payment/toyyibpay-callback',
             'webauthn/login/options',
             'webauthn/login',
             'webauthn/register/options',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\StudentInvoice;
+use App\Services\ToyyibPayService;
 
 class InvoiceController extends Controller
 {
@@ -23,20 +24,30 @@ class InvoiceController extends Controller
             return redirect($invoice->payment_url);
         }
 
-        $xendit = new \App\Services\XenditService();
-        
         try {
-            $response = $xendit->createInvoice($invoice);
-            
-            // Simpan URL dari Xendit ke database
+            $gateway = $invoice->student->company?->paymentGateway;
+            if (! $gateway || ! $gateway->is_active) {
+                return back()->with('error', 'Payment Gateway perusahaan belum dikonfigurasi.');
+            }
+            $bill = app(ToyyibPayService::class)->createBill([
+                'name' => 'eMindTutor Course',
+                'description' => 'Course ' . ($invoice->course->nama_kos ?? 'Payment'),
+                'amount' => $invoice->jumlah,
+                'reference' => $invoice->nomor_invoice,
+                'return_url' => route('student.payments.index'),
+                'callback_url' => route('payment.webhook'),
+                'payer_name' => $invoice->student->user->name,
+                'payer_email' => $invoice->student->user->email,
+            ], $gateway);
+
             $invoice->update([
-                'payment_url' => $response['invoice_url'],
-                'external_id' => $invoice->nomor_invoice // Pastikan nomor_invoice unik
+                'payment_url' => $bill['payment_url'],
+                'external_id' => $invoice->nomor_invoice,
             ]);
 
-            return redirect($response['invoice_url']);
+            return redirect($bill['payment_url']);
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menghubungi Xendit: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghubungi ToyyibPay: ' . $e->getMessage());
         }
     }
 

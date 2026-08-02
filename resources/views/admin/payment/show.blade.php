@@ -27,7 +27,7 @@
 
     <div class="mt-6 flex justify-end space-x-3">
         @if(strtolower($invoice->status_bayaran) != 'paid')
-            <a href="{{ $invoice->xendit_invoice_url }}" target="_blank"
+            <a href="{{ $invoice->payment_url }}" target="_blank" rel="noopener"
                class="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition">
               {{ __('admin/payment/show.buttons.pay_now') }}
             </a>

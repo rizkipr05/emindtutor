@@ -16,6 +16,8 @@ use App\Models\Discount;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CompanyReceiptMail;
+use App\Services\ToyyibPayService;
+use App\Models\PaymentGateway;
 
 class PaymentController extends Controller
 {
@@ -41,6 +43,7 @@ class PaymentController extends Controller
         return redirect()->route('dashboard');
     }
 
+
     public function paymentPage($packageId)
     {
         $package = SubscriptionPackage::findOrFail($packageId);
@@ -57,7 +60,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * LOGIC UTAMA: Buat Invoice ke Xendit
+     * LOGIC UTAMA: Buat bill di ToyyibPay.
      */
     public function createInvoice(Request $request)
     {
@@ -93,7 +96,7 @@ class PaymentController extends Controller
         $externalId = "EMT-{$todayStr}-{$sequence}-" . time();
         $nomorInvoice = "INV-{$todayStr}-{$sequence}";
 
-        // 2. Handle TRIAL (Tidak perlu ke Xendit)
+        // 2. Handle TRIAL (Tidak perlu ke payment gateway)
         if ($package->is_trial) {
             CompanyInvoice::create([
                 'company_id'    => $companyId,
@@ -112,87 +115,68 @@ class PaymentController extends Controller
             return redirect()->route('a.dashboard.index')->with('success', 'Trial Activated');
         }
 
-        // 3. Simpan Invoice Lokal (Pending)
+        // 3. Simpan invoice lokal sebelum membuat bill eksternal.
         $invoice = CompanyInvoice::create([
             'company_id'    => $companyId,
             'package_id'    => $packageId,
             'nomor_invoice' => $nomorInvoice,
             'external_id'   => $externalId,
             'jumlah'        => $jumlahAkhir,
-            'status_bayaran'=> 'pending', // Status awal sebelum callback Xendit
+            'status_bayaran'=> 'pending', // Status awal sebelum callback ToyyibPay
         ]);
 
-        // 4. Request ke Xendit API
-        $secretKey = config('services.xendit.secret_key');
-        $baseUrl   = config('services.xendit.base_url');
-
         try {
-            // Xendit menggunakan Basic Auth dengan Username=SecretKey dan Password=Kosong
-            $response = Http::withBasicAuth($secretKey, '')
-                ->post($baseUrl . '/v2/invoices', [
-                    'external_id'      => $externalId,
-                    'amount'           => $jumlahAkhir,
-                    'payer_email'      => $user->email,
-                    'description'      => "Payment for " . $package->nama_pakej,
-                    'invoice_duration' => 86400, // 24 jam
-                    'currency'         => 'IDR', // Sesuaikan mata uang (IDR/MYR/PHP)
-                    'success_redirect_url' => route('success', $invoice->id),
-                    'failure_redirect_url' => route('subscribe.payment', $packageId),
-                ]);
-
-            $xenditData = $response->json();
-
-            if (isset($xenditData['invoice_url'])) {
-                // Update Invoice dengan Data Xendit
-                $invoice->update([
-                    'xendit_id'          => $xenditData['id'],
-                    'xendit_invoice_url' => $xenditData['invoice_url'],
-                    'status_bayaran'     => strtolower($xenditData['status'] ?? 'pending')
-                ]);
-
-                // Redirect ke halaman detail (user akan klik tombol Pay di sana)
-                return redirect()->route('payment.pending', [$invoice->id, $packageId]);
-            } else {
-                // Handle Error dari Xendit
-                Log::error('Xendit Error', $xenditData);
-                return back()->with('error', 'Gagal membuat invoice Xendit: ' . ($xenditData['message'] ?? 'Unknown error'));
+            $gateway = PaymentGateway::superAdmin();
+            if (! $gateway) {
+                return back()->with('error', 'Payment Gateway Super Admin belum dikonfigurasi.');
             }
+            $bill = app(ToyyibPayService::class)->createBill([
+                'name' => 'eMindTutor ' . $package->nama_pakej,
+                'description' => 'Subscription ' . $package->nama_pakej,
+                'amount' => $jumlahAkhir,
+                'reference' => $externalId,
+                'return_url' => route('success', $invoice->id),
+                'callback_url' => route('payment.webhook'),
+                'payer_name' => $user->name,
+                'payer_email' => $user->email,
+            ], $gateway);
+
+            $invoice->update([
+                'toyyibpay_bill_code' => $bill['bill_code'],
+                'payment_url' => $bill['payment_url'],
+            ]);
+
+            return redirect()->route('payment.pending', [$invoice->id, $packageId]);
 
         } catch (\Exception $e) {
-            Log::error('Xendit Exception: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan koneksi ke Payment Gateway.');
+            Log::error('ToyyibPay create bill failed: ' . $e->getMessage());
+            return back()->with('error', 'Gagal membuat bill ToyyibPay: ' . $e->getMessage());
         }
     }
 
     /**
-     * WEBHOOK: Menerima notifikasi otomatis dari Xendit
-     * Pastikan route ini bypass CSRF Protection!
-     */
-/**
-     * WEBHOOK: Menerima notifikasi otomatis dari Xendit
+     * CALLBACK: Menerima notifikasi server-to-server dari ToyyibPay.
      */
     public function webhook(Request $request)
     {
-        $webhookSecret = config('services.xendit.webhook_secret');
-        if ($webhookSecret && ! hash_equals($webhookSecret, (string) $request->header('x-callback-token'))) {
-            abort(403, 'Invalid Xendit callback token.');
+        $data = $request->all();
+        $externalId = (string) ($data['order_id'] ?? '');
+        $companyInvoice = CompanyInvoice::with('package')->where('external_id', $externalId)->first();
+        $studentInvoice = $companyInvoice ? null : StudentInvoice::with('student.company')->where('external_id', $externalId)->orWhere('nomor_invoice', $externalId)->first();
+        $gateway = $companyInvoice ? PaymentGateway::superAdmin() : $studentInvoice?->student?->company?->paymentGateway;
+
+        if (! $gateway || ! app(ToyyibPayService::class)->isValidCallback($data, $gateway)) {
+            abort(403, 'Invalid ToyyibPay callback hash.');
         }
 
-        $data = $request->all();
-
-        // 1. Terima status PAID atau SETTLED
-        if (isset($data['status'], $data['external_id']) && in_array($data['status'], ['PAID', 'SETTLED'], true)) {
-            $externalId = (string) $data['external_id'];
-            
-            // 2. Cari Invoice
-            // Pastikan eager load 'package' untuk ambil durasi hari
-            $invoice = CompanyInvoice::with('package')->where('external_id', $externalId)->first();
+        // ToyyibPay status 1 means a successful payment.
+        if (($data['status'] ?? null) === '1') {
+            $invoice = $companyInvoice;
 
             // 3. Update hanya jika belum paid
             if ($invoice && $invoice->status_bayaran !== 'paid') {
                 
-                // Tentukan Tanggal Mulai (dari waktu bayar Xendit atau Sekarang)
-                $paidAt = isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : Carbon::now();
+                $paidAt = isset($data['transaction_time']) ? Carbon::parse($data['transaction_time']) : Carbon::now();
                 
                 // Hitung Tarikh Tamat (Ambil durasi dari paket)
                 // Default 30 hari jika paket tidak ketemu (untuk jaga-jaga)
@@ -214,13 +198,8 @@ class PaymentController extends Controller
                 }
             }
 
-            $studentInvoice = StudentInvoice::with('student')
-                ->where('external_id', $externalId)
-                ->orWhere('nomor_invoice', $externalId)
-                ->first();
-
             if ($studentInvoice && $studentInvoice->status_bayaran !== 'paid') {
-                $paidAt = isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : Carbon::now();
+                $paidAt = isset($data['transaction_time']) ? Carbon::parse($data['transaction_time']) : Carbon::now();
 
                 $studentInvoice->update([
                     'status_bayaran' => 'paid',
@@ -234,27 +213,22 @@ class PaymentController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Webhook received']);
+        return response()->json(['message' => 'ToyyibPay callback received']);
     }
 
     /**
-     * Halaman Sukses (Redirect Back dari Xendit)
+     * Halaman kembali dari ToyyibPay. Callback tetap sumber status utama.
      */
     public function success($invoiceId)
     {
         $invoice = CompanyInvoice::with('package')->findOrFail($invoiceId);
         
-        // Cek status manual ke Xendit jika webhook belum masuk (Fallback)
-        if ($invoice->status_bayaran !== 'paid' && $invoice->xendit_id) {
+        // Fallback jika callback belum diterima saat pengguna kembali ke aplikasi.
+        if ($invoice->status_bayaran !== 'paid' && $invoice->toyyibpay_bill_code) {
             
             try {
-                $response = Http::withBasicAuth(config('services.xendit.secret_key'), '')
-                            ->get(config('services.xendit.base_url') . '/v2/invoices/' . $invoice->xendit_id);
-                
-                $data = $response->json();
-
-                // 1. Terima status PAID atau SETTLED
-                if (isset($data['status']) && ($data['status'] === 'PAID' || $data['status'] === 'SETTLED')) {
+                $gateway = PaymentGateway::superAdmin();
+                if ($gateway && app(ToyyibPayService::class)->hasSuccessfulTransaction($invoice->toyyibpay_bill_code, $gateway)) {
                      
                      // Hitung Tanggal
                      $paidAt = Carbon::now();
@@ -272,7 +246,7 @@ class PaymentController extends Controller
             } catch (\Exception $e) {
                 // Biarkan error diam (silent fail) di page success agar user tidak panik,
                 // toh webhook akan mengurusnya nanti.
-                Log::error('Gagal Cek Status Manual: ' . $e->getMessage());
+                Log::error('Gagal cek status ToyyibPay: ' . $e->getMessage());
             }
         }
 

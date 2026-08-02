@@ -29,6 +29,7 @@ use App\Http\Controllers\SuperAdmin\CompanyInvoiceController;
 use App\Http\Controllers\SuperAdmin\StatsController;
 use App\Http\Controllers\SuperAdmin\StaffEmindController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
+use App\Http\Controllers\SuperAdmin\PaymentGatewayController as SuperAdminPaymentGatewayController;
 use App\Http\Controllers\SuperAdmin\SubAktifController;
 use App\Http\Controllers\Compro\AboutController;
 use App\Http\Controllers\Compro\CompanyController as ComproCompanyController;
@@ -52,6 +53,7 @@ use App\Http\Controllers\Admin\ReviewController as CompanyReviewController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Student\InvoiceController;
 use App\Http\Controllers\Admin\BankController;
+use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 
 Route::group(['middleware' => ['localization']], function () {
     Route::get('/', [HomeController::class, 'index'])->name('compro.index');
@@ -61,7 +63,7 @@ Route::group(['middleware' => ['localization']], function () {
     Route::get('/companies/{company}', [ComproCompanyController::class, 'show'])->name('compro.companies.show');
 });
 
-Route::post('/payment/xendit-webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
+Route::post('/payment/toyyibpay-callback', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 // Rute untuk mengganti bahasa
 Route::get('/set-language/{lang}', [LanguageController::class, 'switch'])->name('set.language');
@@ -187,6 +189,8 @@ Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])
 
     Route::get('/settings/{section?}', [SettingsController::class, 'index'])->name('superadmin.settings.index');
     Route::post('/settings/{section?}', [SettingsController::class, 'update'])->name('superadmin.settings.update');
+    Route::get('/payment-gateway', [SuperAdminPaymentGatewayController::class, 'edit'])->name('superadmin.payment-gateway.edit');
+    Route::put('/payment-gateway', [SuperAdminPaymentGatewayController::class, 'update'])->name('superadmin.payment-gateway.update');
 
     Route::controller(StaffEmindController::class)->prefix('staff')->name('superadmin.staff.')->group(function () {
         Route::get('/', 'index')->name('index');
@@ -378,6 +382,9 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::put('/update/{id}', 'update')->name('update');
     });
+
+    Route::get('/payment-gateway', [AdminPaymentGatewayController::class, 'edit'])->name('admin.payment-gateway.edit');
+    Route::put('/payment-gateway', [AdminPaymentGatewayController::class, 'update'])->name('admin.payment-gateway.update');
 
     Route::controller(BankController::class)->prefix('bank-details')->name('admin.bank_details.')->group(function () {
         Route::get('/', 'index')->name('index');

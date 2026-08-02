@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Mail\CompanyReceiptMail;
 use App\Models\Company;
 use App\Models\CompanyInvoice;
+use App\Models\PaymentGateway;
 use App\Models\Student;
 use App\Models\SubscriptionPackage;
 use App\Models\Teacher;
@@ -29,16 +30,15 @@ class PaymentFlowTest extends TestCase
             ->assertSee($package->nama_pakej);
     }
 
-    public function test_admin_can_create_xendit_invoice_and_be_redirected_to_pending_page(): void
+    public function test_admin_can_create_toyyibpay_bill_and_be_redirected_to_pending_page(): void
     {
         [$admin, $company] = $this->makeAdminWithCompany();
         $package = $this->makePackage();
+        $this->makeSuperAdminGateway();
 
         Http::fake([
             '*' => Http::response([
-                'id' => 'xendit-invoice-123',
-                'invoice_url' => 'https://checkout.example/xendit-invoice-123',
-                'status' => 'PENDING',
+                ['BillCode' => 'toyyibpay-bill-123'],
             ], 200),
         ]);
 
@@ -51,8 +51,8 @@ class PaymentFlowTest extends TestCase
 
         $response->assertRedirect(route('payment.pending', [$invoice->id, $package->id]));
         $this->assertSame('pending', $invoice->fresh()->status_bayaran);
-        $this->assertSame('xendit-invoice-123', $invoice->fresh()->xendit_id);
-        $this->assertSame('https://checkout.example/xendit-invoice-123', $invoice->fresh()->xendit_invoice_url);
+        $this->assertSame('toyyibpay-bill-123', $invoice->fresh()->toyyibpay_bill_code);
+        $this->assertSame('https://toyyibpay.com/toyyibpay-bill-123', $invoice->fresh()->payment_url);
     }
 
     public function test_webhook_marks_invoice_paid_and_sends_receipt_mail(): void
@@ -73,14 +73,18 @@ class PaymentFlowTest extends TestCase
             'status_bayaran' => 'pending',
         ]);
 
-        $response = $this->postJson(route('payment.webhook'), [
-            'status' => 'PAID',
-            'external_id' => $invoice->external_id,
-            'paid_at' => '2026-07-20T10:00:00Z',
-        ]);
+        $this->makeSuperAdminGateway();
+        $payload = [
+            'status' => '1',
+            'order_id' => $invoice->external_id,
+            'refno' => 'TP-001',
+            'transaction_time' => '2026-07-20 10:00:00',
+        ];
+        $payload['hash'] = md5('test-secret1' . $invoice->external_id . 'TP-001ok');
+        $response = $this->postJson(route('payment.webhook'), $payload);
 
         $response->assertOk()->assertJson([
-            'message' => 'Webhook received',
+            'message' => 'ToyyibPay callback received',
         ]);
 
         $invoice->refresh();
@@ -91,6 +95,20 @@ class PaymentFlowTest extends TestCase
         Mail::assertSent(CompanyReceiptMail::class, function (CompanyReceiptMail $mail) use ($invoice) {
             return $mail->invoice->is($invoice);
         });
+    }
+
+    private function makeSuperAdminGateway(): PaymentGateway
+    {
+        return PaymentGateway::create([
+            'provider' => 'toyyibpay',
+            'user_secret_key' => 'test-secret',
+            'category_code' => 'test-category',
+            'base_url' => 'https://toyyibpay.com',
+            'api_url' => 'https://toyyibpay.com',
+            'payment_channel' => 0,
+            'expiry_days' => 1,
+            'is_active' => true,
+        ]);
     }
 
     public function test_superadmin_can_create_manual_invoice_and_confirm_payment(): void

@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Course;
 use App\Models\Student;
 use App\Models\StudentInvoice;
+use App\Models\PaymentGateway;
 use App\Models\Staff;
 use App\Models\Teacher;
 use App\Models\SystemSetting;
@@ -159,7 +160,6 @@ class SmokeTest extends TestCase
             'no_telefon' => '0123456799',
             'status' => true,
         ]);
-
         $staffUser = User::factory()->create([
             'name' => 'Staff One',
             'email' => 'staff.one@example.com',
@@ -221,6 +221,17 @@ class SmokeTest extends TestCase
             'alamat' => 'Jalan Test 11',
             'no_telefon' => '0123456777',
             'status' => true,
+        ]);
+        PaymentGateway::create([
+            'company_id' => $company->id,
+            'provider' => 'toyyibpay',
+            'user_secret_key' => 'test-secret',
+            'category_code' => 'test-category',
+            'base_url' => 'https://toyyibpay.com',
+            'api_url' => 'https://toyyibpay.com',
+            'payment_channel' => 0,
+            'expiry_days' => 1,
+            'is_active' => true,
         ]);
         $course = Course::create([
             'company_id' => $company->id,
@@ -291,11 +302,13 @@ class SmokeTest extends TestCase
             ])
             ->assertSessionHasErrors('student_invoice_id');
 
-        $this->withHeader('x-callback-token', (string) config('services.xendit.webhook_secret'))
-            ->postJson(route('payment.webhook'), [
-            'external_id' => $otherInvoice->nomor_invoice,
-            'status' => 'PAID',
-        ])->assertOk();
+        $callback = [
+            'order_id' => $otherInvoice->nomor_invoice,
+            'status' => '1',
+            'refno' => 'TP-STUDENT-001',
+        ];
+        $callback['hash'] = md5('test-secret1' . $otherInvoice->nomor_invoice . 'TP-STUDENT-001ok');
+        $this->postJson(route('payment.webhook'), $callback)->assertOk();
 
         $this->assertDatabaseHas('student_invoices', [
             'id' => $otherInvoice->id,

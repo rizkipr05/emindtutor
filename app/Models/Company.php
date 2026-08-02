@@ -73,4 +73,9 @@ class Company extends Model
     {
         return $this->hasOne(CompanyBankDetail::class, 'company_id');
     }
+
+    public function paymentGateway()
+    {
+        return $this->hasOne(PaymentGateway::class);
+    }
 }

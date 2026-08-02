@@ -113,6 +113,7 @@
                 <a href="{{ route('superadmin.stats.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.stats.index') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.stats') }}</a>
                 <a href="{{ route('superadmin.staff.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.staff.index') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.staff') }}</a>
                 <a href="{{ route('superadmin.settings.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.settings.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.settings') }}</a>
+                <a href="{{ route('superadmin.payment-gateway.edit') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.payment-gateway.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">Payment Gateway</a>
                 @php
                     $unreadCount = \DB::table('announcement_user')
                         ->where('user_id', auth()->id())
