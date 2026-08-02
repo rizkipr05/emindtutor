@@ -47,7 +47,7 @@ class RouteCoverageTest extends TestCase
         $package = $this->makePackage();
 
         $this->actingAs($user)->get(route('dashboard.index'))->assertOk();
-        $this->actingAs($user)->get(route('dashboard.index'))->assertSee(route('langganan.index'));
+        $this->actingAs($user)->get(route('dashboard.index'))->assertSee(route('subscription-packages.index'));
         $this->actingAs($user)->get(route('companies.index'))->assertOk();
         $this->actingAs($user)->get(route('companies.show', $company))->assertOk();
         $this->actingAs($user)->get(route('invoices.index'))->assertOk();
