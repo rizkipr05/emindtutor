@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->validateCsrfTokens(except: [
             'payment/toyyibpay-callback',
+            'registration/toyyibpay-callback',
             'webauthn/login/options',
             'webauthn/login',
             'webauthn/register/options',

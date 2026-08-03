@@ -123,6 +123,8 @@ Route::put('/logout', [AuthController::class, 'update'])->middleware('auth')->na
 
 // payment
 Route::get('/subscribe/start/{package}', [PaymentController::class, 'start'])->name('subscribe.start');
+Route::post('/registration/toyyibpay-callback', [AuthController::class, 'registrationPaymentCallback'])->name('registration.payment.callback');
+Route::get('/registration/payment/{registration}/return', [AuthController::class, 'registrationPaymentReturn'])->name('registration.payment.return');
 
 Route::get('/impersonate/leave', function (ImpersonateManager $impersonate) {
     // dd($impersonate);

@@ -9,6 +9,7 @@ use App\Models\PaymentGateway;
 use App\Models\Student;
 use App\Models\SubscriptionPackage;
 use App\Models\Subscription;
+use App\Models\PendingCompanyRegistration;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -102,6 +103,32 @@ class PaymentFlowTest extends TestCase
         Mail::assertSent(CompanyReceiptMail::class, function (CompanyReceiptMail $mail) use ($invoice) {
             return $mail->invoice->is($invoice);
         });
+    }
+
+    public function test_paid_registration_creates_company_only_after_valid_callback(): void
+    {
+        Mail::fake();
+        $package = $this->makePackage(['harga' => 99, 'is_trial' => false]);
+        $this->makeSuperAdminGateway();
+        Http::fake(['*' => Http::response([['BillCode' => 'registration-bill-123']], 200)]);
+
+        $response = $this->withSession(['from_subscribe' => true, 'selected_package' => $package->id])
+            ->post(route('register_post'), [
+                'name' => 'New Owner', 'email' => 'new-owner@example.com', 'password' => 'password123', 'password_confirmation' => 'password123',
+                'nama_wakil_syarikat' => 'New Company', 'pic_telefon' => '0123456789', 'alamat' => 'Jalan Test', 'no_telefon' => '0123456789',
+            ]);
+
+        $registration = PendingCompanyRegistration::firstOrFail();
+        $response->assertRedirect('https://toyyibpay.com/registration-bill-123');
+        $this->assertDatabaseMissing('users', ['email' => 'new-owner@example.com']);
+        $this->assertSame('pending', $registration->status);
+
+        $payload = ['status' => '1', 'order_id' => $registration->external_reference, 'refno' => 'TP-REG-001'];
+        $payload['hash'] = md5('test-secret1' . $registration->external_reference . 'TP-REG-001ok');
+        $this->postJson(route('registration.payment.callback'), $payload)->assertOk();
+
+        $this->assertDatabaseHas('users', ['email' => 'new-owner@example.com']);
+        $this->assertSame('paid', $registration->fresh()->status);
     }
 
     private function makeSuperAdminGateway(): PaymentGateway
