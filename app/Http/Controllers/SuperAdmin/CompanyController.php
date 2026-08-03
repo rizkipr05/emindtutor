@@ -9,6 +9,8 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\CompanyInvoice;
 use App\Models\StudentInvoice;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CompanyController extends Controller
 {
@@ -23,8 +25,17 @@ class CompanyController extends Controller
         // Tambahkan properti helper "activeInvoice" biar gampang di Blade
         foreach ($companies as $company) {
             $company->activeInvoice = $company->invoices
+                ->where('status_bayaran', 'paid')
                 ->where('tarikh_terbit', '<=', $today)
                 ->where('tarikh_tamat', '>=', $today)
+                ->sortByDesc('tarikh_tamat')
+                ->first();
+            $company->pendingInvoice = $company->invoices
+                ->whereIn('status_bayaran', ['pending', 'upcoming'])
+                ->sortByDesc('created_at')
+                ->first();
+            $company->latestPaidInvoice = $company->invoices
+                ->where('status_bayaran', 'paid')
                 ->sortByDesc('tarikh_tamat')
                 ->first();
         }
@@ -136,9 +147,52 @@ class CompanyController extends Controller
 
     public function destroy(Company $company)
     {
-        // hapus user juga, akan cascade ke company
-        $company->user->delete();
-        return redirect()->route('companies.index')->with('success', 'Syarikat berjaya dipadam.');
+        DB::transaction(function () use ($company) {
+            $studentIds = DB::table('students')->where('company_id', $company->id)->pluck('id');
+            $studentUserIds = DB::table('students')->where('company_id', $company->id)->pluck('user_id');
+            $teacherIds = DB::table('teachers')->where('company_id', $company->id)->pluck('id');
+            $teacherUserIds = DB::table('teachers')->where('company_id', $company->id)->pluck('user_id');
+            $staffUserIds = Schema::hasTable('staff') ? DB::table('staff')->where('company_id', $company->id)->pluck('user_id') : collect();
+            $scheduleIds = DB::table('class_schedules')->where('company_id', $company->id)->pluck('id');
+            $studentInvoiceIds = DB::table('student_invoices')->whereIn('student_id', $studentIds)->pluck('id');
+            $companyInvoiceIds = DB::table('company_invoices')->where('company_id', $company->id)->pluck('id');
+
+            $this->deleteWhereIn('student_payments', 'student_invoice_id', $studentInvoiceIds);
+            $this->deleteWhereIn('teacher_reviews', 'student_invoice_id', $studentInvoiceIds);
+            $this->deleteWhereIn('student_attendances', 'student_id', $studentIds);
+            $this->deleteWhereIn('class_schedule_student', 'student_id', $studentIds);
+            $this->deleteWhereIn('class_schedule_student', 'class_schedule_id', $scheduleIds);
+            $this->deleteWhereIn('class_schedule_days', 'class_schedule_id', $scheduleIds);
+            $this->deleteWhereIn('class_schedule_sessions', 'class_schedule_id', $scheduleIds);
+            $this->deleteWhereIn('class_schedule_exceptions', 'class_schedule_id', $scheduleIds);
+            $this->deleteWhereIn('teacher_attendances', 'teacher_id', $teacherIds);
+            $this->deleteWhereIn('teacher_unavailabilities', 'teacher_id', $teacherIds);
+            $this->deleteWhereIn('company_payments', 'company_invoice_id', $companyInvoiceIds);
+            $this->deleteWhereIn('student_invoices', 'id', $studentInvoiceIds);
+
+            foreach (['payment_gateways', 'company_bank_details', 'whatsapp_settings', 'payment_settings', 'teacher_rules', 'company_reviews', 'subscriptions', 'company_invoices', 'class_schedules', 'courses', 'students', 'teachers', 'staff'] as $table) {
+                $this->deleteWhere($table, 'company_id', $company->id);
+            }
+
+            DB::table('companies')->where('id', $company->id)->delete();
+            DB::table('users')->whereIn('id', collect([$company->user_id])->merge($studentUserIds)->merge($teacherUserIds)->merge($staffUserIds)->filter()->unique())->delete();
+        });
+
+        return redirect()->route('companies.index')->with('success', 'Syarikat dan semua rekod berkaitan berjaya dipadam.');
+    }
+
+    private function deleteWhere(string $table, string $column, mixed $value): void
+    {
+        if (Schema::hasTable($table) && Schema::hasColumn($table, $column)) {
+            DB::table($table)->where($column, $value)->delete();
+        }
+    }
+
+    private function deleteWhereIn(string $table, string $column, $values): void
+    {
+        if ($values->isNotEmpty() && Schema::hasTable($table) && Schema::hasColumn($table, $column)) {
+            DB::table($table)->whereIn($column, $values)->delete();
+        }
     }
 
     public function toggleStatus($id)

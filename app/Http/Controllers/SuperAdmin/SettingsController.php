@@ -268,13 +268,6 @@ class SettingsController extends Controller
                 'badge' => __('super_admin/settings.sections.billing.badge', ['count' => CompanyInvoice::count()]),
                 'fields' => [
                     [
-                        'name' => 'allow_manual_verification',
-                        'label' => __('super_admin/settings.forms.allow_manual_verification'),
-                        'type' => 'toggle',
-                        'default' => '1',
-                        'help' => __('super_admin/settings.forms.allow_manual_verification_help'),
-                    ],
-                    [
                         'name' => 'invoice_reminder_days',
                         'label' => __('super_admin/settings.forms.invoice_reminder_days'),
                         'type' => 'number',

@@ -93,7 +93,7 @@
                     </a>
 
                     <form action="{{ route('companies.destroy', $company->id) }}" method="POST" 
-                          class="inline-block" onsubmit="return confirm('{{ __('super_admin/companies.show.actions.delete_confirm') }}')">
+                          class="inline-block" onsubmit="return confirm('Hapus perusahaan beserta seluruh akun, kursus, pelajar, invoice, langganan, dan riwayat terkait? Tindakan ini permanen.')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors duration-200">

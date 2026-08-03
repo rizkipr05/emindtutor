@@ -75,7 +75,11 @@
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         {{ __('super_admin/companies.subscription_status.ongoing') }}
                                     </span>
-                                @elseif($company->invoices->isNotEmpty())
+                                @elseif($company->pendingInvoice)
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Menunggu Pembayaran
+                                    </span>
+                                @elseif($company->latestPaidInvoice)
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         {{ __('super_admin/companies.subscription_status.expired') }}
                                     </span>
@@ -91,13 +95,12 @@
                                     {{ __('super_admin/companies.expires') }}: 
                                     {{ \Carbon\Carbon::parse($company->activeInvoice->tarikh_tamat)->format('d M Y') }}
                                 </div>
-                            @elseif($company->invoices->isNotEmpty())
-                                @php
-                                    $lastInvoice = $company->invoices->sortByDesc('tarikh_tamat')->first();
-                                @endphp
+                            @elseif($company->pendingInvoice)
+                                <div class="text-xs text-gray-500 mt-1">Invoice belum dibayar</div>
+                            @elseif($company->latestPaidInvoice)
                                 <div class="text-xs text-gray-500 mt-1">
                                     Expired: 
-                                    {{ \Carbon\Carbon::parse($lastInvoice->tarikh_tamat)->format('d M Y') }}
+                                    {{ \Carbon\Carbon::parse($company->latestPaidInvoice->tarikh_tamat)->format('d M Y') }}
                                 </div>
                             @endif
                         </div>
@@ -113,7 +116,7 @@
                                 </svg>
                             </a>
                             
-                            @if(!$company->activeInvoice)
+                            @if(false)
                             <a href="{{ route('invoices.create', $company->id) }}" 
                                class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors duration-200"
                                title="Manual Subscribe / Renew">

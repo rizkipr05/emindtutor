@@ -47,7 +47,7 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-800">
-                            {{ $invoice->company->user->name ?? '-' }}
+                            {{ $invoice->company?->user?->name ?? 'Company tidak ditemukan' }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-800">
                             RM {{ number_format($invoice->jumlah, 2) }}
@@ -76,10 +76,12 @@
                         {{-- KOLOM ACTION --}}
                         <td class="px-4 py-3 text-sm text-center">
                             <div class="flex items-center justify-center space-x-2">
+                                @if($invoice->company)
                                 <a href="{{ route('companies.show', $invoice->company->id) }}"
                                    class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow">
                                     Show
                                 </a>
+                                @endif
                                 
                                 @if($invoice->status_bayaran === 'paid')
                                     {{-- Tombol Resit --}}
@@ -88,15 +90,8 @@
                                         Resit
                                     </a>
                                 
-                                @elseif(!$isExpired) 
-                                    {{-- HANYA MUNCUL JIKA TIDAK EXPIRED --}}
-                                    <form action="{{ route('invoices.confirmManual', $invoice->id) }}" method="POST" onsubmit="return confirm('Konfirmasi pembayaran manual?');">
-                                        @csrf
-                                        <button type="submit" 
-                                                class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-teal-500 rounded-lg hover:bg-teal-600 shadow transition-colors">
-                                            Confirm Paid
-                                        </button>
-                                    </form>
+                                @elseif(!$isExpired)
+                                    <span class="text-xs text-amber-600">Menunggu pembayaran ToyyibPay</span>
                                 @else
                                     {{-- Jika Expired, tombol Confirm hilang, ganti tanda silang/info --}}
                                     <span class="text-xs text-gray-400 italic">Expired</span>

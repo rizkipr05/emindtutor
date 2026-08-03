@@ -177,6 +177,9 @@ Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])
     Route::get('/invoices', [CompanyInvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}/receipt', [CompanyInvoiceController::class, 'receipt'])->name('invoices.receipt');
     Route::get('/invoices/create/{companyId}', [CompanyInvoiceController::class, 'create'])->name('invoices.create');
+    Route::get('/invoices/store/{companyId}', fn ($companyId) => redirect()
+        ->route('invoices.create', $companyId)
+        ->with('error', 'Gunakan formulir invoice untuk menyimpan data.'))->name('invoices.store.form');
     Route::post('/invoices/store/{companyId}', [CompanyInvoiceController::class, 'store'])->name('invoices.store');
     Route::post('/invoices/{id}/confirm-manual', [CompanyInvoiceController::class, 'confirmManualPayment'])->name('invoices.confirmManual');
     

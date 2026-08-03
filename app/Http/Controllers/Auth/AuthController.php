@@ -155,23 +155,38 @@ class AuthController extends Controller
 
         // A paid subscription must be confirmed before any user/company is created.
         if (session('from_subscribe') && $package && ! $package->is_trial) {
-            if (PendingCompanyRegistration::where('email', $request->email)->where('status', 'pending')->exists()) {
-                return back()->withErrors(['email' => 'Pendaftaran dengan email ini masih menunggu pembayaran.']);
-            }
-
             $gateway = PaymentGateway::superAdmin();
             if (! $gateway) {
                 return back()->withErrors(['email' => 'Payment Gateway belum dikonfigurasi.']);
             }
 
-            $registration = PendingCompanyRegistration::create([
+            $existingRegistration = PendingCompanyRegistration::where('email', $request->email)->first();
+            if ($existingRegistration?->status === 'pending' && $existingRegistration->payment_url && (! $existingRegistration->expires_at || $existingRegistration->expires_at->isFuture())) {
+                session()->forget(['from_subscribe', 'selected_package']);
+
+                return redirect()->away($existingRegistration->payment_url);
+            }
+
+            $registrationData = [
                 'package_id' => $package->id, 'name' => $request->name, 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'nama_wakil_syarikat' => $request->nama_wakil_syarikat, 'pic_telefon' => $request->pic_telefon,
                 'alamat' => $request->alamat, 'no_telefon' => $request->no_telefon,
                 'external_reference' => 'REG-' . Str::upper(Str::random(20)),
                 'expires_at' => now()->addDays($gateway->expiry_days),
-            ]);
+                'toyyibpay_bill_code' => null, 'payment_url' => null, 'status' => 'pending',
+            ];
+
+            if ($existingRegistration?->status === 'paid') {
+                return back()->withErrors(['email' => 'Pembayaran untuk email ini sudah tercatat. Silakan login atau hubungi admin.']);
+            }
+
+            if ($existingRegistration) {
+                $existingRegistration->update($registrationData);
+                $registration = $existingRegistration;
+            } else {
+                $registration = PendingCompanyRegistration::create($registrationData);
+            }
 
             try {
                 $bill = app(ToyyibPayService::class)->createBill([
@@ -260,9 +275,18 @@ class AuthController extends Controller
             return response()->json(['message' => 'Callback received']);
         }
 
-        DB::transaction(function () use ($registration) {
+        $this->completeRegistration($registration);
+
+        return response()->json(['message' => 'Registration completed']);
+    }
+
+    private function completeRegistration(PendingCompanyRegistration $registration): User
+    {
+        return DB::transaction(function () use ($registration) {
             $registration->refresh();
-            if ($registration->status === 'paid') return;
+            if ($registration->status === 'paid' && $registration->user_id) {
+                return User::findOrFail($registration->user_id);
+            }
             abort_if(User::where('email', $registration->email)->exists(), 409, 'Email already registered.');
             $last = Company::whereNotNull('nombor_pendaftaran_syarikat')->latest('id')->value('nombor_pendaftaran_syarikat');
             $number = $last ? ((int) str_replace('EMT-', '', $last)) + 1 : 1;
@@ -274,14 +298,30 @@ class AuthController extends Controller
             Subscription::create(['company_id' => $company->id, 'package_id' => $package->id, 'start_date' => $start, 'end_date' => $end, 'status' => 'active']);
             $registration->update(['status' => 'paid', 'user_id' => $user->id, 'company_id' => $company->id]);
             try { Mail::to($user->email)->send(new WelcomeEmail($user)); } catch (\Throwable $e) { \Log::error('Gagal kirim welcome email: ' . $e->getMessage()); }
+            return $user;
         });
-
-        return response()->json(['message' => 'Registration completed']);
     }
 
     public function registrationPaymentReturn(Request $request, PendingCompanyRegistration $registration)
     {
         $returnStatus = (string) $request->query('status_id', '');
+
+        // Localhost cannot receive ToyyibPay callbacks. On a successful return,
+        // verify the bill server-to-server before creating and logging in the user.
+        if ($registration->status !== 'paid' && $returnStatus === '1' && $registration->toyyibpay_bill_code) {
+            try {
+                $gateway = PaymentGateway::superAdmin();
+                if ($gateway && app(ToyyibPayService::class)->hasSuccessfulTransaction($registration->toyyibpay_bill_code, $gateway)) {
+                    $user = $this->completeRegistration($registration);
+                    Auth::login($user);
+                    $request->session()->regenerate();
+
+                    return redirect()->route('a.dashboard.index')->with('success', 'Pembayaran berhasil. Akun perusahaan Anda sudah aktif.');
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Gagal verifikasi pembayaran registrasi: ' . $e->getMessage());
+            }
+        }
 
         return view('compro.registration-payment-return', compact('registration', 'returnStatus'));
     }
