@@ -8,6 +8,7 @@ use App\Models\CompanyInvoice;
 use App\Models\PaymentGateway;
 use App\Models\Student;
 use App\Models\SubscriptionPackage;
+use App\Models\Subscription;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,6 +92,11 @@ class PaymentFlowTest extends TestCase
         $this->assertSame('paid', $invoice->status_bayaran);
         $this->assertNotNull($invoice->tarikh_terbit);
         $this->assertNotNull($invoice->tarikh_tamat);
+        $this->assertDatabaseHas('subscriptions', [
+            'company_id' => $company->id,
+            'package_id' => $package->id,
+            'status' => 'active',
+        ]);
 
         Mail::assertSent(CompanyReceiptMail::class, function (CompanyReceiptMail $mail) use ($invoice) {
             return $mail->invoice->is($invoice);

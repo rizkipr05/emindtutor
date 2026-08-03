@@ -189,6 +189,7 @@ class PaymentController extends Controller
                     'tarikh_terbit'  => $paidAt,
                     'tarikh_tamat'   => $tarikhTamat,
                 ]);
+                $this->activateSubscription($invoice->company_id, $invoice->package_id, $durationDays);
 
                 // Kirim email ke email perusahaan (asumsi ada relasi company)
                 $emailTujuan = $invoice->company?->user?->email;
@@ -241,6 +242,7 @@ class PaymentController extends Controller
                         'tarikh_terbit'  => $paidAt,
                         'tarikh_tamat'   => $tarikhTamat,
                      ]);
+                     $this->activateSubscription($invoice->company_id, $invoice->package_id, $durationDays);
                 }
 
             } catch (\Exception $e) {
