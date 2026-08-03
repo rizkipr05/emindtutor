@@ -51,6 +51,7 @@ class PaymentFlowTest extends TestCase
         $invoice = CompanyInvoice::where('company_id', $company->id)->firstOrFail();
 
         $response->assertRedirect(route('payment.pending', [$invoice->id, $package->id]));
+        Http::assertSent(fn ($request) => $request['billPhone'] === $company->no_telefon);
         $this->assertSame('pending', $invoice->fresh()->status_bayaran);
         $this->assertSame('toyyibpay-bill-123', $invoice->fresh()->toyyibpay_bill_code);
         $this->assertSame('https://toyyibpay.com/toyyibpay-bill-123', $invoice->fresh()->payment_url);

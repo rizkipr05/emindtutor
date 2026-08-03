@@ -38,6 +38,7 @@ class InvoiceController extends Controller
                 'callback_url' => route('payment.webhook'),
                 'payer_name' => $invoice->student->user->name,
                 'payer_email' => $invoice->student->user->email,
+                'payer_phone' => $invoice->student->phone,
             ], $gateway);
 
             $invoice->update([

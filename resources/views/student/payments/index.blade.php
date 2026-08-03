@@ -166,10 +166,15 @@
                             <!-- Action Buttons -->
                             <div class="flex space-x-3">
                                 @if (!$invoice->payment)
-                                    {{-- Belum ada payment, boleh bayar --}}
-                                    <a href="{{ route('student.payments.create', $invoice->id) }}" 
-                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                        {{ __('student/payments/index.invoice.actions.pay_now') }}
+                                    {{-- Pembayaran online melalui gateway perusahaan --}}
+                                    <a href="{{ route('student.pay', $invoice->id) }}"
+                                    class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+                                        Bayar Online (ToyyibPay)
+                                    </a>
+                                    {{-- Alternatif pembayaran manual untuk proses verifikasi admin --}}
+                                    <a href="{{ route('student.payments.create', $invoice->id) }}"
+                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center text-sm font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        Upload Bukti Bayar
                                     </a>
                                 @else
                                     {{-- Sudah ada payment, disable tombol --}}

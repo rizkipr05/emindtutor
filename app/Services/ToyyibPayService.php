@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\PaymentGateway;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class ToyyibPayService
@@ -17,7 +19,11 @@ class ToyyibPayService
             throw new RuntimeException('ToyyibPay belum dikonfigurasi. Isi TOYYIBPAY_USER_SECRET_KEY dan TOYYIBPAY_CATEGORY_CODE.');
         }
 
-        $response = Http::asForm()->post($this->apiUrl($gateway, '/index.php/api/createBill'), [
+        if (blank($attributes['payer_phone'] ?? null)) {
+            throw new RuntimeException('Nomor telepon pembayar wajib diisi untuk membuat bill ToyyibPay.');
+        }
+
+        $response = $this->client()->post($this->apiUrl($gateway, '/index.php/api/createBill'), [
             'userSecretKey' => $secretKey,
             'categoryCode' => $categoryCode,
             'billName' => $this->cleanText($attributes['name'], 30),
@@ -40,6 +46,11 @@ class ToyyibPayService
         $billCode = is_array($data) ? ($data[0]['BillCode'] ?? null) : null;
 
         if (! $response->successful() || ! $billCode) {
+            Log::warning('ToyyibPay create bill returned an invalid response.', [
+                'http_status' => $response->status(),
+                'response' => Str::limit($response->body(), 1000),
+                // Do not log the request because it contains User Secret Key.
+            ]);
             throw new RuntimeException('ToyyibPay gagal membuat bill: ' . ($this->errorMessage($data) ?: 'Respons tidak valid.'));
         }
 
@@ -65,7 +76,7 @@ class ToyyibPayService
 
     public function hasSuccessfulTransaction(string $billCode, PaymentGateway $gateway): bool
     {
-        $response = Http::asForm()->post($this->apiUrl($gateway, '/index.php/api/getBillTransactions'), [
+        $response = $this->client()->post($this->apiUrl($gateway, '/index.php/api/getBillTransactions'), [
             'billCode' => $billCode,
             'billpaymentStatus' => '1',
         ]);
@@ -82,6 +93,15 @@ class ToyyibPayService
         return rtrim((string) $gateway->api_url, '/') . $path;
     }
 
+    private function client()
+    {
+        // ToyyibPay is behind Cloudflare. Force IPv4 to avoid local PHP/cURL
+        // resolver failures on hosts with incomplete IPv6/DNS support.
+        return Http::asForm()->timeout(30)->withOptions([
+            'force_ip_resolve' => 'v4',
+        ]);
+    }
+
     private function cleanText(string $value, int $limit): string
     {
         $value = preg_replace('/[^A-Za-z0-9 _-]/', ' ', $value) ?? '';
@@ -95,6 +115,12 @@ class ToyyibPayService
             return null;
         }
 
-        return $data['message'] ?? $data[0]['message'] ?? $data[0]['Error'] ?? null;
+        $first = array_is_list($data) ? ($data[0] ?? []) : $data;
+
+        if (! is_array($first)) {
+            return null;
+        }
+
+        return $first['message'] ?? $first['Message'] ?? $first['msg'] ?? $first['error'] ?? $first['Error'] ?? $first['result'] ?? null;
     }
 }

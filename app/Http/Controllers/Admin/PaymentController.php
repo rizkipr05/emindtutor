@@ -65,7 +65,9 @@ class PaymentController extends Controller
     public function createInvoice(Request $request)
     {
         $user = Auth::user();
-        $companyId = $user->company->id; 
+        $company = $user->company;
+        abort_unless($company, 403);
+        $companyId = $company->id;
         $packageId = $request->package_id;
         $package   = SubscriptionPackage::findOrFail($packageId);
         $harga     = $package->harga;
@@ -139,6 +141,7 @@ class PaymentController extends Controller
                 'callback_url' => route('payment.webhook'),
                 'payer_name' => $user->name,
                 'payer_email' => $user->email,
+                'payer_phone' => $company->no_telefon ?: $company->pic_telefon,
             ], $gateway);
 
             $invoice->update([
