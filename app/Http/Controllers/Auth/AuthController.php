@@ -136,11 +136,25 @@ class AuthController extends Controller
 
     public function register()
     {
-        return view('compro.signup');
+        $packages = SubscriptionPackage::query()
+            ->where('status', 'aktif')
+            ->orderBy('harga')
+            ->get();
+
+        return view('compro.signup', [
+            'packages' => $packages,
+            'selectedPackageId' => old('package_id', session('selected_package')),
+        ]);
     }
 
     public function register_post(Request $request)
     {
+        // Compatibility for visitors who selected a package from the public
+        // pricing page before this package selector was added to Sign Up.
+        if (! $request->filled('package_id') && session()->has('selected_package')) {
+            $request->merge(['package_id' => session('selected_package')]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'nama_wakil_syarikat' => 'required|string|max:255',
@@ -148,13 +162,16 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'no_telefon' => 'required|string|max:20',
+            'package_id' => 'required|exists:subscription_packages,id',
         ]);
 
-        $packageId = session('selected_package');
-        $package = $packageId ? SubscriptionPackage::find($packageId) : null;
+        $package = SubscriptionPackage::where('status', 'aktif')->find($request->integer('package_id'));
+        if (! $package) {
+            return back()->withErrors(['package_id' => 'Paket yang dipilih tidak tersedia.'])->withInput();
+        }
 
         // A paid subscription must be confirmed before any user/company is created.
-        if (session('from_subscribe') && $package && ! $package->is_trial) {
+        if (! $package->is_trial) {
             $gateway = PaymentGateway::superAdmin();
             if (! $gateway) {
                 return back()->withErrors(['email' => 'Payment Gateway belum dikonfigurasi.']);
@@ -231,7 +248,7 @@ class AuthController extends Controller
         ]);
         // dd($request->all());
         // Simpan ke companies
-        Company::create([
+        $company = Company::create([
             'user_id' => $user->id,
             'nama_wakil_syarikat' => $request->nama_wakil_syarikat,
             'pic_telefon' => $request->pic_telefon,
@@ -239,6 +256,31 @@ class AuthController extends Controller
             'no_telefon' => $request->no_telefon,
             'nombor_pendaftaran_syarikat' => $nomorPendaftar,
         ]);
+
+        // Paket percubaan tidak melalui payment gateway, tetapi langganan tetap
+        // diaktifkan supaya had fitur syarikat berlaku sejak akaun dibuat.
+        if ($package->is_trial) {
+            $start = Carbon::today();
+            $end = $start->copy()->addDays($package->duration_days);
+
+            CompanyInvoice::create([
+                'company_id' => $company->id,
+                'package_id' => $package->id,
+                'nomor_invoice' => 'TRIAL-' . $company->id,
+                'jumlah' => 0,
+                'status_bayaran' => 'paid',
+                'tarikh_terbit' => $start,
+                'tarikh_tamat' => $end,
+            ]);
+
+            Subscription::create([
+                'company_id' => $company->id,
+                'package_id' => $package->id,
+                'start_date' => $start,
+                'end_date' => $end,
+                'status' => 'active',
+            ]);
+        }
 
         // Kirim Email
         try {
@@ -250,17 +292,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        // cek apakah datang dari subscribe flow
-        if (session('from_subscribe')) {
-            $packageId = session('selected_package');
-
-            // hapus biar ga ke-redirect lagi di login berikutnya
-            session()->forget(['from_subscribe', 'selected_package']);
-
-            return redirect()->route('subscribe.payment', $packageId);
-        }
-
-        // dd(session('from_subscribe'));
+        session()->forget(['from_subscribe', 'selected_package']);
 
     return redirect()->route('a.dashboard.index')->with('success', __('messages.company_created'));
     }

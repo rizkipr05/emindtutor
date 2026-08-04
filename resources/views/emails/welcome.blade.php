@@ -1,19 +1,24 @@
-<h1>Hi {{ $user->name }},</h1>
-<p>Your account has been successfully activated, and you may now begin using the platform to manage your learning, class schedule, and records in a more organized and efficient manner.</p>
-<p>Please log in to your dashboard to complete your profile.</p><br><br>
-<p>With eMindTutor, you can:</p>
-<ul>
-    <li>Access your class schedule anytime</li>
-    <li>Review your learning records and reports</li>
-    <li>Manage your fee payments systematically</li>
-    <li>Communicate with your teacher more efficiently</li>
-</ul><br><br>
-<p>If you have any questions or require assistance, please feel free to contact us via WhatsApp or our official email.</p>
-<p>We hope eMindTutor will support you in achieving a more effective and structured learning experience.</p>
-<p>Wishing you success in your learning journey.</p><br><br>
-<p>Best regards,</p>
-<p>Team eMindTutor</p>
-<!-- <p>Terima kasih telah mendaftar. Akun Anda dengan email <strong>{{ $user->email }}</strong> telah berhasil dibuat.</p>
-<p>Nomor Pendaftaran Syarikat Anda adalah: <strong>{{ $user->company->nombor_pendaftaran_syarikat ?? '-' }}</strong></p>
-<br>
-<p>Silakan login ke dashboard untuk melengkapi profil Anda.</p> -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; }
+        .container { max-width: 640px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .brand { margin-bottom: 20px; color: #0891b2; font-size: 22px; font-weight: 700; }
+        .content { white-space: normal; font-size: 15px; }
+        .footer { margin-top: 28px; color: #6b7280; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="brand">{{ config('app.name', 'eMindTutor') }}</div>
+        <div class="content">
+            {!! app(\App\Services\EmailTemplateRenderer::class)->render($templateBody, $templateVariables) !!}
+        </div>
+        <div class="footer">
+            &copy; {{ date('Y') }} {{ config('app.name', 'eMindTutor') }}.
+        </div>
+    </div>
+</body>
+</html>

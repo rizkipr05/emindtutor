@@ -28,6 +28,45 @@
           </div>
         @endif
 
+        <fieldset>
+          <legend class="text-lg font-bold text-blue-900">Pilih Paket Langganan</legend>
+          <p class="mt-1 text-sm text-gray-500">Pilih paket terlebih dahulu. Setelah data diisi, paket berbayar akan diarahkan ke pembayaran ToyyibPay.</p>
+
+          @if($packages->isEmpty())
+            <div class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              Belum ada paket langganan aktif. Silakan hubungi Super Admin.
+            </div>
+          @else
+            <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-{{ min(3, max(1, $packages->count())) }}">
+              @foreach($packages as $package)
+                @php($isSelected = (string) $selectedPackageId === (string) $package->id)
+                <label data-package-card class="relative block cursor-pointer rounded-xl border-2 p-4 transition hover:border-blue-500 {{ $isSelected ? 'border-blue-700 bg-blue-50' : 'border-gray-200 bg-white' }}">
+                  <input
+                    type="radio"
+                    name="package_id"
+                    value="{{ $package->id }}"
+                    class="sr-only"
+                    required
+                    {{ $isSelected ? 'checked' : '' }}
+                    onchange="document.querySelectorAll('[data-package-card]').forEach(card => { card.classList.remove('border-blue-700', 'bg-blue-50'); card.classList.add('border-gray-200', 'bg-white'); }); this.closest('[data-package-card]').classList.remove('border-gray-200', 'bg-white'); this.closest('[data-package-card]').classList.add('border-blue-700', 'bg-blue-50');"
+                  >
+                  <span class="contents">
+                    @if($package->is_trial)
+                      <span class="mb-2 inline-block rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">Percubaan</span>
+                    @endif
+                    <span class="block font-bold text-gray-900">{{ $package->nama_pakej }}</span>
+                    <span class="mt-1 block text-xl font-bold text-blue-800">RM {{ number_format($package->harga, 2) }}</span>
+                    <span class="mt-1 block text-sm text-gray-500">{{ $package->duration_days }} hari · Maks. {{ $package->maks_pelajar }} pelajar</span>
+                  </span>
+                </label>
+              @endforeach
+            </div>
+          @endif
+          @error('package_id')
+            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+          @enderror
+        </fieldset>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Name -->
           <div>

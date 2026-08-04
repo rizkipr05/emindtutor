@@ -95,16 +95,18 @@
                             <h2 class="text-2xl font-bold text-slate-900">{{ $currentSection['title'] }}</h2>
                             <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">{{ $currentSection['subtitle'] }}</p>
                         </div>
-                        <span class="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
-                            {{ __('super_admin/settings.sidebar.active') }}
-                        </span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
+                                {{ __('super_admin/settings.sidebar.active') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="p-6">
                     <div class="grid gap-4 lg:grid-cols-2">
                         @foreach($sectionFields as $field)
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 {{ !empty($field['full_width']) ? 'lg:col-span-2' : '' }}">
                                 @if(($field['type'] ?? 'text') === 'toggle')
                                     <input type="hidden" name="{{ $field['name'] }}" value="0">
                                     <div class="flex items-center justify-between gap-4">
@@ -146,7 +148,7 @@
                                         <textarea
                                             id="{{ $field['name'] }}"
                                             name="{{ $field['name'] }}"
-                                            rows="4"
+                                            rows="{{ $field['rows'] ?? 4 }}"
                                             class="mt-3 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-100"
                                         >{{ old($field['name'], $field['value'] ?? ($field['default'] ?? '')) }}</textarea>
                                     @else
@@ -171,8 +173,8 @@
 
                     <div class="mt-6 flex flex-col items-start justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
                         <p class="text-sm text-slate-500">{{ __('super_admin/settings.forms.save_note') }}</p>
-                        <button type="submit" class="inline-flex items-center rounded-xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700">
-                            {{ __('super_admin/settings.forms.save') }}
+                        <button type="submit" class="inline-flex items-center rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition hover:opacity-90" style="background-color: #0891b2 !important; color: #ffffff !important; border: 1px solid #0e7490;">
+                            {{ $currentSectionKey === 'email_templates' ? 'Simpan Template' : __('super_admin/settings.forms.save') }}
                         </button>
                     </div>
                 </div>

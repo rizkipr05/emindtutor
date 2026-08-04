@@ -57,6 +57,11 @@ return [
             'subtitle' => 'Gunakan alat komunikasi yang memang sudah ada dalam platform.',
             'badge' => 'Kawalan komunikasi',
         ],
+        'email_templates' => [
+            'title' => 'Template Email',
+            'subtitle' => 'Ubah email selamat datang dan konfirmasi pembayaran untuk syarikat.',
+            'badge' => 'Kawalan email',
+        ],
     ],
     'metrics' => [
         'companies' => 'Syarikat',
@@ -219,6 +224,12 @@ return [
             'teachers' => 'Guru',
             'students' => 'Pelajar',
         ],
+        'welcome_email_subject' => 'Subject Email Selamat Datang',
+        'welcome_email_body' => 'Isi Email Selamat Datang',
+        'payment_confirmation_subject' => 'Subject Email Konfirmasi Pembayaran',
+        'payment_confirmation_body' => 'Isi Email Konfirmasi Pembayaran',
+        'email_subject_help' => 'Boleh gunakan placeholder seperti {company_name}, {email}, {package_name}, dan {invoice_number}.',
+        'email_template_help' => 'Placeholder tersedia: {company_name}, {representative_name}, {email}, {invoice_number}, {transaction_id}, {package_name}, {amount}, {paid_date}, {expired_date}, {login_url}, {app_name}, {support_email}.',
     ],
     'messages' => [
         'saved' => 'Setting berjaya disimpan.',

@@ -362,6 +362,51 @@ class SettingsController extends Controller
                     ['label' => __('super_admin/settings.actions.open_communications.title'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
                 ],
             ],
+            'email_templates' => [
+                'title' => __('super_admin/settings.sections.email_templates.title'),
+                'subtitle' => __('super_admin/settings.sections.email_templates.subtitle'),
+                'badge' => __('super_admin/settings.sections.email_templates.badge'),
+                'fields' => [
+                    [
+                        'name' => 'welcome_email_subject',
+                        'label' => __('super_admin/settings.forms.welcome_email_subject'),
+                        'type' => 'text',
+                        'default' => 'Welcome to eMindTutor, {company_name}',
+                        'placeholder' => 'Welcome to eMindTutor, {company_name}',
+                        'help' => __('super_admin/settings.forms.email_subject_help'),
+                    ],
+                    [
+                        'name' => 'payment_confirmation_subject',
+                        'label' => __('super_admin/settings.forms.payment_confirmation_subject'),
+                        'type' => 'text',
+                        'default' => 'Payment Confirmation - {invoice_number}',
+                        'placeholder' => 'Payment Confirmation - {invoice_number}',
+                        'help' => __('super_admin/settings.forms.email_subject_help'),
+                    ],
+                    [
+                        'name' => 'welcome_email_body',
+                        'label' => __('super_admin/settings.forms.welcome_email_body'),
+                        'type' => 'textarea',
+                        'rows' => 10,
+                        'full_width' => true,
+                        'default' => "Hi {company_name},\n\nYour company account has been successfully activated.\n\nLogin email: {email}\nLogin URL: {login_url}\n\nPlease log in to complete your company profile and start managing teachers, students, classes, and payments.\n\nBest regards,\nTeam eMindTutor",
+                        'help' => __('super_admin/settings.forms.email_template_help'),
+                    ],
+                    [
+                        'name' => 'payment_confirmation_body',
+                        'label' => __('super_admin/settings.forms.payment_confirmation_body'),
+                        'type' => 'textarea',
+                        'rows' => 10,
+                        'full_width' => true,
+                        'default' => "Hi {company_name},\n\nYour subscription payment has been confirmed.\n\nInvoice: {invoice_number}\nPackage: {package_name}\nAmount: RM {amount}\nPaid date: {paid_date}\nActive until: {expired_date}\n\nYour subscription access is now active.\n\nBest regards,\nTeam eMindTutor",
+                        'help' => __('super_admin/settings.forms.email_template_help'),
+                    ],
+                ],
+                'features' => [
+                    ['label' => __('super_admin/settings.actions.manage_billing.title'), 'desc' => __('super_admin/settings.actions.manage_billing.desc'), 'url' => route('invoices.index')],
+                    ['label' => __('super_admin/settings.actions.open_communications.title'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
+                ],
+            ],
         ];
     }
 
@@ -410,6 +455,12 @@ class SettingsController extends Controller
             'icon' => 'M3 6.75A2.75 2.75 0 015.75 4h12.5A2.75 2.75 0 0121 6.75v7.5A2.75 2.75 0 0118.25 17H9l-5 3v-3H5.75A2.75 2.75 0 013 14.25z',
             'tone' => 'from-emerald-500 to-teal-500',
         ],
+        'email_templates' => [
+            'label' => __('super_admin/settings.sections.email_templates.title'),
+            'caption' => __('super_admin/settings.sections.email_templates.subtitle'),
+            'icon' => 'M4 6.5A2.5 2.5 0 016.5 4h11A2.5 2.5 0 0120 6.5v11a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 17.5v-11zm2.2.8l5.8 4.35 5.8-4.35-.9-1.2L12 9.75 7.1 6.1l-.9 1.2z',
+            'tone' => 'from-cyan-500 to-blue-500',
+        ],
     ];
     }
 
@@ -437,6 +488,7 @@ class SettingsController extends Controller
         return match ($field['type']) {
             'email' => ['required', 'email', 'max:255'],
             'number' => ['required', 'integer', 'min:0'],
+            'textarea' => ['required', 'string', 'max:10000'],
             'select' => array_values(array_filter([
                 ($field['required'] ?? true) ? 'required' : 'nullable',
                 'string',

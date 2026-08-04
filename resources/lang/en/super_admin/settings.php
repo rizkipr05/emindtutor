@@ -57,6 +57,11 @@ return [
             'subtitle' => 'Use the communication tools that already exist in the platform.',
             'badge' => 'Communication control',
         ],
+        'email_templates' => [
+            'title' => 'Email Templates',
+            'subtitle' => 'Edit welcome and payment confirmation emails sent to companies.',
+            'badge' => 'Email control',
+        ],
     ],
     'metrics' => [
         'companies' => 'Companies',
@@ -219,6 +224,12 @@ return [
             'teachers' => 'Teachers',
             'students' => 'Students',
         ],
+        'welcome_email_subject' => 'Welcome Email Subject',
+        'welcome_email_body' => 'Welcome Email Body',
+        'payment_confirmation_subject' => 'Payment Confirmation Subject',
+        'payment_confirmation_body' => 'Payment Confirmation Body',
+        'email_subject_help' => 'You may use placeholders such as {company_name}, {email}, {package_name}, and {invoice_number}.',
+        'email_template_help' => 'Available placeholders: {company_name}, {representative_name}, {email}, {invoice_number}, {transaction_id}, {package_name}, {amount}, {paid_date}, {expired_date}, {login_url}, {app_name}, {support_email}.',
     ],
     'messages' => [
         'saved' => 'Settings saved successfully.',
