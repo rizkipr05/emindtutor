@@ -12,6 +12,7 @@ class Localization
     {
         // Ambil bahasa dari query atau session
         $locale = $request->query('lang', Session::get('locale', 'en'));
+        $locale = in_array($locale, ['en', 'my'], true) ? $locale : 'en';
 
         // Set bahasa yang dipilih
         App::setLocale($locale);

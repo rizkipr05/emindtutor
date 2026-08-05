@@ -39,29 +39,35 @@ class DashboardController extends Controller
             ->with('package')
             ->first();
         $remainingDays = 0;
-        if($activeSubscription){
-            $today = Carbon::today();
-            $endDate = Carbon::parse($activeSubscription->tarikh_tamat);
-            $remainingDays = $today->diffInDays($endDate) + 1;
+        $expiryDate    = null;
+        $totalDays     = 0;
+        if ($activeSubscription) {
+            $today         = Carbon::today();
+            $startDate     = Carbon::parse($activeSubscription->tarikh_terbit);
+            $endDate       = Carbon::parse($activeSubscription->tarikh_tamat);
+            $remainingDays = max(0, $today->diffInDays($endDate) + 1);
+            $expiryDate    = $endDate;
+            $totalDays     = max(1, $startDate->diffInDays($endDate) + 1);
         }
 
         $showReviewPopup = app(ReviewController::class)->shouldShowReviewPopup();
         $summary = [
-            'courses' => Course::where('company_id', $company->id)->count(),
-            'teachers' => Teacher::where('company_id', $company->id)->count(),
-            'students' => Student::where('company_id', $company->id)->count(),
-            'staff' => Staff::where('company_id', $company->id)->count(),
+            'courses'       => Course::where('company_id', $company->id)->count(),
+            'teachers'      => Teacher::where('company_id', $company->id)->count(),
+            'students'      => Student::where('company_id', $company->id)->count(),
+            'staff'         => Staff::where('company_id', $company->id)->count(),
             'announcements' => Announcement::where('created_by', $user->id)->count(),
         ];
 
-
         return view('admin.dashboard', [
-            'company'      => $company,
-            'user'         => $user,
-            'subscription' => $activeSubscription,
-            'remainingDays'=> $remainingDays,
+            'company'         => $company,
+            'user'            => $user,
+            'subscription'    => $activeSubscription,
+            'remainingDays'   => $remainingDays,
+            'expiryDate'      => $expiryDate,
+            'totalDays'       => $totalDays,
             'showReviewPopup' => $showReviewPopup,
-            'summary'      => $summary,
+            'summary'         => $summary,
         ]);
     }
 

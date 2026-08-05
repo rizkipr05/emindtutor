@@ -8,13 +8,9 @@ class LanguageController extends Controller
 {
     public function switch($lang)
     {
-        // Validasi apakah bahasa yang dipilih valid
-        if (in_array($lang, ['en', 'my'])) {
-            session(['locale' => $lang]);  // Set bahasa ke session
-        } else {
-            // Jika bahasa tidak valid, set ke bahasa default (misalnya 'en')
-            session(['locale' => 'en']);
-        }
+        $lang = in_array($lang, ['en', 'my'], true) ? $lang : 'en';
+        session(['locale' => $lang]);
+        app()->setLocale($lang);
 
         // Kembali ke halaman sebelumnya
         return redirect()->back();

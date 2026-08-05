@@ -87,11 +87,6 @@
                         </button>
                     </form>
 
-                    <a href="{{ route('impersonate', $company->user->id) }}" 
-                        class="bg-blue-500 text-white px-3 py-1 rounded">
-                        {{ __('super_admin/companies.show.actions.login_as') }}
-                    </a>
-
                     <form action="{{ route('companies.destroy', $company->id) }}" method="POST" 
                           class="inline-block" onsubmit="return confirm('Hapus perusahaan beserta seluruh akun, kursus, pelajar, invoice, langganan, dan riwayat terkait? Tindakan ini permanen.')">
                         @csrf

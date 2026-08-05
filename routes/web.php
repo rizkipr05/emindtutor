@@ -54,6 +54,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Student\InvoiceController;
 use App\Http\Controllers\Admin\BankController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 
 Route::group(['middleware' => ['localization']], function () {
     Route::get('/', [HomeController::class, 'index'])->name('compro.index');
@@ -66,7 +67,10 @@ Route::group(['middleware' => ['localization']], function () {
 Route::post('/payment/toyyibpay-callback', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 // Rute untuk mengganti bahasa
-Route::get('/set-language/{lang}', [LanguageController::class, 'switch'])->name('set.language');
+Route::get('/set-language/{lang}', [LanguageController::class, 'switch'])
+    ->where('lang', 'en|my')
+    ->middleware('localization')
+    ->name('set.language');
 
 //WA API Test Route
 Route::get('/test-wa', [TestController::class, 'test']);
@@ -390,6 +394,9 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
 
     Route::get('/payment-gateway', [AdminPaymentGatewayController::class, 'edit'])->name('admin.payment-gateway.edit');
     Route::put('/payment-gateway', [AdminPaymentGatewayController::class, 'update'])->name('admin.payment-gateway.update');
+
+    Route::get('/settings/{section?}', [AdminSettingsController::class, 'index'])->name('admin.settings.index');
+    Route::post('/settings/{section}', [AdminSettingsController::class, 'update'])->name('admin.settings.update');
 
     Route::controller(BankController::class)->prefix('bank-details')->name('admin.bank_details.')->group(function () {
         Route::get('/', 'index')->name('index');

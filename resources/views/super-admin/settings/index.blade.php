@@ -66,11 +66,6 @@
         <section class="min-w-0 space-y-6">
             <div class="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('dashboard.index') }}" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-200 bg-white text-cyan-600 shadow-sm transition hover:bg-cyan-50">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </a>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-600">{{ __('super_admin/settings.breadcrumb.superadmin') }}</p>
                         <h1 class="text-3xl font-bold text-slate-900">{{ __('super_admin/settings.heading') }}</h1>

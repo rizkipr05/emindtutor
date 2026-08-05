@@ -42,7 +42,7 @@ class CompanyReceiptMail extends Mailable
 
     public function templateBody(): string
     {
-        return SystemSetting::value('payment_confirmation_body', "Hi {company_name},\n\nYour subscription payment has been confirmed.\n\nInvoice: {invoice_number}\nPackage: {package_name}\nAmount: RM {amount}\nPaid date: {paid_date}\nActive until: {expired_date}\n\nYour subscription access is now active.\n\nBest regards,\nTeam eMindTutor");
+        return '';
     }
 
     public function templateVariables(): array

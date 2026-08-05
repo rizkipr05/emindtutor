@@ -201,6 +201,7 @@
                     @endif
                 </a>
                 <a href="{{ route('company.reviews.index') }}" class="block p-2 {{ request()->routeIs('company.reviews.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">{{ __("layouts/admin.ulasan") }}</a>
+                <a href="{{ route('admin.settings.index') }}" class="block p-2 {{ request()->routeIs('admin.settings.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">⚙ Tetapan Sistem</a>
 
                 <!-- <a href="{{ route('broadcasts.index') }}" class="block p-2 {{ request()->routeIs('broadcasts.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">Komunikasi<span class="text-green-600 text-xs ml-2">New</span></a> -->
                 @if(session()->has('impersonated_by'))

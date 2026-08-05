@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\App;
 use App\Models\User;
 use App\Models\Company;
 use App\Mail\WelcomeEmail;
+use App\Mail\CompanyReceiptMail;
 use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 use App\Services\RoleRedirector;
@@ -326,10 +327,15 @@ class AuthController extends Controller
             $company = Company::create(['user_id' => $user->id, 'nama_wakil_syarikat' => $registration->nama_wakil_syarikat, 'pic_telefon' => $registration->pic_telefon, 'pic_email' => $registration->email, 'alamat' => $registration->alamat, 'no_telefon' => $registration->no_telefon, 'nombor_pendaftaran_syarikat' => 'EMT-' . str_pad($number, 4, '0', STR_PAD_LEFT), 'status' => true]);
             $package = SubscriptionPackage::findOrFail($registration->package_id);
             $start = Carbon::today(); $end = $start->copy()->addDays($package->duration_days);
-            CompanyInvoice::create(['company_id' => $company->id, 'package_id' => $package->id, 'nomor_invoice' => 'REG-' . $registration->id, 'external_id' => $registration->external_reference, 'toyyibpay_bill_code' => $registration->toyyibpay_bill_code, 'payment_url' => $registration->payment_url, 'jumlah' => $package->harga, 'status_bayaran' => 'paid', 'tarikh_terbit' => $start, 'tarikh_tamat' => $end]);
+            $invoice = CompanyInvoice::create(['company_id' => $company->id, 'package_id' => $package->id, 'nomor_invoice' => 'REG-' . $registration->id, 'external_id' => $registration->external_reference, 'toyyibpay_bill_code' => $registration->toyyibpay_bill_code, 'payment_url' => $registration->payment_url, 'jumlah' => $package->harga, 'status_bayaran' => 'paid', 'tarikh_terbit' => $start, 'tarikh_tamat' => $end]);
             Subscription::create(['company_id' => $company->id, 'package_id' => $package->id, 'start_date' => $start, 'end_date' => $end, 'status' => 'active']);
             $registration->update(['status' => 'paid', 'user_id' => $user->id, 'company_id' => $company->id]);
-            try { Mail::to($user->email)->send(new WelcomeEmail($user)); } catch (\Throwable $e) { \Log::error('Gagal kirim welcome email: ' . $e->getMessage()); }
+            try { 
+                Mail::to($user->email)->send(new WelcomeEmail($user)); 
+                Mail::to($user->email)->send(new CompanyReceiptMail($invoice));
+            } catch (\Throwable $e) { 
+                \Log::error('Gagal kirim email registrasi: ' . $e->getMessage()); 
+            }
             return $user;
         });
     }
