@@ -1,6 +1,6 @@
 @extends('layouts.teacher')
 
-@section('title', __('teacher/attendance.take_title', ['class' => $classSchedule->course->nama_kos]))
+@section('title', __('teacher/attendance.take_title', ['class' => $classSchedule->course->localized_name]))
 
 @section('content')
 <div class="max-w-6xl mx-auto" x-data="attendanceManager()" x-init="init()">
@@ -8,8 +8,8 @@
     <div class="mb-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">{{ $classSchedule->course->nama_kos }}</h1>
-                <p class="text-gray-600 mt-1">{{ __('teacher/attendance.attendance_date', ['date' => Carbon\Carbon::now()->format('d M Y')]) }}</p>
+                <h1 class="text-3xl font-bold text-gray-800">{{ $classSchedule->course->localized_name }}</h1>
+                <p class="text-gray-600 mt-1">{{ __('teacher/attendance.attendance_date', ['date' => Carbon\Carbon::now()->locale(app()->getLocale() === 'en' ? 'en' : 'ms')->translatedFormat('d M Y')]) }}</p>
             </div>
             <a href="{{ route('teacher.attendance.index') }}" 
                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition duration-200">
@@ -190,7 +190,7 @@
                                 @if($existingAttendancePhoto)
                                     <div class="mt-4">
                                         <img src="{{ asset('storage/' . $existingAttendancePhoto) }}"
-                                             alt="Foto seluruh siswa"
+                                             alt="{{ __('teacher/attendance.all_students_photo_alt') }}"
                                              class="w-full max-h-64 object-cover rounded-xl border border-slate-200">
                                     </div>
                                 @endif
@@ -212,7 +212,7 @@
                                                     <h3 class="font-medium text-gray-800">{{ $student->user->name }}</h3>
                                                     <p class="text-sm text-gray-600">{{ $student->user->email }}</p>
                                                     @if($student->ic_number)
-                                                        <p class="text-xs text-gray-500">IC: {{ $student->ic_number }}</p>
+                                                        <p class="text-xs text-gray-500">{{ __('teacher/attendance.ic_label') }}: {{ $student->ic_number }}</p>
                                                     @endif
                                                 </div>
                                             </div>
@@ -311,13 +311,13 @@
                         
                         <div class="space-y-3">
                             <div class="flex justify-between items-center">
-                                <span class="text-gray-600">Check-in:</span>
+                                <span class="text-gray-600">{{ __('teacher/attendance.check_in_label') }}:</span>
                                 <span class="font-medium text-green-600">{{ \Carbon\Carbon::parse($teacherAttendance->check_in)->format('H:i') }}</span>
                             </div>
                             
                             @if($teacherAttendance->check_out)
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-600">Check-out:</span>
+                                    <span class="text-gray-600">{{ __('teacher/attendance.check_out_label') }}:</span>
                                     <span class="font-medium text-red-600">{{ \Carbon\Carbon::parse($teacherAttendance->check_out)->format('H:i') }}</span>
                                 </div>
                                 
@@ -364,7 +364,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">{{ __('teacher/attendance.student_amount') }}:</span>
-                            <span class="font-medium">{{ $activeStudents->count() }} orang</span>
+                            <span class="font-medium">{{ __('teacher/attendance.student_count', ['count' => $activeStudents->count()]) }}</span>
                         </div>
                     </div>
                 </div>
@@ -654,10 +654,10 @@ function attendanceManager() {
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert(data.error || 'Terjadi kesalahan');
+                    alert(data.error || '{{ __('teacher/attendance.generic_error') }}');
                 }
             } catch (error) {
-                alert('Terjadi kesalahan: ' + error.message);
+                alert('{{ __('teacher/attendance.generic_error_with_message', ['message' => '']) }}' + error.message);
             } finally {
                 this.loading = false;
             }
@@ -700,10 +700,10 @@ function attendanceManager() {
                     this.showCheckoutModal = false;
                     location.reload();
                 } else {
-                    alert(data.error || 'Terjadi kesalahan');
+                    alert(data.error || '{{ __('teacher/attendance.generic_error') }}');
                 }
             } catch (error) {
-                alert('Terjadi kesalahan: ' + error.message);
+                alert('{{ __('teacher/attendance.generic_error_with_message', ['message' => '']) }}' + error.message);
             } finally {
                 this.loading = false;
             }

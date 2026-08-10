@@ -49,7 +49,7 @@
     </div>
     
     {{-- Tabel Gaji --}}
-    <form method="POST" action="{{ route('admin.teachers.sallaries.createPaid') }}">
+    <form method="POST" action="{{ route('admin.teachers.sallaries.createPaid') }}" class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm md:p-6">
         @csrf
         <input type="hidden" name="month" value="{{ $selectedMonth }}">
         <input type="hidden" name="year" value="{{ $selectedYear }}">
@@ -67,24 +67,25 @@
             </button>
             <!-- <span class="text-sm text-gray-600 ml-4">{{ __('admin/teachers/sallaries/index.actions.mark_paid') }}</span> -->
         </div>
-        <div class="overflow-x-auto bg-white shadow rounded">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-100">
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-gradient-to-r from-teal-600 to-cyan-600 text-white">
                     <tr>
-                        <th class="px-4 py-2"><input type="checkbox" id="selectAll"></th>
-                        <th class="px-4 py-2 text-left text-sm font-medium">{{ __('admin/teachers/sallaries/index.table.type') }}</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium">{{ __('admin/teachers/sallaries/index.table.name') }}</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium">{{ __('admin/teachers/sallaries/index.table.attendance') }}</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium">{{ __('admin/teachers/sallaries/index.table.total_minutes') }}</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium">{{ __('admin/teachers/sallaries/index.table.amount') }}</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium">{{ __('admin/teachers/sallaries/index.table.status') }}</th>
-                        <th class="px-4 py-2 text-left text-sm font-medium">{{ __('admin/teachers/sallaries/index.table.actions') }}</th>
+                        <th class="w-12 px-4 py-3.5"><input type="checkbox" id="selectAll" class="rounded border-white/50 text-teal-600 focus:ring-teal-300"></th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">{{ __('admin/teachers/sallaries/index.table.type') }}</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">{{ __('admin/teachers/sallaries/index.table.name') }}</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">{{ __('admin/teachers/sallaries/index.table.attendance') }}</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">{{ __('admin/teachers/sallaries/index.table.total_minutes') }}</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">{{ __('admin/teachers/sallaries/index.table.amount') }}</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">{{ __('admin/teachers/sallaries/index.table.status') }}</th>
+                        <th class="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">{{ __('admin/teachers/sallaries/index.table.actions') }}</th>
                     </tr>
                 </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody class="divide-y divide-slate-100 bg-white">
                 @forelse ($sallaries as $index => $sallary)
-                    <tr class="{{ $sallary['type'] == 'Teacher' ? 'bg-blue-50' : 'bg-green-50' }}">
-                        <td class="px-4 py-2">
+                    <tr class="transition-colors hover:bg-slate-50 {{ $sallary['type'] == 'Teacher' ? 'border-l-4 border-l-blue-400' : 'border-l-4 border-l-emerald-400' }}">
+                        <td class="px-4 py-3.5">
                             @if($sallary['status'] == 'pending')
                                 <input type="checkbox" 
                                        name="selected_items[]" 
@@ -102,38 +103,38 @@
                                 <span class="text-green-600">✓</span>
                             @endif
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-3.5">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 {{ $sallary['type'] == 'Teacher' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                 {{ __('admin/teachers/sallaries/index.type_labels.' . $sallary['type']) }}
                             </span>
                         </td>
-                        <td class="px-4 py-2 font-medium">{{ $sallary['name'] }}</td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-3.5 font-semibold text-slate-800">{{ $sallary['name'] }}</td>
+                        <td class="px-4 py-3.5 text-slate-600">
                             @if($sallary['type'] == 'Teacher')
                                 {{ $sallary['attendance_count'] }} {{ __('admin/teachers/sallaries/index.attendance_unit') }}
                             @else
                                 <span class="text-gray-500">-</span>
                             @endif
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-3.5 text-slate-600">
                             @if($sallary['type'] == 'Teacher' && $sallary['total_minutes'] !== '-')
                                 {{ number_format($sallary['total_minutes'] / 60, 1) }} {{ __('admin/teachers/sallaries/index.hours_unit') }}
                             @else
                                 <span class="text-gray-500">-</span>
                             @endif
                         </td>
-                        <td class="px-4 py-2 font-semibold">
+                        <td class="px-4 py-3.5 font-bold text-slate-800">
                             RM {{ number_format($sallary['salary'], 2, '.', ',') }}
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-3.5">
                             @if($sallary['status'] == 'paid')
                                 <span class="text-green-600 font-semibold">{{ __('admin/teachers/sallaries/index.status.paid') }}</span>
                             @else
                                 <span class="text-yellow-600 font-semibold">{{ __('admin/teachers/sallaries/index.status.pending') }}</span>
                             @endif
                         </td>
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-3.5 whitespace-nowrap">
                             <button type="button" class="text-blue-600 hover:underline text-sm" onclick="showDetail('{{ $sallary['name'] }}', '{{ $sallary['type'] }}', '{{ number_format($sallary['salary'], 2) }}', '{{ $sallary['attendance_count'] ?? '-' }}')">{{ __('admin/teachers/sallaries/index.table.actions') }}</button>
                             @if($sallary['type'] == 'Teacher')
                                 <a href="{{ route('admin.bonus.create', ['user' => $sallary['teacher_id']]) }}" class="text-purple-600 hover:underline text-sm">{{ __('admin/teachers/sallaries/index.table.add_bonus') }}</a>
@@ -149,22 +150,23 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-4 text-center text-gray-500">
+                        <td colspan="8" class="px-4 py-10 text-center text-slate-500">
                             {{ __('admin/teachers/sallaries/index.empty', ['month' => $months[$selectedMonth] ?? $selectedMonth, 'year' => $selectedYear]) }}
                         </td>
                     </tr>
                 @endforelse
             </tbody>
             @if($sallaries->count() > 0)
-            <tfoot class="bg-gray-50">
-                <tr class="font-semibold">
-                    <td class="px-4 py-2" colspan="5">{{ __('admin/teachers/sallaries/index.footer.total') }}</td>
-                    <td class="px-4 py-2">RM {{ number_format($totalAmount, 2, '.', ',') }}</td>
-                    <td class="px-4 py-2" colspan="2"></td>
+            <tfoot class="border-t-2 border-teal-100 bg-teal-50">
+                <tr class="font-bold text-slate-800">
+                    <td class="px-4 py-4" colspan="5">{{ __('admin/teachers/sallaries/index.footer.total') }}</td>
+                    <td class="px-4 py-4 text-teal-700">RM {{ number_format($totalAmount, 2, '.', ',') }}</td>
+                    <td class="px-4 py-4" colspan="2"></td>
                 </tr>
             </tfoot>
             @endif
         </table>
+            </div>
     </div>
     </form>
     <form id="sync-attendance-form" method="POST" action="{{ route('admin.teachers.sallaries.syncAttendance') }}" class="hidden">

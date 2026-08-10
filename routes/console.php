@@ -7,9 +7,14 @@ use App\Models\Subscription;
 use App\Models\CompanyInvoice;
 use App\Models\Student;
 use App\Models\StudentInvoice;
-use App\Services\FonnteService;
+use App\Models\ClassScheduleSession;
+use App\Models\SystemSetting;
+use App\Models\Teacher;
+use App\Services\WhatsAppNotificationService;
+use App\Mail\CompanyInvoiceExpiredMail;
 use App\Mail\InvoiceTagihanMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -19,6 +24,7 @@ Artisan::command('inspire', function () {
 Schedule::daily()->call(function () {
 
     $today = now()->toDateString();
+    $whatsApp = app(WhatsAppNotificationService::class);
 
     $invoices = CompanyInvoice::whereDate('tarikh_tamat', $today)
         ->where('status_bayaran', 'paid')
@@ -28,9 +34,11 @@ Schedule::daily()->call(function () {
 
     foreach ($invoices as $inv) {
 
-        FonnteService::sendMessage(
+        $whatsApp->sendOnce(
+            $inv,
+            'subscription_expired',
             $inv->company->no_telefon,
-            "Langganan anda telah tamat hari ini. Sila perbaharui segera untuk mengelakkan gangguan akses."
+            "Langganan syarikat sudah habis. Sila perbaharui segera untuk mengelakkan gangguan akses."
         );
 
         if ($inv->company->email) {
@@ -57,6 +65,7 @@ Schedule::daily()->call(function () {
 Schedule::daily()->call(function () {
 
     $targetDate = now()->subDays(3)->toDateString();
+    $whatsApp = app(WhatsAppNotificationService::class);
 
     $invoices = CompanyInvoice::where('status', 'inactive')
         ->where('reminder_expired_sent', true)
@@ -80,7 +89,9 @@ Schedule::daily()->call(function () {
         }
 
         // Masih belum renew → kirim broadcast
-        FonnteService::sendMessage(
+        $whatsApp->sendOnce(
+            $inv,
+            'subscription_expired_grace_reminder',
             $inv->company->no_telefon,
             "Peringatan: Langganan anda telah tamat sejak 3 hari yang lalu. Sila perbaharui segera untuk mengelakkan gangguan akses kepada sistem."
         );
@@ -98,7 +109,9 @@ Schedule::daily()->call(function () {
 // ======================================================
 Schedule::daily()->call(function () {
 
-    $targetDate = now()->subDays(7)->toDateString();
+    $graceDays = max(0, (int) SystemSetting::value('subscription_grace_days', 7));
+    $targetDate = now()->subDays($graceDays)->toDateString();
+    $whatsApp = app(WhatsAppNotificationService::class);
 
     $invoices = CompanyInvoice::where('status', 'inactive')
         ->where('reminder_7_days_processed', false)
@@ -123,14 +136,50 @@ Schedule::daily()->call(function () {
         $inv->company->update(['status' => 'inactive']);
 
         // Kirim pesan
-        FonnteService::sendMessage(
+        $whatsApp->sendOnce(
+            $inv,
+            'subscription_deactivated',
             $inv->company->no_telefon,
-            "Akaun syarikat anda telah dinyahaktifkan kerana tidak memperbaharui langganan selepas 7 hari tamat tempoh."
+            "Akaun syarikat anda telah dinyahaktifkan kerana tidak memperbaharui langganan selepas {$graceDays} hari tamat tempoh."
         );
 
         $inv->update(['reminder_7_days_processed' => true]);
     }
 
+});
+
+// Remind teachers to clock in before a scheduled class. The company controls the lead time.
+Schedule::everyFiveMinutes()->call(function () {
+    $leadMinutes = max(1, (int) SystemSetting::value('class_clock_in_reminder_minutes', 30));
+    $now = now('Asia/Kuala_Lumpur');
+    $windowEnd = $now->copy()->addMinutes(5);
+    $whatsApp = app(WhatsAppNotificationService::class);
+
+    ClassScheduleSession::with(['classSchedule.teacher.user'])
+        ->whereDate('session_date', $now->toDateString())
+        ->where('status', 'scheduled')
+        ->get()
+        ->filter(function (ClassScheduleSession $session) use ($now, $windowEnd, $leadMinutes) {
+            $start = \Carbon\Carbon::parse($session->session_date->format('Y-m-d') . ' ' . $session->start_time, 'Asia/Kuala_Lumpur')
+                ->subMinutes($leadMinutes);
+
+            return $start->betweenIncluded($now, $windowEnd);
+        })
+        ->each(function (ClassScheduleSession $session) use ($whatsApp) {
+            $schedule = $session->classSchedule;
+            $teacher = $schedule?->teacher;
+
+            if (! $teacher || $schedule->teacherAttendances()->whereDate('check_in', $session->session_date)->exists()) {
+                return;
+            }
+
+            $whatsApp->sendOnce(
+                $session,
+                'class_clock_in_reminder',
+                $teacher->phone,
+                "Peringatan kelas: {$schedule->nama_kelas} bermula pada {$session->start_time}. Sila clock in sebelum kelas bermula."
+            );
+        });
 });
 
 // Cek setiap hari untuk student yang expired

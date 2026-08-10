@@ -22,7 +22,7 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $teacher = Teacher::where('user_id', Auth::id())->first();
+        $teacher = Teacher::with(['user', 'company.user'])->where('user_id', Auth::id())->first();
 
         if (!$teacher) {
             return redirect()->back()->with('error', 'Data guru tidak ditemukan.');

@@ -184,7 +184,20 @@
                 </div>
 
                 <a href="{{ route('admin.reports.index') }}" class="block p-2 {{ request()->routeIs('admin.reports.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">{{ __("layouts/admin.attendance_report") }}</a>
-                <a href="{{ route('admin.bayaran.index') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.payment_fee") }}</a>
+                <!-- Payment & Fee -->
+                <div x-data="{ open: {{ request()->routeIs('admin.bayaran.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" class="flex w-full items-center justify-between rounded p-2 {{ request()->routeIs('admin.bayaran.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">
+                        <span>{{ __("layouts/admin.payment_fee") }}</span>
+                        <svg x-bind:class="{ 'rotate-180': open }" class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="ml-4 space-y-1">
+                        <a href="{{ route('admin.bayaran.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.bayaran.index') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">
+                            All Payments
+                        </a>
+                    </div>
+                </div>
                 <a href="{{ route('admin.staff.index') }}" class="block p-2 {{ request()->routeIs('admin.staff.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">{{ __("layouts/admin.staff_management") }}</a>
                 @php
                     $unreadCount = \DB::table('announcement_user')
@@ -201,7 +214,7 @@
                     @endif
                 </a>
                 <a href="{{ route('company.reviews.index') }}" class="block p-2 {{ request()->routeIs('company.reviews.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">{{ __("layouts/admin.ulasan") }}</a>
-                <a href="{{ route('admin.settings.index') }}" class="block p-2 {{ request()->routeIs('admin.settings.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">⚙ Tetapan Sistem</a>
+                <a href="{{ route('admin.settings.index') }}" class="block p-2 {{ request()->routeIs('admin.settings.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded"> {{ __('layouts/admin.system_settings') }}</a>
 
                 <!-- <a href="{{ route('broadcasts.index') }}" class="block p-2 {{ request()->routeIs('broadcasts.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">Komunikasi<span class="text-green-600 text-xs ml-2">New</span></a> -->
                 @if(session()->has('impersonated_by'))

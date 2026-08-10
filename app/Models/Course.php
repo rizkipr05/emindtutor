@@ -12,6 +12,8 @@ class Course extends Model
     protected $fillable = [
         'company_id',
         'nama_kos',
+        'nama_kos_en',
+        'nama_kos_my',
         'fee',
         'max_student',
         'jenis',
@@ -43,5 +45,12 @@ class Course extends Model
     public function students()
     {
         return $this->hasMany(Student::class);
+    }
+
+    public function getLocalizedNameAttribute(): string
+    {
+        return app()->getLocale() === 'en'
+            ? ($this->nama_kos_en ?: $this->nama_kos_my ?: $this->nama_kos)
+            : ($this->nama_kos_my ?: $this->nama_kos_en ?: $this->nama_kos);
     }
 }

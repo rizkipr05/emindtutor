@@ -67,7 +67,8 @@ class CourseController extends Controller
     {
         // dd("hi");
         $request->validate([
-            'nama_kos' => 'required|string|max:255',
+            'nama_kos_en' => 'required|string|max:255',
+            'nama_kos_my' => 'required|string|max:255',
             'fee' => 'required|integer',
             'max_student' => 'integer',
             'teaching_mode' => 'required|in:offline,online,hybrid',
@@ -83,7 +84,9 @@ class CourseController extends Controller
 
         Course::create([
             'company_id' => Auth::user()->company->id,
-            'nama_kos' => $request->nama_kos,
+            'nama_kos' => $request->nama_kos_my,
+            'nama_kos_en' => $request->nama_kos_en,
+            'nama_kos_my' => $request->nama_kos_my,
             'fee' => $request->fee,
             'max_student' => $request->max_student,
             'charge_on_registration' => $request->has('charge_on_registration'),
@@ -121,7 +124,8 @@ class CourseController extends Controller
 
         // dd($request->all());
         $request->validate([
-            'nama_kos' => 'required|string|max:255',
+            'nama_kos_en' => 'required|string|max:255',
+            'nama_kos_my' => 'required|string|max:255',
             'fee' => 'required|integer',
             'charge_on_registration' => 'required|boolean',
             'include_registration_fee' => 'required|boolean',
@@ -137,7 +141,9 @@ class CourseController extends Controller
         ]);
 
 
-        $course->update($request->all());
+        $data = $request->all();
+        $data['nama_kos'] = $request->nama_kos_my;
+        $course->update($data);
 
         return redirect()->route('admin.courses.index')->with('success', 'Course updated successfully.');
     }

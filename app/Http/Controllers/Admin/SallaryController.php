@@ -8,6 +8,7 @@ use App\Models\Sallary;
 use App\Models\Teacher;
 use App\Models\Staff;
 use App\Models\TeacherAttendance;
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -332,6 +333,7 @@ class SallaryController extends Controller
                         'status' => 'paid',
                         'payment_date' => now()->toDateString(),
                     ]);
+                    $this->notifyApprovedPayroll($item['teacher_id'], $month, (int) $year);
                     $createdCount++;
                     continue;
                 }
@@ -355,6 +357,7 @@ class SallaryController extends Controller
                 ];
 
                 Sallary::create($salaryData);
+                $this->notifyApprovedPayroll($item['teacher_id'], $month, (int) $year);
                 $createdCount++;
             }
 
@@ -590,12 +593,36 @@ private function monthNumber(string $month): ?int
     public function markPaid(Request $request)
     {
         $ids = $request->input('sallary_ids', []);
-        Sallary::whereIn('id', $ids)->update([
+        $salaries = Sallary::whereIn('id', $ids)->get();
+        Sallary::whereIn('id', $salaries->pluck('id'))->update([
             'status' => 'paid',
             'payment_date' => now()
         ]);
 
+        $salaries->groupBy(fn (Sallary $salary) => $salary->teacher_id . ':' . $salary->month . ':' . $salary->year)
+            ->each(function ($rows) {
+                $salary = $rows->first();
+                $this->notifyApprovedPayroll($salary->teacher_id, $salary->month, (int) $salary->year);
+            });
+
         return redirect()->back()->with('success', 'Gaji guru berhasil ditandai sebagai dibayar.');
+    }
+
+    private function notifyApprovedPayroll(int $teacherId, string $month, int $year): void
+    {
+        $teacher = Teacher::with('user')->find($teacherId);
+
+        if (! $teacher) {
+            return;
+        }
+
+        app(WhatsAppNotificationService::class)->sendOnce(
+            $teacher,
+            'payroll_approved_' . strtolower($month) . '_' . $year,
+            $teacher->phone,
+            "Gaji anda bagi {$month} {$year} telah diluluskan. Anda boleh memuat turun slip gaji di eMindTutor: "
+                . route('teacher.sallaries.download', [$this->monthNumber($month), $year])
+        );
     }
 
 

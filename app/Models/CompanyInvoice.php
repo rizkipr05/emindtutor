@@ -18,6 +18,9 @@ class CompanyInvoice extends Model
         'status_bayaran',
         'tarikh_terbit',
         'tarikh_tamat',
+        'reminder_expired_sent',
+        'reminder_3_days_sent',
+        'reminder_7_days_processed',
     ];
 
     protected $casts = [

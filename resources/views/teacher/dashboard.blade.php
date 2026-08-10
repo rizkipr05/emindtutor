@@ -9,7 +9,7 @@
         
         <!-- Header Welcome -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{{ __('teacher/dashboard.teacher_dashboard', ['company' => $teacher->company->user->name]) }}</h1>
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{{ __('teacher/dashboard.teacher_dashboard', ['company' => $teacher->company?->user?->name ?? $teacher->company?->nama_wakil_syarikat ?? 'EMindTutor']) }}</h1>
             <p class="text-gray-600 text-sm sm:text-base">{{ __('teacher/dashboard.welcome_back', ['site' => 'EMindTutor']) }}</p>
         </div>
 
@@ -58,13 +58,13 @@
                     <div class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="font-semibold text-gray-700 text-sm sm:text-base">{{ __('teacher/dashboard.label_name') }}</span>
-                            <span class="text-gray-900 font-medium break-words">{{ $teacher->user->name }}</span>
+                            <span class="text-gray-900 font-medium break-words">{{ $teacher->user?->name ?? '-' }}</span>
                         </div>
                     </div>
                     <div class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="font-semibold text-gray-700 text-sm sm:text-base">{{ __('teacher/dashboard.label_email') }}</span>
-                            <span class="text-gray-900 font-medium break-all">{{ $teacher->user->email }}</span>
+                            <span class="text-gray-900 font-medium break-all">{{ $teacher->user?->email ?? '-' }}</span>
                         </div>
                     </div>
                     <div class="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200">
@@ -141,66 +141,7 @@
             </div>
         </div>
 
-        <!-- Pengumuman Untuk Siswa -->
-        <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="p-2 bg-amber-100 rounded-xl">
-                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('teacher/dashboard.announcement_create_title') }}</h2>
-                    <p class="text-sm text-gray-500">{{ __('teacher/dashboard.announcement_create_desc') }}</p>
-                </div>
-            </div>
-
-            <form action="{{ route('broadcasts.store') }}" method="POST" class="space-y-5">
-                @csrf
-                <input type="hidden" name="target_audience" value="students">
-                <input type="hidden" name="redirect_route" value="t.dashboard.index">
-
-                <div>
-                    <label for="announcement_title" class="mb-2 block text-sm font-semibold text-gray-700">{{ __('teacher/dashboard.announcement_title_label') }}</label>
-                    <input
-                        id="announcement_title"
-                        type="text"
-                        name="title"
-                        value="{{ old('title') }}"
-                        class="w-full rounded-xl border border-gray-300 p-3 text-sm text-gray-900 transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200 @error('title') border-red-500 focus:border-red-500 focus:ring-red-200 @enderror"
-                        placeholder="{{ __('teacher/dashboard.announcement_title_placeholder') }}"
-                        required
-                    >
-                    @error('title')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="announcement_message" class="mb-2 block text-sm font-semibold text-gray-700">{{ __('teacher/dashboard.announcement_message_label') }}</label>
-                    <textarea
-                        id="announcement_message"
-                        name="message"
-                        rows="5"
-                        class="w-full rounded-xl border border-gray-300 p-3 text-sm text-gray-900 transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200 @error('message') border-red-500 focus:border-red-500 focus:ring-red-200 @enderror"
-                        placeholder="{{ __('teacher/dashboard.announcement_message_placeholder') }}"
-                        required
-                    >{{ old('message') }}</textarea>
-                    @error('message')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-sm text-gray-500">{{ __('teacher/dashboard.announcement_send_notice') }}</p>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-amber-600">
-                        {{ __('teacher/dashboard.announcement_send_button') }}
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Riwayat Pengumuman -->
+        <!-- Pengumuman daripada perusahaan -->
         <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between gap-4 mb-6">
                 <div class="flex items-center gap-3">

@@ -2,10 +2,10 @@
     $role = auth()->user()->role;
     $isTeacher = $role === 'teacher';
 
-    $pageEyebrow = $isTeacher ? 'Maklumat - Pengumuman' : null;
-    $pageTitle = $isTeacher ? 'Pengumuman (Announcement)' : '📢 Announcements';
+    $pageEyebrow = $isTeacher ? __('teacher/dashboard.announcements_page_eyebrow') : null;
+    $pageTitle = $isTeacher ? __('teacher/dashboard.announcements_page_title') : '📢 Announcements';
     $pageDescription = $isTeacher
-        ? 'Kekal dikemas kini dengan berita dan maklumat terkini.'
+        ? __('teacher/dashboard.announcements_page_description')
         : 'Stay updated with the latest news and information';
 @endphp
 
@@ -38,8 +38,8 @@
                     <p class="text-gray-500 text-sm">{{ $pageDescription }}</p>
                 </div>
 
-                {{-- Tombol Create untuk role yang boleh mengirim announcement --}}
-                @if(in_array($role, ['teacher', 'admin', 'super admin']))
+                {{-- Tombol Create hanya untuk admin perusahaan dan super admin --}}
+                @if(in_array($role, ['admin', 'super admin']))
                     <a href="{{ route('broadcasts.create') }}" 
                        class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +99,7 @@
         <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             @if($isTeacher)
                 <div class="mb-6 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
-                    Semua pengumuman baharu untuk guru akan dipaparkan di sini.
+                    {{ __('teacher/dashboard.announcements_teacher_notice') }}
                 </div>
             @endif
 
@@ -166,8 +166,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                                 </svg>
                             </div>
-                            <p class="text-gray-500 text-lg font-medium">No announcements for you</p>
-                            <p class="text-gray-400 text-sm mt-2">Check back later for new updates</p>
+                            <p class="text-gray-500 text-lg font-medium">{{ $isTeacher ? __('teacher/dashboard.announcements_empty_title') : 'No announcements for you' }}</p>
+                            <p class="text-gray-400 text-sm mt-2">{{ $isTeacher ? __('teacher/dashboard.announcements_empty_description') : 'Check back later for new updates' }}</p>
                         </div>
                     @else
                         <div class="space-y-4">

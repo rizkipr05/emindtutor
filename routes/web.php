@@ -55,6 +55,7 @@ use App\Http\Controllers\Student\InvoiceController;
 use App\Http\Controllers\Admin\BankController;
 use App\Http\Controllers\Admin\PaymentGatewayController as AdminPaymentGatewayController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\SuperAdmin\WhatsAppReminderTemplateController;
 
 Route::group(['middleware' => ['localization']], function () {
     Route::get('/', [HomeController::class, 'index'])->name('compro.index');
@@ -154,6 +155,16 @@ Route::middleware(['auth', 'localization'])->group(function () {
 });
 
 Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])->group(function () {
+    Route::controller(WhatsAppReminderTemplateController::class)->prefix('whatsapp-reminder-templates')->name('superadmin.whatsapp-reminder-templates.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::post('/{template}/send', 'send')->name('send');
+        Route::get('/{template}/edit', 'edit')->name('edit');
+        Route::put('/{template}', 'update')->name('update');
+        Route::delete('/{template}', 'destroy')->name('destroy');
+    });
+
     Route::get('/impersonate/{id}', function ($id) {
         $user = \App\Models\User::findOrFail($id);
         Auth::user()->impersonate($user);

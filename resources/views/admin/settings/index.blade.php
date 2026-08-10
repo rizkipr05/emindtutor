@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', __('admin/settings.title') . ' | EMindTutor')
@@ -251,16 +252,27 @@
             {{-- Subscription History --}}
             @if($subscriptionHistory->count() > 0)
             <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-                <div class="border-b border-slate-100 px-6 py-4 flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
+                <div class="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 002 2v12a2 2 0 002 2h10a2 2 0 00-2-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">{{ __('admin/settings.subscription_history') }}</h2>
+                            <p class="text-xs text-slate-500">{{ __('admin/settings.latest_records') }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">{{ __('admin/settings.subscription_history') }}</h2>
-                        <p class="text-xs text-slate-500">{{ __('admin/settings.latest_records') }}</p>
-                    </div>
+                    @if($activeSubscription && $remainingDays < 30)
+                        <a href="{{ route('admin.subscribe.index') }}"
+                           class="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-teal-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            {{ __('admin/settings.renew_subscription') }}
+                        </a>
+                    @endif
                 </div>
                 <div class="divide-y divide-slate-100">
                     @foreach($subscriptionHistory as $inv)

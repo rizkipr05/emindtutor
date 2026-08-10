@@ -65,6 +65,8 @@ class CommunicationController extends Controller
     {
         $user = auth()->user();
 
+        abort_if($user->role === 'teacher', 403, 'Guru hanya dapat menerima pengumuman dari perusahaan.');
+
         // Default kosong
         $teachers = collect();
         $students = collect();
@@ -157,6 +159,8 @@ class CommunicationController extends Controller
 
     public function store(Request $request)
     {
+        abort_if(auth()->user()->role === 'teacher', 403, 'Guru tidak diizinkan membuat pengumuman.');
+
         $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string',

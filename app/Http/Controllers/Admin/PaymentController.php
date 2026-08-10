@@ -16,6 +16,7 @@ use App\Models\Discount;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CompanyReceiptMail;
+use App\Mail\CompanySubscriptionInvoiceMail;
 use App\Services\ToyyibPayService;
 use App\Models\PaymentGateway;
 
@@ -47,6 +48,13 @@ class PaymentController extends Controller
     public function paymentPage($packageId)
     {
         $package = SubscriptionPackage::findOrFail($packageId);
+        $companyId = Auth::user()?->company?->id;
+
+        if ($package->is_trial && $this->hasUsedTrial($companyId)) {
+            return redirect()->route('admin.subscribe.index')
+                ->with('error', __('admin/settings.trial_already_used'));
+        }
+
         // Ambil diskon aktif untuk ditampilkan di view (opsional)
         $discounts = Discount::where('end_date', '>=', Carbon::today())->get();
         return view('admin.payment.index', compact('package', 'discounts'));
@@ -71,6 +79,11 @@ class PaymentController extends Controller
         $packageId = $request->package_id;
         $package   = SubscriptionPackage::findOrFail($packageId);
         $harga     = $package->harga;
+
+        if ($package->is_trial && $this->hasUsedTrial($companyId)) {
+            return redirect()->route('admin.subscribe.index')
+                ->with('error', __('admin/settings.trial_already_used'));
+        }
 
         // 1. Cek Diskon
         $discount = null;
@@ -100,7 +113,7 @@ class PaymentController extends Controller
 
         // 2. Handle TRIAL (Tidak perlu ke payment gateway)
         if ($package->is_trial) {
-            CompanyInvoice::create([
+            $invoice = CompanyInvoice::create([
                 'company_id'    => $companyId,
                 'package_id'    => $package->id,
                 'nomor_invoice' => $nomorInvoice . '-TRIAL',
@@ -113,6 +126,7 @@ class PaymentController extends Controller
 
             // Aktifkan Subscription Langsung
             $this->activateSubscription($companyId, $packageId, $package->duration_days);
+            $this->sendSubscriptionInvoice($invoice);
 
             return redirect()->route('a.dashboard.index')->with('success', 'Trial Activated');
         }
@@ -148,6 +162,7 @@ class PaymentController extends Controller
                 'toyyibpay_bill_code' => $bill['bill_code'],
                 'payment_url' => $bill['payment_url'],
             ]);
+            $this->sendSubscriptionInvoice($invoice->fresh(['company.user', 'package']));
 
             return redirect()->route('payment.pending', [$invoice->id, $packageId]);
 
@@ -218,6 +233,13 @@ class PaymentController extends Controller
         }
 
         return response()->json(['message' => 'ToyyibPay callback received']);
+    }
+
+    private function hasUsedTrial(?int $companyId): bool
+    {
+        return $companyId !== null && CompanyInvoice::where('company_id', $companyId)
+            ->whereHas('package', fn ($query) => $query->where('is_trial', true))
+            ->exists();
     }
 
     /**
@@ -291,5 +313,14 @@ class PaymentController extends Controller
             ->latest()
             ->first()
             ->update(['tarikh_tamat' => $endDate]);
+    }
+
+    private function sendSubscriptionInvoice(CompanyInvoice $invoice): void
+    {
+        $email = $invoice->company?->user?->email ?? $invoice->company?->pic_email;
+
+        if ($email) {
+            Mail::to($email)->send(new CompanySubscriptionInvoiceMail($invoice));
+        }
     }
 }

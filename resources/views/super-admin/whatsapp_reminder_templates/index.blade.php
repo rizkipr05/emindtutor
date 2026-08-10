@@ -1,0 +1,15 @@
+@extends('layouts.superadmin')
+
+@section('content')
+@php($labels = ['teachers' => 'Guru', 'students' => 'Murid', 'company' => 'Perusahaan'])
+<div class="max-w-6xl mx-auto">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div><h1 class="text-2xl font-bold">Template Reminder</h1><p class="text-gray-500">Kelola template pesan terpisah untuk guru, murid, dan perusahaan.</p></div>
+        <a href="{{ route('superadmin.whatsapp-reminder-templates.create', ['audience' => $audience]) }}" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">+ Buat Template</a>
+    </div>
+    <div class="flex gap-2 mb-5">@foreach($labels as $key => $label)<a href="{{ route('superadmin.whatsapp-reminder-templates.index', ['audience' => $key]) }}" class="px-4 py-2 rounded-lg {{ $audience === $key ? 'bg-teal-600 text-white' : 'bg-white border text-gray-600' }}">Template {{ $label }}</a>@endforeach</div>
+    @if(session('success'))<div class="mb-4 px-4 py-3 rounded border border-green-300 bg-green-100 text-green-800">{{ session('success') }}</div>@endif
+    @if(session('error'))<div class="mb-4 px-4 py-3 rounded border border-red-300 bg-red-100 text-red-800">{{ session('error') }}</div>@endif
+    <div class="bg-white shadow rounded-xl overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-gray-50 border-b"><tr><th class="px-5 py-3">Nama Template</th><th class="px-5 py-3">Isi Pesan</th><th class="px-5 py-3">Status</th><th class="px-5 py-3 text-right">Aksi</th></tr></thead><tbody class="divide-y">@forelse($templates as $template)<tr><td class="px-5 py-4 font-semibold">{{ $template->title }}</td><td class="px-5 py-4 text-gray-600 max-w-xl">{{ $template->message }}</td><td class="px-5 py-4">{{ $template->is_active ? 'Aktif' : 'Nonaktif' }}</td><td class="px-5 py-4 text-right whitespace-nowrap"><form class="inline-flex items-center gap-2 mr-3" method="POST" action="{{ route('superadmin.whatsapp-reminder-templates.send', $template) }}" onsubmit="return confirm('Kirim template ini sekarang?')">@csrf<select name="company_id" required class="border rounded px-2 py-1 max-w-40"><option value="">Pilih perusahaan</option>@foreach($companies as $company)<option value="{{ $company->id }}">{{ $company->nama_wakil_syarikat }}</option>@endforeach</select><button {{ $template->is_active ? '' : 'disabled' }} class="bg-green-600 disabled:bg-gray-300 text-white px-2 py-1 rounded">Kirim Sekarang</button></form><a href="{{ route('superadmin.whatsapp-reminder-templates.edit', $template) }}" class="text-blue-600 mr-3">Edit</a><form class="inline" method="POST" action="{{ route('superadmin.whatsapp-reminder-templates.destroy', $template) }}" onsubmit="return confirm('Hapus template ini?')">@csrf @method('DELETE')<button class="text-red-600">Hapus</button></form></td></tr>@empty<tr><td colspan="4" class="px-5 py-10 text-center text-gray-500">Belum ada template {{ strtolower($labels[$audience]) }}.</td></tr>@endforelse</tbody></table></div>
+</div>
+@endsection

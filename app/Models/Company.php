@@ -78,4 +78,9 @@ class Company extends Model
     {
         return $this->hasOne(PaymentGateway::class);
     }
+
+    public function whatsAppReminders()
+    {
+        return $this->hasMany(WhatsAppReminder::class);
+    }
 }

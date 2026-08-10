@@ -114,7 +114,7 @@
                             @foreach ($courses as $course)
                                 <tr class="hover:bg-gray-50 transition-colors duration-200">
                                     <td class="px-6 py-4">
-                                        <div class="font-medium text-gray-900">{{ $course->nama_kos }}</div>
+                                        <div class="font-medium text-gray-900">{{ $course->localized_name }}</div>
                                     </td>
                                     <td class="px-6 py-4">
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">

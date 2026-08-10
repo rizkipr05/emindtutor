@@ -65,19 +65,17 @@
                         </h2>
                     </div>
                     <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Nama Kursus -->
-                        <div class="md:col-span-2">
-                            <label for="nama_kos" class="block text-sm font-semibold text-gray-700 mb-2">
-                                {{ __('admin/courses/create.course_name') }} <span class="text-red-500">*</span>
+                        <!-- Nama Kursus Mengikut Bahasa -->
+                        <div>
+                            <label for="nama_kos_en" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Course Name (English) <span class="text-red-500">*</span>
                             </label>
                             <input type="text" 
-                                   id="nama_kos" 
-                                   name="nama_kos" 
-                                   value="{{ old('nama_kos') }}"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors {{ $errors->has('nama_kos') ? 'border-red-500 bg-red-50' : '' }}" 
-                                   placeholder="{{ __('admin/courses/create.course_name_placeholder') }}"
+                                   id="nama_kos_en" name="nama_kos_en" value="{{ old('nama_kos_en') }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors {{ $errors->has('nama_kos_en') ? 'border-red-500 bg-red-50' : '' }}" 
+                                   placeholder="Example: Mathematics Class"
                                    required>
-                            @error('nama_kos')
+                            @error('nama_kos_en')
                                 <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -85,6 +83,11 @@
                                     {{ $message }}
                                 </p>
                             @enderror
+                        </div>
+                        <div>
+                            <label for="nama_kos_my" class="block text-sm font-semibold text-gray-700 mb-2">Nama Kelas (Bahasa Melayu) <span class="text-red-500">*</span></label>
+                            <input type="text" id="nama_kos_my" name="nama_kos_my" value="{{ old('nama_kos_my') }}" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors {{ $errors->has('nama_kos_my') ? 'border-red-500 bg-red-50' : '' }}" placeholder="Contoh: Kelas Matematik" required>
+                            @error('nama_kos_my')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                         </div>
 
                         <!-- Jenis Kursus -->

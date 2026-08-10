@@ -53,10 +53,16 @@
                     </ul>
 
                     {{-- Tombol --}}
-                    <a href="{{ route('subscribe.start', $package->id) }}"
-                       class="mt-8 block text-center w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
-                        {{ __('compro/pricing.subscribe_now') }}
-                    </a>
+                    @if($package->is_trial && $trialUsed)
+                        <span class="mt-8 block w-full cursor-not-allowed rounded-xl bg-slate-200 py-3 text-center font-semibold text-slate-500">
+                            {{ __('admin/settings.trial_already_used') }}
+                        </span>
+                    @else
+                        <a href="{{ route('subscribe.start', $package->id) }}"
+                           class="mt-8 block text-center w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
+                            {{ __('compro/pricing.subscribe_now') }}
+                        </a>
+                    @endif
                 </div>
             @endforeach
         </div>

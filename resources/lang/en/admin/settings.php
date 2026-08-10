@@ -28,4 +28,5 @@ return [
     'account_email' => 'Account Email', 'current_password' => 'Current Password', 'new_password' => 'New Password', 'password_help' => 'At least 8 characters.', 'confirm_new_password' => 'Confirm New Password', 'stay_signed_in' => 'You will remain signed in after the update.', 'update_password' => 'Update Password',
     'quick_links' => 'Quick Links', 'quick_links_subtitle' => 'Quick access to other management areas', 'company_profile' => 'Company Profile', 'company_profile_desc' => 'Edit company details & contacts', 'bank_account' => 'Bank Account', 'bank_account_desc' => 'Manage company bank accounts', 'gateway_desc' => 'Company ToyyibPay settings', 'packages_subscription' => 'Packages & Subscription', 'packages_subscription_desc' => 'Review or renew your subscription',
     'company_not_found' => 'Company not found.', 'company_updated' => 'Company information has been updated.', 'gateway_saved' => 'Payment gateway configuration has been saved.', 'current_password_incorrect' => 'The current password is incorrect.', 'password_updated' => 'Password has been updated.',
+    'trial_already_used' => 'Free trial already used',
 ];

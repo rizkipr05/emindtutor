@@ -31,6 +31,8 @@ return new class extends Migration
             ['setting_group' => 'packages', 'setting_key' => 'allow_package_management', 'setting_label' => 'Allow Package Management', 'setting_type' => 'toggle', 'setting_value' => '1'],
             ['setting_group' => 'billing', 'setting_key' => 'allow_manual_verification', 'setting_label' => 'Allow Manual Verification', 'setting_type' => 'toggle', 'setting_value' => '1'],
             ['setting_group' => 'billing', 'setting_key' => 'invoice_reminder_days', 'setting_label' => 'Invoice Reminder Days', 'setting_type' => 'number', 'setting_value' => '7'],
+            ['setting_group' => 'billing', 'setting_key' => 'subscription_grace_days', 'setting_label' => 'Subscription Grace Days', 'setting_type' => 'number', 'setting_value' => '7'],
+            ['setting_group' => 'communications', 'setting_key' => 'class_clock_in_reminder_minutes', 'setting_label' => 'Class Clock-in Reminder Minutes', 'setting_type' => 'number', 'setting_value' => '30'],
             ['setting_group' => 'staff', 'setting_key' => 'enable_staff_module', 'setting_label' => 'Enable Staff Module', 'setting_type' => 'toggle', 'setting_value' => '1'],
             ['setting_group' => 'staff', 'setting_key' => 'auto_activate_staff', 'setting_label' => 'Auto Activate Staff', 'setting_type' => 'toggle', 'setting_value' => '0'],
             ['setting_group' => 'reports', 'setting_key' => 'allow_pdf_export', 'setting_label' => 'Allow PDF Export', 'setting_type' => 'toggle', 'setting_value' => '1'],

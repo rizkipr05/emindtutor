@@ -101,10 +101,6 @@ class SettingsController extends Controller
                     'status' => $company->status ? __('super_admin/settings.management.active') : __('super_admin/settings.management.inactive'),
                     'edit_url' => route('companies.edit', $company),
                     'delete_url' => route('companies.destroy', $company),
-                    'meta' => $package->duration_days . ' ' . __('super_admin/settings.management.days') . ' · ' . number_format((float) $package->harga, 0),
-                    'status' => $package->status,
-                    'edit_url' => route('subscription-packages.edit', $package),
-                    'delete_url' => route('subscription-packages.destroy', $package),
                 ]),
             ],
             'staff' => [

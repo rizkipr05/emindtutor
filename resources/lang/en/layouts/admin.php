@@ -21,5 +21,6 @@ return [
     'new' => 'New',
     'komunikasi' => 'Announcement',
     'ulasan' => 'Reviews',
+    'system_settings' => 'System Settings',
     'subscription_inactive_notice' => 'No active subscription found. Some admin features may require an active package.',
 ];

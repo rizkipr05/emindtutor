@@ -128,8 +128,9 @@
           <!-- Nomor telefon Wakil Syarikat -->
           <div>
             <label for="pic_telefon" class="block text-sm font-medium text-gray-700">Nomor Telefon Wakil Syarikat</label>
-            <input type="text" name="pic_telefon" id="pic_telefon" required
+            <input type="tel" name="pic_telefon" id="pic_telefon" required value="{{ old('pic_telefon', '62') }}" inputmode="numeric" pattern="62[0-9]{8,13}" title="Gunakan format nomor Indonesia, contoh 628123456789"
               class="mt-2 w-full rounded-xl border-gray-300 focus:ring-blue-900 focus:border-blue-900 px-4 py-3 shadow-sm">
+            <p class="text-xs text-gray-500 mt-1">Gunakan awalan 62, contoh: 628123456789.</p>
             @error('pic_telefon')
               <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -148,8 +149,9 @@
           <!-- No Telefon -->
           <div>
             <label for="no_telefon" class="block text-sm font-medium text-gray-700">{{ __('compro/auth.phone') }}</label>
-            <input type="text" name="no_telefon" id="no_telefon" required
+            <input type="tel" name="no_telefon" id="no_telefon" required value="{{ old('no_telefon', '62') }}" inputmode="numeric" pattern="62[0-9]{8,13}" title="Gunakan format nomor Indonesia, contoh 628123456789"
               class="mt-2 w-full rounded-xl border-gray-300 focus:ring-blue-900 focus:border-blue-900 px-4 py-3 shadow-sm">
+            <p class="text-xs text-gray-500 mt-1">Gunakan awalan 62, contoh: 628123456789.</p>
             @error('no_telefon')
               <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror

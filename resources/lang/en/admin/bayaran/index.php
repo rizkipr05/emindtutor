@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Payments & Fees',
+    'title' => 'Payments & Fee',
     'subtitle' => 'Manage and monitor all student payments',
 
     'stats' => [

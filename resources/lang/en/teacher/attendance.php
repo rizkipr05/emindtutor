@@ -122,4 +122,9 @@ return [
     ],
 
     'attendance_saved_success' => 'Student attendance has been saved successfully!',
+    'student_count' => ':count students',
+    'ic_label' => 'IC',
+    'all_students_photo_alt' => 'All students photo',
+    'generic_error' => 'An error occurred',
+    'generic_error_with_message' => 'An error occurred: :message',
 ];

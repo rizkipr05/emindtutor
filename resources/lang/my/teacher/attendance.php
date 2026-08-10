@@ -122,4 +122,9 @@ return [
     ],
 
     'attendance_saved_success' => 'Kehadiran pelajar berjaya disimpan!',
+    'student_count' => ':count pelajar',
+    'ic_label' => 'IC',
+    'all_students_photo_alt' => 'Foto semua pelajar',
+    'generic_error' => 'Ralat telah berlaku',
+    'generic_error_with_message' => 'Ralat telah berlaku: :message',
 ];
