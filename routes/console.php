@@ -11,6 +11,7 @@ use App\Models\ClassScheduleSession;
 use App\Models\SystemSetting;
 use App\Models\Teacher;
 use App\Services\WhatsAppNotificationService;
+use App\Services\MonthlyStudentReportCollector;
 use App\Mail\CompanyInvoiceExpiredMail;
 use App\Mail\InvoiceTagihanMail;
 use Illuminate\Support\Facades\Mail;
@@ -19,6 +20,11 @@ use Illuminate\Support\Str;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Collect a permanent monthly report for each student when the company's configured date is due.
+Schedule::dailyAt('00:10')->call(function () {
+    app(MonthlyStudentReportCollector::class)->collectDueReports();
+});
 
 
 Schedule::daily()->call(function () {

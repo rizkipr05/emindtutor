@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
@@ -20,8 +21,19 @@ class ForgotPasswordController extends Controller
     public function sendResetLinkEmail(Request $request) {
         $request->validate(['email' => 'required|email|exists:users,email']);
 
-        // Mengirim link via Broker Laravel (Ini akan memanggil Notifikasi yang kita buat tadi)
-        $status = Password::sendResetLink($request->only('email'));
+        try {
+            // Mengirim link via Broker Laravel (Ini akan memanggil Notifikasi yang kita buat tadi)
+            $status = Password::sendResetLink($request->only('email'));
+        } catch (\Throwable $exception) {
+            Log::error('Password reset email could not be sent.', [
+                'email' => $request->email,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return back()->withInput()->withErrors([
+                'email' => 'E-mel reset kata laluan tidak dapat dihantar buat masa ini. Sila cuba lagi kemudian atau hubungi pentadbir.',
+            ]);
+        }
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('status', __($status))

@@ -15,6 +15,11 @@
                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition duration-200">
                 <i class="fas fa-arrow-left mr-2"></i>{{ __('teacher/attendance.back') }}
             </a>
+            @if($teacherAttendance && $teacherAttendance->check_in)
+                <a href="{{ route('teacher.teaching-reports.create', ['classSchedule' => $classSchedule, 'date' => now('Asia/Kuala_Lumpur')->toDateString()]) }}" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition duration-200">
+                    <i class="fas fa-file-alt mr-2"></i>{{ __('reports.teaching.open') }}
+                </a>
+            @endif
         </div>
     </div>
 

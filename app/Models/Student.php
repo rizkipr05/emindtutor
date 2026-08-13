@@ -51,6 +51,16 @@ class Student extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function monthlyReports()
+    {
+        return $this->hasMany(MonthlyStudentReport::class);
+    }
+
+    public function teachingReports()
+    {
+        return $this->hasMany(TeachingReport::class);
+    }
+
     public function hasActiveCourseAccess(int $courseId, ?Carbon $date = null): bool
     {
         $date = $date ?: Carbon::now('Asia/Kuala_Lumpur');

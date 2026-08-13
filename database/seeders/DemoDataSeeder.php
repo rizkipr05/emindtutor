@@ -4,13 +4,19 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\CompanyInvoice;
+use App\Models\ClassSchedule;
+use App\Models\ClassScheduleDay;
 use App\Models\Course;
+use App\Models\StudentAttendance;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Models\StudentInvoice;
 use App\Models\SubscriptionPackage;
 use App\Models\Teacher;
+use App\Models\TeacherAttendance;
+use App\Models\TeachingReport;
 use App\Models\User;
+use App\Services\MonthlyStudentReportCollector;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -73,6 +79,13 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
+        $company->update([
+            'monthly_report_schedule' => 'first_day',
+            'monthly_report_custom_day' => null,
+            'monthly_report_pdf_title' => 'Monthly Learning Statement',
+            'monthly_report_pdf_footer' => 'This report is generated automatically by EMindTutor.',
+        ]);
+
         if ($package) {
             CompanyInvoice::updateOrCreate(
                 [
@@ -93,7 +106,23 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        Course::updateOrCreate(
+        $teacher = Teacher::updateOrCreate(
+            ['user_id' => $teacherLogin->id],
+            [
+                'company_id' => $company->id,
+                'phone' => '011-2000002',
+                'ic_number' => 'TCH-DEMO-0001',
+                'allowance' => 25,
+                'allowance_type' => 'per_hour',
+                'bank_name' => 'DEMO BANK',
+                'bank_account_number' => '0000000001',
+                'bank_account_holder' => 'Teacher Demo',
+                'account_holders_ic_number' => 'TCH-DEMO-0001',
+                'status' => 'active',
+            ]
+        );
+
+        $course = Course::updateOrCreate(
             [
                 'company_id' => $company->id,
                 'nama_kos' => 'Kelas Demo EMindTutor',
@@ -315,6 +344,44 @@ class DemoDataSeeder extends Seeder
                     'tarikh_tamat' => $today->copy()->addDays(30),
                 ]
             );
+        }
+
+        if ($activeStudent && $teacher && $course) {
+            $classSchedule = ClassSchedule::updateOrCreate(
+                ['company_id' => $company->id, 'course_id' => $course->id, 'teacher_id' => $teacher->id, 'nama_kelas' => 'Demo Learning Class'],
+                ['link_group' => null, 'notes' => 'Demo class for monthly learning reports.', 'allowance_type' => 'per_hour', 'allowance' => 25, 'status' => 'akan_datang']
+            );
+
+            ClassScheduleDay::updateOrCreate(
+                ['class_schedule_id' => $classSchedule->id, 'hari' => 'Monday'],
+                ['jam_mulai' => '10:00:00', 'durasi_menit' => 60]
+            );
+            $classSchedule->students()->syncWithoutDetaching([$activeStudent->id]);
+
+            $reportMonth = $today->copy()->subMonthNoOverflow();
+            foreach ([3, 10, 17, 24] as $day) {
+                $classDate = $reportMonth->copy()->day(min($day, $reportMonth->daysInMonth))->setTime(10, 0);
+                TeacherAttendance::updateOrCreate(
+                    ['teacher_id' => $teacher->id, 'class_schedule_id' => $classSchedule->id, 'check_in' => $classDate],
+                    ['check_out' => $classDate->copy()->addHour(), 'note' => 'Class completed as planned.']
+                );
+                StudentAttendance::updateOrCreate(
+                    ['user_id' => $activeStudent->user_id, 'class_schedule_id' => $classSchedule->id, 'attendance_date' => $classDate->toDateString()],
+                    ['attendance_time' => '10:00:00', 'status' => $day === 17 ? 'late' : 'present']
+                );
+                TeachingReport::updateOrCreate(
+                    ['class_schedule_id' => $classSchedule->id, 'student_id' => $activeStudent->id, 'class_date' => $classDate->toDateString()],
+                    [
+                        'company_id' => $company->id,
+                        'teacher_id' => $teacher->id,
+                        'learning_topic' => match ($day) { 3 => 'Number patterns', 10 => 'Basic fractions', 17 => 'Problem solving', default => 'Monthly revision' },
+                        'teacher_note' => $day === 17 ? 'Arrived late but completed the class activities well.' : 'Good participation and steady progress.',
+                        'attendance_status' => $day === 17 ? 'late' : 'present',
+                    ]
+                );
+            }
+
+            app(MonthlyStudentReportCollector::class)->collectStudentReport($company, $activeStudent, $reportMonth, $today);
         }
 
         if ($pendingStudent) {

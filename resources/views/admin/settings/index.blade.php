@@ -88,9 +88,30 @@
                     <h2 class="text-xl font-bold text-slate-900">{{ __('admin/settings.overview.title') }}</h2>
                     <p class="mt-1 text-sm text-slate-500">{{ __('admin/settings.overview.subtitle') }}</p>
                 </div>
-                <form method="POST" action="{{ route('admin.settings.update', ['section' => 'overview']) }}">
+                <form method="POST" action="{{ route('admin.settings.update', ['section' => 'overview']) }}" enctype="multipart/form-data">
                     @csrf
                     <div class="p-6 grid gap-4 sm:grid-cols-2">
+
+                        <div class="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <label class="block text-sm font-semibold text-slate-900 mb-1">Nama Syarikat</label>
+                            <input type="text" name="nama_syarikat" value="{{ old('nama_syarikat', $company->nama_syarikat) }}"
+                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">
+                            @error('nama_syarikat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <label class="block text-sm font-semibold text-slate-900 mb-1">E-mel Syarikat</label>
+                            <input type="email" name="email_syarikat" value="{{ old('email_syarikat', $company->email_syarikat) }}"
+                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">
+                            @error('email_syarikat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <label class="block text-sm font-semibold text-slate-900 mb-1">Website Syarikat</label>
+                            <input type="url" name="link" value="{{ old('link', $company->link) }}" placeholder="https://example.com"
+                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">
+                            @error('link')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
 
                         <div class="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                             <label class="block text-sm font-semibold text-slate-900 mb-1">{{ __('admin/settings.representative_name') }}</label>
@@ -133,6 +154,25 @@
                             <textarea name="alamat" rows="3"
                                       class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">{{ old('alamat', $company->alamat) }}</textarea>
                             @error('alamat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
+
+                        <div class="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            <label class="block text-sm font-semibold text-slate-900 mb-1">Logo Syarikat</label>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                @if($company->logo_syarikat)
+                                    <img src="{{ asset('uploads/' . $company->logo_syarikat) }}" alt="Logo syarikat" class="h-16 w-16 rounded-xl border border-slate-200 bg-white object-contain p-1">
+                                @endif
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <input id="logo_syarikat" type="file" name="logo_syarikat" accept="image/png,image/jpeg,image/webp" class="sr-only"
+                                           onchange="document.getElementById('logo_syarikat_name').textContent = this.files.length ? this.files[0].name : 'Tiada fail dipilih'">
+                                    <label for="logo_syarikat" class="inline-flex cursor-pointer items-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700">
+                                        Pilih Logo
+                                    </label>
+                                    <span id="logo_syarikat_name" class="text-sm text-slate-500">Tiada fail dipilih</span>
+                                </div>
+                            </div>
+                            <p class="mt-1.5 text-xs text-slate-500">Format PNG, JPG, JPEG atau WEBP. Maksimum 2 MB.</p>
+                            @error('logo_syarikat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
                     </div>
                     <div class="flex items-center justify-between gap-4 border-t border-slate-200 px-6 py-4">
@@ -426,6 +466,54 @@
                     </div>
                 </form>
             </div>
+
+            @elseif($currentSectionKey === 'monthly_reports')
+            <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h2 class="text-xl font-bold text-slate-900">{{ __('reports.monthly.settings_title') }}</h2>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('reports.monthly.settings_subtitle') }}</p>
+                </div>
+                <form method="POST" action="{{ route('admin.settings.update', ['section' => 'monthly_reports']) }}">
+                    @csrf
+                    <div class="space-y-4 p-6">
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <label for="monthly_report_schedule" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.collection_date') }}</label>
+                            <select id="monthly_report_schedule" name="monthly_report_schedule" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100">
+                                <option value="first_day" {{ old('monthly_report_schedule', $company->monthly_report_schedule) === 'first_day' ? 'selected' : '' }}>{{ __('reports.monthly.first_day') }}</option>
+                                <option value="last_day" {{ old('monthly_report_schedule', $company->monthly_report_schedule) === 'last_day' ? 'selected' : '' }}>{{ __('reports.monthly.last_day') }}</option>
+                                <option value="custom_day" {{ old('monthly_report_schedule', $company->monthly_report_schedule) === 'custom_day' ? 'selected' : '' }}>{{ __('reports.monthly.custom_day') }}</option>
+                            </select>
+                            @error('monthly_report_schedule')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
+                        <div id="custom-report-day" class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <label for="monthly_report_custom_day" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.custom_day_label') }}</label>
+                            <input id="monthly_report_custom_day" type="number" name="monthly_report_custom_day" min="1" max="31" value="{{ old('monthly_report_custom_day', $company->monthly_report_custom_day) }}" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100">
+                            <p class="mt-1.5 text-xs text-slate-500">{{ __('reports.monthly.custom_day_help') }}</p>
+                            @error('monthly_report_custom_day')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <label for="monthly_report_pdf_title" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.pdf_title') }}</label>
+                            <input id="monthly_report_pdf_title" name="monthly_report_pdf_title" value="{{ old('monthly_report_pdf_title', $company->monthly_report_pdf_title) }}" placeholder="Monthly Learning Statement" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900">
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <label for="monthly_report_pdf_footer" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.pdf_footer') }}</label>
+                            <textarea id="monthly_report_pdf_footer" name="monthly_report_pdf_footer" rows="3" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="Contoh: Dokumen ini dijana secara automatik.">{{ old('monthly_report_pdf_footer', $company->monthly_report_pdf_footer) }}</textarea>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 border-t border-slate-200 px-6 py-4">
+                        <p class="text-sm text-slate-500">{{ __('reports.monthly.student_visibility') }}</p>
+                        <button type="submit" class="inline-flex items-center rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700">{{ __('reports.monthly.save') }}</button>
+                    </div>
+                </form>
+            </div>
+
+            <script>
+                const scheduleInput = document.getElementById('monthly_report_schedule');
+                const customDayInput = document.getElementById('custom-report-day');
+                const toggleCustomDay = () => customDayInput.classList.toggle('hidden', scheduleInput.value !== 'custom_day');
+                scheduleInput.addEventListener('change', toggleCustomDay);
+                toggleCustomDay();
+            </script>
 
             @elseif($currentSectionKey === 'security')
             {{-- ─── SECURITY: Change Password ─── --}}

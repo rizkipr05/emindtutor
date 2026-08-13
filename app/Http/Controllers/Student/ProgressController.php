@@ -9,6 +9,7 @@ use App\Models\TeacherAttendance;
 use App\Models\StudentAttendance;
 use App\Models\ClassSchedule;
 use App\Models\Course;
+use App\Models\MonthlyStudentReport;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,10 +22,14 @@ class ProgressController extends Controller
         // dd($student);
         $selectedMonth = $request->get('month', now()->month);
         $selectedYear = $request->get('year', now()->year);
-        
+        $monthlyReport = MonthlyStudentReport::where('student_id', $student->id)
+            ->where('report_month', $selectedMonth)
+            ->where('report_year', $selectedYear)
+            ->first();
+
         $progressData = $this->getStudentProgress($student->id, $selectedMonth, $selectedYear);
-        
-        return view('student.progress.index', compact('progressData', 'selectedMonth', 'selectedYear'));
+
+        return view('student.progress.index', compact('progressData', 'monthlyReport', 'selectedMonth', 'selectedYear'));
     }
     
     private function getStudentProgress($studentId, $month, $year)

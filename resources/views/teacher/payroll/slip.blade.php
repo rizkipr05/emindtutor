@@ -223,14 +223,15 @@
 <body>
     @php
         $company = $teacher->company;
-        $companyName = $pdfFields['company_name'] ?? ($company?->user?->name ?? '-');
+        $companyName = $pdfFields['company_name'] ?? ($company?->nama_syarikat ?: ($company?->user?->name ?? '-'));
         $printedAt = $printedAt ?? now('Asia/Kuala_Lumpur');
         $logoPath = null;
 
         if (!empty($company?->logo_syarikat)) {
             $candidate = public_path('uploads/' . $company->logo_syarikat);
             if (file_exists($candidate)) {
-                $logoPath = $candidate;
+                $mimeType = mime_content_type($candidate) ?: 'image/png';
+                $logoPath = 'data:' . $mimeType . ';base64,' . base64_encode(file_get_contents($candidate));
             }
         }
 
@@ -276,6 +277,8 @@
                     <div class="company-meta">
                         <div>COM. {{ $pdfFields['company_registration'] ?? ($company?->nombor_pendaftaran_syarikat ?? '-') }}</div>
                         <div>{{ $pdfFields['company_address'] ?? ($company?->alamat ?? '-') }}</div>
+                        @if($company?->email_syarikat)<div>{{ $company->email_syarikat }}</div>@endif
+                        <div>{{ collect([$company?->no_telefon, $company?->link])->filter()->implode(' | ') }}</div>
                     </div>
                 </td>
             </tr>

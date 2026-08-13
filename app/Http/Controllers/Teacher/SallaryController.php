@@ -21,11 +21,6 @@ class SallaryController extends Controller
         return view('teacher.payroll.index', $this->buildPageData($request));
     }
 
-    public function customize(Request $request)
-    {
-        return view('teacher.payroll.customize', $this->buildPageData($request));
-    }
-
     private function buildPageData(Request $request): array
     {
         $teacher = Teacher::with(['user', 'company.user'])->where('user_id', Auth::id())->firstOrFail();
@@ -323,17 +318,17 @@ class SallaryController extends Controller
         $totalTeachingSalary = $payrollData['totalTeachingSalary'] ?? 0;
 
         $defaults = [
-            'company_name' => $company?->user?->name ?? '-',
+            'company_name' => $company?->nama_syarikat ?: ($company?->user?->name ?? '-'),
             'company_registration' => $company?->nombor_pendaftaran_syarikat ?? '-',
             'company_address' => $company?->alamat ?? '-',
             'employee_name' => strtoupper($teacher->user->name),
             'employee_nric' => $teacher->ic_number ?? '-',
             'bank_name' => strtoupper($teacher->bank_name ?? '-'),
             'bank_account_number' => $teacher->bank_account_number ?? '-',
-            'outlet' => $teachingItems->pluck('label')->take(2)->implode(', ') ?: ($company?->user?->name ?? '-'),
+            'outlet' => $teachingItems->pluck('label')->take(2)->implode(', ') ?: ($company?->nama_syarikat ?: ($company?->user?->name ?? '-')),
             'payslip_date' => now('Asia/Kuala_Lumpur')->format('d/m/Y'),
             'payroll_period' => $month . ' ' . $year,
-            'department' => $company?->user?->name ?? '-',
+            'department' => $company?->nama_syarikat ?: ($company?->user?->name ?? '-'),
             'position' => 'Teacher',
             'employee_ref' => 'T-' . str_pad((string) $teacher->id, 5, '0', STR_PAD_LEFT),
             'annual_leave_entitlement' => '0.00',
@@ -351,12 +346,7 @@ class SallaryController extends Controller
             'employer_hrd' => '0.00',
         ];
 
-        $fields = [];
-        foreach ($defaults as $key => $value) {
-            $fields[$key] = (string) $request->query($key, $value);
-        }
-
-        return $fields;
+        return $defaults;
     }
 
     private function resolveMonthName(?string $month): string

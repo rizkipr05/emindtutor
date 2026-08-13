@@ -15,13 +15,6 @@
             {{ __('teacher/payroll.teacher_info', ['name' => $teacher->user->name, 'ic' => $teacher->ic_number ?? __('teacher/payroll.not_available')]) }}
         </p>
         <div class="mt-5 flex justify-center gap-3">
-            <a href="{{ route('teacher.sallaries.customize', ['month' => $selectedMonth, 'year' => $selectedYear]) }}"
-                class="inline-flex min-w-[220px] items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold shadow-md transition"
-                style="color:#ffffff !important; background-color:#2563eb !important; border:1px solid #1d4ed8 !important;">
-                <span style="color:#ffffff !important; display:inline !important; visibility:visible !important; opacity:1 !important;">
-                    Kustom PDF Slip Gaji
-                </span>
-            </a>
             <a href="{{ route('teacher.sallaries.download', ['month' => $selectedMonth, 'year' => $selectedYear]) }}"
                 class="inline-flex min-w-[220px] items-center justify-center rounded-lg bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-red-700">
                 Print PDF Payslip
@@ -33,17 +26,20 @@
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start">
             <div class="flex h-24 w-24 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
                 @if($companyLogo)
-                    <img src="{{ $companyLogo }}" alt="{{ $company->user->name ?? __('teacher/payroll.not_available') }}" class="h-full w-full object-contain">
+                    <img src="{{ $companyLogo }}" alt="{{ $company?->user?->name ?? __('teacher/payroll.not_available') }}" class="h-full w-full object-contain">
                 @else
                     <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('teacher/payroll.letter_head_title') }}</span>
                 @endif
             </div>
             <div class="flex-1">
-                <h3 class="text-xl font-bold text-slate-900">{{ $company->user->name ?? __('teacher/payroll.not_available') }}</h3>
+                <h3 class="text-xl font-bold text-slate-900">{{ $company?->nama_syarikat ?: ($company?->user?->name ?? __('teacher/payroll.not_available')) }}</h3>
                 <div class="mt-3 grid grid-cols-1 gap-3 text-sm text-gray-700 md:grid-cols-2">
-                    <p><span class="font-semibold">{{ __('teacher/payroll.company_registration') }}:</span> {{ $company->nombor_pendaftaran_syarikat ?? __('teacher/payroll.not_available') }}</p>
+                    <p><span class="font-semibold">{{ __('teacher/payroll.company_registration') }}:</span> {{ $company?->nombor_pendaftaran_syarikat ?? __('teacher/payroll.not_available') }}</p>
                     <p><span class="font-semibold">{{ __('teacher/payroll.payslip_date') }}:</span> {{ now('Asia/Kuala_Lumpur')->format('d/m/Y') }}</p>
-                    <p class="md:col-span-2"><span class="font-semibold">{{ __('teacher/payroll.company_address') }}:</span> {{ $company->alamat ?? __('teacher/payroll.not_available') }}</p>
+                    <p class="md:col-span-2"><span class="font-semibold">{{ __('teacher/payroll.company_address') }}:</span> {{ $company?->alamat ?? __('teacher/payroll.not_available') }}</p>
+                    <p><span class="font-semibold">E-mel:</span> {{ $company?->email_syarikat ?? __('teacher/payroll.not_available') }}</p>
+                    <p><span class="font-semibold">Telefon:</span> {{ $company?->no_telefon ?? __('teacher/payroll.not_available') }}</p>
+                    @if($company?->link)<p class="md:col-span-2"><span class="font-semibold">Website:</span> {{ $company->link }}</p>@endif
                 </div>
             </div>
         </div>

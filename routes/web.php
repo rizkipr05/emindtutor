@@ -20,6 +20,7 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Compro\HomeController;
 use App\Http\Controllers\Compro\PricingController;
 use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
+use App\Http\Controllers\Teacher\TeachingReportController;
 use App\Http\Controllers\Admin\RuleController;
 use App\Http\Controllers\Student\DashboardController as SDashController;
 use App\Http\Controllers\Student\TeacherReviewController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\Compro\CompanyController as ComproCompanyController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\SubscribeController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\MonthlyStudentReportController;
 use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\BayaranController;
 use App\Http\Controllers\Teacher\ReviewController;
@@ -43,6 +45,7 @@ use App\Http\Controllers\Teacher\SallaryController as TeacherSallaryController;
 use App\Http\Controllers\Student\PaymentController as StudentPaymentController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Student\ProgressController;
+use App\Http\Controllers\Student\MonthlyReportController;
 use App\Http\Controllers\Student\CommunicationController;
 use App\Http\Controllers\Admin\BonusController;
 use App\Http\Controllers\Admin\AnalyticsController;
@@ -367,6 +370,11 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
         Route::get('/reports/download/{classId}/{type}/{month}/{year}', 'downloadClassReport')->name('download');
     });
 
+    Route::controller(MonthlyStudentReportController::class)->prefix('monthly-reports')->name('admin.monthly-reports.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{report}/download', 'download')->name('download');
+    });
+
     Route::controller(ClassScheduleController::class)->prefix('class')->name('admin.class.')->group(function (){
         Route::get('/', 'index')->name('index');
         Route::get('/{id}', 'show')->name('show');
@@ -433,6 +441,11 @@ Route::prefix('teacher')->middleware(['auth', 'teacher', 'localization'])->group
         Route::post('/{classSchedule}/checkout', 'teacherCheckOut')->name('checkout');
         Route::post('/{classSchedule}/store', 'storeAttendance')->name('store');
     });
+
+    Route::controller(TeachingReportController::class)->prefix('teaching-reports')->name('teacher.teaching-reports.')->group(function () {
+        Route::get('/{classSchedule}/create', 'create')->name('create');
+        Route::post('/{classSchedule}', 'store')->name('store');
+    });
     
     Route::controller(ScheduleController::class)->group(function () {
         Route::get('/schedule', 'index')->name('teacher.schedule.index');
@@ -449,7 +462,6 @@ Route::prefix('teacher')->middleware(['auth', 'teacher', 'localization'])->group
 
     Route::controller(TeacherSallaryController::class)->prefix('sallaries')->name('teacher.sallaries.')->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::get('/customize', 'customize')->name('customize');
         // Route::get('/{salary}/show', 'show')->name('show');
         Route::get('preview/{month}/{year}', 'preview')->name('preview');
         Route::get('download/{month}/{year}', 'download')->name('download');
@@ -462,6 +474,8 @@ Route::get('/student', [SDashController::class, 'index'])
     ->name('s.dashboard.index');
 
 Route::prefix('student')->middleware(['auth', 'student', 'localization'])->group(function () {
+    Route::get('/monthly-reports', [MonthlyReportController::class, 'index'])->name('student.monthly-reports.index');
+    Route::get('/monthly-reports/{report}/download', [MonthlyReportController::class, 'download'])->name('student.monthly-reports.download');
     Route::controller(TeacherReviewController::class)->prefix('feedbacks')->name('student.reviews.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
@@ -485,6 +499,7 @@ Route::prefix('student')->middleware(['auth', 'student', 'localization'])->group
 
     Route::controller(StudentPaymentController::class)->prefix('payments')->name('student.payments.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/{invoiceId}/receipt', 'receipt')->name('receipt');
         Route::get('/create/{invoiceId}', 'create')->name('create');
         Route::post('/store', 'store')->name('store');
     });
@@ -499,6 +514,8 @@ Route::prefix('student')->middleware(['auth', 'student', 'localization'])->group
 
     Route::get('/pay/{id}', [InvoiceController::class, 'pay'])->name('student.pay');
 });
+
+Route::get('/reports/public/{token}', [MonthlyReportController::class, 'publicDownload'])->name('reports.public.download');
 
 Route::fallback(function () {
     if (request()->is('student') || request()->is('student/*') || request()->is('studet') || request()->is('studet/*')) {

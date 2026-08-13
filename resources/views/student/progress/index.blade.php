@@ -64,6 +64,25 @@
         </div>
 
         <!-- Progress Cards -->
+        @if($monthlyReport)
+            <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-sm">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p class="font-bold"><i class="fas fa-check-circle mr-2"></i>{{ __('reports.monthly.collected') }}</p>
+                        <p class="mt-1 text-sm">{{ __('reports.monthly.collected_detail', ['month' => \Carbon\Carbon::parse($monthlyReport->period_start)->translatedFormat('F Y'), 'date' => $monthlyReport->collected_at->translatedFormat('d M Y, H:i')]) }}</p>
+                    </div>
+                    <div class="rounded-lg bg-white px-4 py-2 text-sm shadow-sm">
+                        <span class="font-semibold">{{ __('reports.monthly.overall_attendance') }}</span>
+                        {{ data_get($monthlyReport->summary, 'attendance_percentage', 0) }}%
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 shadow-sm">
+                <i class="fas fa-clock mr-2"></i>{{ __('reports.monthly.live_notice') }}
+            </div>
+        @endif
+
         @if(empty($progressData))
             <div class="bg-white rounded-xl shadow-md border border-gray-100 p-12 text-center">
                 <div class="text-gray-400 mb-4">

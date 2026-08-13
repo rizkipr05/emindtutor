@@ -11,6 +11,8 @@ class Company extends Model
 
     protected $fillable = [
         'user_id',
+        'nama_syarikat',
+        'email_syarikat',
         'nama_wakil_syarikat',
         'pic_telefon',
         'pic_email',
@@ -18,12 +20,17 @@ class Company extends Model
         'link',
         'no_telefon',
         'nombor_pendaftaran_syarikat',
-        
+        'logo_syarikat',
         'status',
+        'monthly_report_schedule',
+        'monthly_report_custom_day',
+        'monthly_report_pdf_title',
+        'monthly_report_pdf_footer',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'monthly_report_custom_day' => 'integer',
     ];
 
     // Relasi ke user
@@ -62,6 +69,11 @@ class Company extends Model
     public function students()
     {
         return $this->hasMany(Student::class);
+    }
+
+    public function monthlyStudentReports()
+    {
+        return $this->hasMany(MonthlyStudentReport::class);
     }
 
     public function classSchedules()

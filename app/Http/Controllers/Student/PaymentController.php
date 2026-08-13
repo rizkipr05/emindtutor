@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\StudentInvoice;
 use App\Models\StudentPayment;
 use App\Models\CompanyBankDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -99,6 +100,23 @@ class PaymentController extends Controller
         });
 
         return redirect()->route('student.payments.index')->with('success', 'Payment berhasil ditambahkan!');
+    }
+
+    public function receipt($invoiceId)
+    {
+        $student = Auth::user()->students;
+        abort_unless($student, 403);
+
+        $invoice = StudentInvoice::with(['student.user', 'student.company', 'course', 'payment'])
+            ->whereKey($invoiceId)
+            ->where('student_id', $student->id)
+            ->where('status_bayaran', 'paid')
+            ->firstOrFail();
+
+        $pdf = Pdf::loadView('student.payments.receipt', compact('invoice'));
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->download("resit-{$invoice->nomor_invoice}.pdf");
     }
 
 }
