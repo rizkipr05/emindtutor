@@ -94,16 +94,18 @@
 
                         <div class="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                             <label class="block text-sm font-semibold text-slate-900 mb-1">Nama Syarikat</label>
-                            <input type="text" name="nama_syarikat" value="{{ old('nama_syarikat', $company->nama_syarikat) }}"
-                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">
-                            @error('nama_syarikat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                            <input type="text" value="{{ $company->user?->name ?: $company->nama_syarikat }}"
+                                class="block w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-700 shadow-sm"
+                                readonly>
+                            <p class="mt-1.5 text-xs text-slate-500">Nama ini menggunakan data semasa pendaftaran syarikat dan turut dipaparkan pada Monthly Report.</p>
                         </div>
 
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                            <label class="block text-sm font-semibold text-slate-900 mb-1">E-mel Syarikat</label>
-                            <input type="email" name="email_syarikat" value="{{ old('email_syarikat', $company->email_syarikat) }}"
-                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">
-                            @error('email_syarikat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                            <label class="block text-sm font-semibold text-slate-900 mb-1">E-mel Login Syarikat</label>
+                            <input type="email" value="{{ $company->user?->email ?: $user->email }}"
+                                class="block w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-700 shadow-sm"
+                                readonly>
+                            <p class="mt-1.5 text-xs text-slate-500">Menggunakan e-mel yang didaftarkan untuk login syarikat.</p>
                         </div>
 
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -122,9 +124,10 @@
 
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                             <label class="block text-sm font-semibold text-slate-900 mb-1">{{ __('admin/settings.representative_email') }}</label>
-                            <input type="email" name="pic_email" value="{{ old('pic_email', $company->pic_email) }}"
-                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">
-                            @error('pic_email')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                            <input type="email" value="{{ $company->user?->email ?: $user->email }}"
+                                class="block w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-700 shadow-sm"
+                                readonly>
+                            <p class="mt-1.5 text-xs text-slate-500">Diselaraskan dengan e-mel login syarikat.</p>
                         </div>
 
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">

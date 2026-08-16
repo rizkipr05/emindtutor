@@ -119,6 +119,11 @@
         </div>
     </div>
 </div>
+
+<div class="p-6">
+    <x-biometric-registration />
+</div>
+
 <!-- Tukar Kata Laluan -->
         <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
             <div class="flex items-center gap-3 mb-6">

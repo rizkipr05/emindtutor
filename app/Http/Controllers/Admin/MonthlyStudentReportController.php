@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MonthlyStudentReport;
 use App\Models\Staff;
+use App\Services\MonthlyLearningStatementPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -35,6 +36,8 @@ class MonthlyStudentReportController extends Controller
             ?? Staff::where('user_id', Auth::id())->value('company_id');
         abort_unless($report->company_id === $companyId, 403);
         abort_unless($report->pdf_path && Storage::disk('public')->exists($report->pdf_path), 404);
+
+        app(MonthlyLearningStatementPdfService::class)->generate($report);
 
         return Storage::disk('public')->download($report->pdf_path, "monthly-learning-statement-{$report->report_year}-{$report->report_month}.pdf");
     }

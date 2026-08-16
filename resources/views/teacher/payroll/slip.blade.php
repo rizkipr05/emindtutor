@@ -223,7 +223,7 @@
 <body>
     @php
         $company = $teacher->company;
-        $companyName = $pdfFields['company_name'] ?? ($company?->nama_syarikat ?: ($company?->user?->name ?? '-'));
+        $companyName = $pdfFields['company_name'] ?? ($company?->user?->name ?: ($company?->nama_syarikat ?? '-'));
         $printedAt = $printedAt ?? now('Asia/Kuala_Lumpur');
         $logoPath = null;
 
@@ -275,10 +275,9 @@
                 <td>
                     <div class="company-name">{{ $companyName }}</div>
                     <div class="company-meta">
-                        <div>COM. {{ $pdfFields['company_registration'] ?? ($company?->nombor_pendaftaran_syarikat ?? '-') }}</div>
                         <div>{{ $pdfFields['company_address'] ?? ($company?->alamat ?? '-') }}</div>
-                        @if($company?->email_syarikat)<div>{{ $company->email_syarikat }}</div>@endif
-                        <div>{{ collect([$company?->no_telefon, $company?->link])->filter()->implode(' | ') }}</div>
+                        @if($company?->user?->email)<div>{{ $company->user->email }}</div>@endif
+                        @if($company?->no_telefon)<div>{{ $company->no_telefon }}</div>@endif
                     </div>
                 </td>
             </tr>

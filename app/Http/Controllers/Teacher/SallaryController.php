@@ -316,19 +316,20 @@ class SallaryController extends Controller
         $company = $teacher->company;
         $teachingItems = $payrollData['teachingItems'] ?? collect();
         $totalTeachingSalary = $payrollData['totalTeachingSalary'] ?? 0;
+        $companyName = $company?->user?->name ?: ($company?->nama_syarikat ?? '-');
 
         $defaults = [
-            'company_name' => $company?->nama_syarikat ?: ($company?->user?->name ?? '-'),
+            'company_name' => $companyName,
             'company_registration' => $company?->nombor_pendaftaran_syarikat ?? '-',
             'company_address' => $company?->alamat ?? '-',
             'employee_name' => strtoupper($teacher->user->name),
             'employee_nric' => $teacher->ic_number ?? '-',
             'bank_name' => strtoupper($teacher->bank_name ?? '-'),
             'bank_account_number' => $teacher->bank_account_number ?? '-',
-            'outlet' => $teachingItems->pluck('label')->take(2)->implode(', ') ?: ($company?->nama_syarikat ?: ($company?->user?->name ?? '-')),
+            'outlet' => $teachingItems->pluck('label')->take(2)->implode(', ') ?: $companyName,
             'payslip_date' => now('Asia/Kuala_Lumpur')->format('d/m/Y'),
             'payroll_period' => $month . ' ' . $year,
-            'department' => $company?->nama_syarikat ?: ($company?->user?->name ?? '-'),
+            'department' => $companyName,
             'position' => 'Teacher',
             'employee_ref' => 'T-' . str_pad((string) $teacher->id, 5, '0', STR_PAD_LEFT),
             'annual_leave_entitlement' => '0.00',

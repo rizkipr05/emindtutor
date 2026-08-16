@@ -18,7 +18,7 @@ class SettingsController extends Controller
     private function resolveCompany(): ?Company
     {
         $user = Auth::user();
-        return Company::where('user_id', $user->id)->first()
+        return Company::with('user')->where('user_id', $user->id)->first()
             ?? Staff::with('company')->where('user_id', $user->id)->first()?->company;
     }
 
@@ -102,11 +102,8 @@ class SettingsController extends Controller
 
             case 'overview':
                 $validated = $request->validate([
-                    'nama_syarikat'                 => 'nullable|string|max:255',
-                    'email_syarikat'                => 'nullable|email|max:255',
                     'nama_wakil_syarikat'          => 'required|string|max:255',
                     'pic_telefon'                  => 'nullable|string|max:20',
-                    'pic_email'                    => 'nullable|email|max:255',
                     'no_telefon'                   => 'nullable|string|max:20',
                     'alamat'                       => 'nullable|string|max:500',
                     'nombor_pendaftaran_syarikat'  => 'nullable|string|max:100',

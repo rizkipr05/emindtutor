@@ -23,7 +23,7 @@
 <body>
     @php
         $company = $invoice->student->company;
-        $companyName = $company?->nama_syarikat ?: ($company?->user?->name ?? '-');
+        $companyName = $company?->user?->name ?: ($company?->nama_syarikat ?? '-');
         $logoPath = $company?->logo_syarikat ? public_path('uploads/' . $company->logo_syarikat) : null;
         $logoDataUri = null;
 
@@ -43,9 +43,8 @@
             <td>
                 <div class="company-name">{{ $companyName }}</div>
                 <div class="muted">
-                    @if($company?->nombor_pendaftaran_syarikat)No. Pendaftaran: {{ $company->nombor_pendaftaran_syarikat }}<br>@endif
                     @if($company?->alamat){{ $company->alamat }}<br>@endif
-                    {{ collect([$company?->email_syarikat, $company?->no_telefon, $company?->link])->filter()->implode(' | ') }}
+                    {{ collect([$company?->user?->email, $company?->no_telefon])->filter()->implode(' | ') }}
                 </div>
             </td>
         </tr>

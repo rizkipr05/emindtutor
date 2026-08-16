@@ -11,7 +11,7 @@ class MonthlyLearningStatementPdfService
 {
     public function generate(MonthlyStudentReport $report): MonthlyStudentReport
     {
-        $report->loadMissing(['student.user', 'company']);
+        $report->loadMissing(['student.user', 'company.user']);
         $report->public_token ??= (string) Str::uuid();
         $filename = "monthly-learning-statements/{$report->company_id}/{$report->student_id}/{$report->report_year}-{$report->report_month}.pdf";
 

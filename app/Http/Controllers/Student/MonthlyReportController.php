@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\MonthlyStudentReport;
+use App\Services\MonthlyLearningStatementPdfService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -23,6 +24,8 @@ class MonthlyReportController extends Controller
         abort_unless($report->student_id === Auth::user()->students?->id, 403);
         abort_unless($report->pdf_path && Storage::disk('public')->exists($report->pdf_path), 404);
 
+        app(MonthlyLearningStatementPdfService::class)->generate($report);
+
         return Storage::disk('public')->download($report->pdf_path, $this->filename($report));
     }
 
@@ -30,6 +33,8 @@ class MonthlyReportController extends Controller
     {
         $report = MonthlyStudentReport::where('public_token', $token)->firstOrFail();
         abort_unless($report->pdf_path && Storage::disk('public')->exists($report->pdf_path), 404);
+
+        app(MonthlyLearningStatementPdfService::class)->generate($report);
 
         return Storage::disk('public')->download($report->pdf_path, $this->filename($report));
     }
