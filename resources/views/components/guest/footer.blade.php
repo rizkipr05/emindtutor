@@ -99,7 +99,7 @@
   <div class="border-t border-slate-700/50 mt-12 pt-6 text-slate-400 text-sm text-center relative z-10">
     <div class="flex items-center justify-center space-x-2">
       <span class="w-1 h-1 bg-cyan-400 rounded-full"></span>
-      <span>Copyright © 2025 eMindTutor</span>
+      <span>{{ __('compro/footer.copyright', ['year' => now()->year]) }}</span>
       <span class="w-1 h-1 bg-orange-500 rounded-full"></span>
     </div>
   </div>

@@ -96,7 +96,7 @@ return [
     | address of the users, but you are free to use a different value.
     |
     */
-    'username' => 'email',
+    'username' => 'webauthn_username',
 
     /*
     |--------------------------------------------------------------------------

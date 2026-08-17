@@ -15,7 +15,7 @@
             <div class="flex justify-between items-center py-4">
                 {{-- Logo --}}
                 <div class="flex items-center space-x-2">
-                <img src="{{ asset('images/logo.png') }}" alt="Pelacakan Progress" class="w-12 h-12">
+                <img src="{{ asset('images/logo.png') }}" alt="eMindTutor" class="w-12 h-12">
                     <span class="font-bold text-xl sm:text-2xl">eMindTutor</span>
                 </div>
                 
@@ -105,7 +105,7 @@
                 
                 {{-- Mobile Language Switch --}}
                 <div class="flex items-center justify-center space-x-4 mb-4 py-2 border-t border-b border-gray-200">
-                    <span class="text-sm text-gray-600">Language:</span>
+                    <span class="text-sm text-gray-600">{{ __('compro/header.language') }}</span>
                     <a href="{{ route('set.language', 'en') }}"
                        class="font-medium px-3 py-1 rounded {{ app()->getLocale() === 'en' ? 'bg-sky-600 text-white' : 'text-gray-700 hover:text-sky-700 hover:underline' }}">
                         EN

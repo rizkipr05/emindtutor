@@ -7,14 +7,14 @@
         <!-- Header Section -->
         <div class="text-center mb-8 sm:mb-12">
             <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-3">
-                {{ optional(optional($student->company)->user)->name ?? optional($student->user)->name ?? 'Student Dashboard' }}
+                {{ optional(optional($student->company)->user)->name ?? optional($student->user)->name ?? __('student/dashboard/dashboard.dashboard_fallback') }}
             </h1>
             <div class="w-16 sm:w-20 lg:w-24 h-1 bg-gradient-to-r from-orange-500 to-amber-500 mx-auto rounded-full"></div>
         </div>
 
         @if($profileMissing ?? false)
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-6 text-amber-800 shadow-sm">
-                Profil student untuk akun ini belum lengkap. Hubungi admin untuk melengkapi data student agar kursus, jadwal, dan pembayaran muncul.
+                {{ __('student/dashboard/dashboard.profile_missing') }}
             </div>
         @endif
 
@@ -47,7 +47,7 @@
             </div>
         </div>
 
-        <!-- Pengumuman Terbaru -->
+        <!-- Latest announcements -->
         <div class="bg-white/80 backdrop-blur-sm border border-white/20 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
             <div class="flex items-center justify-between gap-4 mb-6">
                 <div class="flex items-center gap-3">
@@ -57,18 +57,18 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Pengumuman Terbaru</h2>
-                        <p class="text-sm text-gray-500">Maklumat terkini daripada guru anda.</p>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('student/dashboard/dashboard.announcements_title') }}</h2>
+                        <p class="text-sm text-gray-500">{{ __('student/dashboard/dashboard.announcements_description') }}</p>
                     </div>
                 </div>
                 <a href="{{ route('broadcasts.index') }}" class="text-sm font-semibold text-amber-700 hover:text-amber-800">
-                    Lihat semua
+                    {{ __('student/dashboard/dashboard.view_all') }}
                 </a>
             </div>
 
             @if($announcements->isEmpty())
                 <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-gray-500">
-                    Belum ada pengumuman untuk anda.
+                    {{ __('student/dashboard/dashboard.announcements_empty') }}
                 </div>
             @else
                 <div class="space-y-4">
@@ -80,7 +80,7 @@
                                     <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ $announcement->message }}</p>
                                     <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                                         <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-700">
-                                            {{ $announcement->creator->name ?? 'Guru' }}
+                                            {{ $announcement->creator->name ?? __('student/dashboard/dashboard.teacher_fallback') }}
                                         </span>
                                         <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600">
                                             {{ \Carbon\Carbon::parse($announcement->created_at)->locale(app()->getLocale() === 'en' ? 'en' : 'ms')->diffForHumans() }}

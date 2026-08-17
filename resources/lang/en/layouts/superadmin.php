@@ -10,5 +10,7 @@ return [
     'staff' => 'EMindTutor Staff',
     'settings' => 'System Setting',
     'communications' => 'Announcements',
+    'payment_gateway' => 'Payment Gateway',
+    'reminder_templates' => 'Reminder Templates',
     'logout' => 'Logout',
 ];

@@ -1,18 +1,18 @@
 <?php
 
 return [
-    'title' => 'System Setting | EMindTutor',
-    'heading' => 'System Setting',
+    'title' => 'Tetapan Sistem | EMindTutor',
+    'heading' => 'Tetapan Sistem',
     'intro' => 'Pusat kawalan untuk modul superadmin yang memang sudah tersedia dalam EMindTutor.',
     'breadcrumb' => [
         'superadmin' => 'Super Admin',
-        'home' => 'Home',
-        'settings' => 'Settings',
+        'home' => 'Utama',
+        'settings' => 'Tetapan',
     ],
     'sidebar' => [
         'title' => 'Hab Pengaturan',
         'subtitle' => 'Pilih bahagian modul yang ingin dikawal.',
-        'section_hint' => 'Terhubung dengan fitur superadmin sedia ada',
+        'section_hint' => 'Dihubungkan dengan ciri superadmin sedia ada',
         'active' => 'Aktif',
     ],
     'overview' => [
@@ -29,7 +29,7 @@ return [
         ],
         'companies' => [
             'title' => 'Syarikat',
-            'subtitle' => 'Urus rekod syarikat, status aktif, dan akses login-as.',
+            'subtitle' => 'Urus rekod syarikat, status aktif, dan akses log masuk sebagai pengguna.',
             'badge' => 'Kawalan syarikat',
         ],
         'packages' => [
@@ -53,13 +53,13 @@ return [
             'badge' => 'Kawalan laporan',
         ],
         'communications' => [
-            'title' => 'Hebahan & Broadcast',
-            'subtitle' => 'Gunakan alat komunikasi yang memang sudah ada dalam platform.',
+            'title' => 'Hebahan',
+            'subtitle' => 'Gunakan alat komunikasi yang sedia ada dalam platform.',
             'badge' => 'Kawalan komunikasi',
         ],
         'email_templates' => [
-            'title' => 'Template Email',
-            'subtitle' => 'Ubah email selamat datang dan konfirmasi pembayaran untuk syarikat.',
+            'title' => 'Templat Emel',
+            'subtitle' => 'Ubah emel selamat datang dan pengesahan pembayaran untuk syarikat.',
             'badge' => 'Kawalan email',
         ],
     ],
@@ -187,10 +187,15 @@ return [
     ],
     'forms' => [
         'save' => 'Simpan Perubahan',
-        'save_note' => 'Hanya bahagian yang sedang aktif akan disimpan. Tukar bahagian lain untuk ubah setting lain.',
+        'save_template' => 'Simpan Templat',
+        'save_note' => 'Hanya bahagian yang aktif akan disimpan. Tukar bahagian lain untuk mengubah tetapan lain.',
         'app_name' => 'Nama Aplikasi',
         'app_name_help' => 'Nama ini akan digunakan pada shell app dan tajuk halaman.',
         'default_locale' => 'Bahasa Lalai',
+        'locale_options' => [
+            'en' => 'Bahasa Inggeris',
+            'my' => 'Bahasa Melayu',
+        ],
         'default_locale_help' => 'Bahasa yang digunakan apabila aplikasi dibuka buat kali pertama.',
         'support_email' => 'Emel Sokongan',
         'support_email_help' => 'Digunakan untuk rujukan hubungan dan sokongan.',

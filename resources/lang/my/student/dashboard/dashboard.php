@@ -3,7 +3,7 @@
 return [
     // Sections / titles
     'student_info' => 'Maklumat Murid',
-    'courses_taken' => 'Daftar Course Yang Diambil',
+    'courses_taken' => 'Kursus yang Diambil',
     'overview_heading' => 'Ringkasan Pantas',
 
     // Info labels
@@ -14,16 +14,23 @@ return [
 
     // Course card
     'paid' => 'Sudah Dibayar',
-    'view_detail' => 'Lihat Detail',
+    'view_detail' => 'Lihat Butiran',
     'overview_announcements' => 'Pengumuman',
-    'overview_courses' => 'Course',
+    'overview_courses' => 'Kursus',
     'overview_payments' => 'Bayaran Dibayar',
     'overview_access' => 'Akses Aktif',
 
     // Empty state
-    'no_courses' => 'Belum Ada Course',
-    'no_courses_desc' => 'Anda belum mengambil course apapun.',
-    'explore_courses' => 'Jelajahi Course',
+    'no_courses' => 'Belum Ada Kursus',
+    'no_courses_desc' => 'Anda belum mengambil sebarang kursus.',
+    'explore_courses' => 'Terokai Kursus',
+    'dashboard_fallback' => 'Dashboard Pelajar',
+    'profile_missing' => 'Profil pelajar untuk akaun ini belum lengkap. Hubungi pentadbir untuk melengkapkan profil supaya kursus, jadual, dan bayaran dapat dipaparkan.',
+    'announcements_title' => 'Pengumuman Terkini',
+    'announcements_description' => 'Maklumat terkini daripada guru anda.',
+    'view_all' => 'Lihat semua',
+    'announcements_empty' => 'Belum ada pengumuman untuk anda.',
+    'teacher_fallback' => 'Guru',
 
     // Form labels & placeholders (password)
     'change_password' => 'Tukar Kata Laluan',

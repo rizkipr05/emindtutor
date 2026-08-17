@@ -2,6 +2,7 @@
 
 return [
     'copyright' => 'Copyright © :year eMindTutor',
+    'copyright' => 'Copyright © :year eMindTutor',
     'resources' => 'Resources',
     'company' => 'Company',
     'contact_us' => 'Contact Us',

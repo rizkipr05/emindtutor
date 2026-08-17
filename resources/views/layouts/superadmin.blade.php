@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,7 +76,7 @@
                     
                     <a href="{{ route('logout') }}" 
                        class="block px-4 py-4 hover:bg-gray-100 font-medium rounded text-white bg-sky-600 hover:text-sky-600 hover:underline">
-                        Logout
+                        {{ __('layouts/superadmin.logout') }}
                     </a>
                 </div>
             </div>
@@ -112,8 +112,8 @@
                 <a href="{{ route('superadmin.stats.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.stats.index') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.stats') }}</a>
                 <a href="{{ route('superadmin.staff.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.staff.index') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.staff') }}</a>
                 <a href="{{ route('superadmin.settings.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.settings.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.settings') }}</a>
-                <a href="{{ route('superadmin.payment-gateway.edit') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.payment-gateway.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">Payment Gateway</a>
-                <a href="{{ route('superadmin.whatsapp-reminder-templates.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.whatsapp-reminder-templates.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">Template Reminder</a>
+                <a href="{{ route('superadmin.payment-gateway.edit') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.payment-gateway.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.payment_gateway') }}</a>
+                <a href="{{ route('superadmin.whatsapp-reminder-templates.index') }}" class="block p-2 rounded {{ request()->routeIs('superadmin.whatsapp-reminder-templates.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('layouts/superadmin.reminder_templates') }}</a>
                 @php
                     $unreadCount = \DB::table('announcement_user')
                         ->where('user_id', auth()->id())

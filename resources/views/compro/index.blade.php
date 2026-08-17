@@ -15,11 +15,11 @@
                     {{ __('compro/home.hero_subtext') }}
         </p>
 
-        <div class="flex justify-center space-x-4" data-aos="zoom-in" data-aos-delay="400">
+        <div class="flex flex-wrap justify-center gap-4" data-aos="zoom-in" data-aos-delay="400">
             <a href="{{ route('compro.about.index') }}" class="bg-white text-black font-semibold px-6 py-3 rounded-full hover:bg-gray-200 transition">
                     {{ __('compro/home.hero_cta_explore') }}
             </a>
-            <a href="{{ $signupUrl }}" class="bg-teal-400 text-white font-semibold px-6 py-3 rounded-full hover:bg-teal-500 transition">
+            <a href="{{ $signupUrl }}" class="border border-white/40 bg-orange-500 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition hover:bg-orange-600 hover:shadow-orange-500/30">
                     {{ __('compro/home.hero_cta_signup') }}
             </a>
         </div>
@@ -176,7 +176,7 @@
                                 <h4 class="font-medium text-slate-700 text-sm">{{ __('compro/home.dashboard_student_title') }}</h4>
                             </div>
                         </div>
-                        <img src="{{ asset('images/student.png') }}" alt="Pelacakan Progress" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <img src="{{ asset('images/student.png') }}" alt="{{ __('compro/home.dashboard_student_title') }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     </div>
                     <div class="p-4">
                         <h4 class="font-medium text-slate-800 mb-1">{{ __('compro/home.dashboard_student_title') }}</h4>
@@ -197,7 +197,7 @@
                                 <h4 class="font-medium text-slate-700 text-sm">{{ __('compro/home.dashboard_teacher_title') }}</h4>
                             </div>
                         </div>
-                        <img src="{{ asset('images/teacher.png') }}" alt="Pelacakan Progress" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <img src="{{ asset('images/teacher.png') }}" alt="{{ __('compro/home.dashboard_teacher_title') }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                     </div>
                     <div class="p-4">
                         <h4 class="font-medium text-slate-800 mb-1">{{ __('compro/home.dashboard_teacher_title') }}</h4>
@@ -331,7 +331,7 @@
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
-                        Per Student
+                        {{ __('compro/home.pricing_per_student') }}
                     </span>
                 @endif
                 

@@ -47,8 +47,8 @@
                     <a href="{{ route('superadmin.settings.index', ['section' => $key]) }}"
                        class="group flex items-center gap-3 rounded-xl px-3 py-3 transition {{ $currentSectionKey === $key ? 'bg-slate-200/90 text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' }}">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $currentSectionKey === $key ? 'bg-cyan-100 text-cyan-700' : 'bg-slate-100 text-slate-400' }}">
-                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="{{ $section['icon'] }}"></path>
+                            <svg class="h-5 w-5" {{ !empty($section['outline']) ? 'fill=none stroke=currentColor' : 'fill=currentColor' }} viewBox="0 0 24 24">
+                                <path @if(!empty($section['outline'])) stroke-linecap="round" stroke-linejoin="round" stroke-width="2" @endif d="{{ $section['icon'] }}"></path>
                             </svg>
                         </span>
                         <span class="min-w-0 flex-1">
@@ -169,7 +169,7 @@
                     <div class="mt-6 flex flex-col items-start justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
                         <p class="text-sm text-slate-500">{{ __('super_admin/settings.forms.save_note') }}</p>
                         <button type="submit" class="inline-flex items-center rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition hover:opacity-90" style="background-color: #0891b2 !important; color: #ffffff !important; border: 1px solid #0e7490;">
-                            {{ $currentSectionKey === 'email_templates' ? 'Simpan Template' : __('super_admin/settings.forms.save') }}
+                            {{ $currentSectionKey === 'email_templates' ? __('super_admin/settings.forms.save_template') : __('super_admin/settings.forms.save') }}
                         </button>
                     </div>
                 </div>

@@ -77,7 +77,7 @@
                 </button>
 
                 <div class="relative flex items-center justify-center my-5 border-t border-gray-300">
-                    <span class="bg-white px-2 mt-[-10px] text-gray-500 text-sm">ATAU</span>
+                    <span class="bg-white px-2 mt-[-10px] text-gray-500 text-sm">{{ __('compro/auth.or') }}</span>
                 </div>
 
                 <!-- Biometric Login Button -->
@@ -95,8 +95,8 @@
                             </svg>
                         </span>
                         <span class="flex-1">
-                            <span class="block text-base font-semibold leading-tight">Login dengan Biometrik</span>
-                            <span class="mt-1 block text-sm text-emerald-50/90">Masuk lebih cepat dengan cap jari pada peranti anda</span>
+                            <span class="block text-base font-semibold leading-tight">{{ __('webauthn.login_title') }}</span>
+                            <span class="mt-1 block text-sm text-emerald-50/90">{{ __('webauthn.login_description') }}</span>
                         </span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-white/80 transition group-hover:translate-x-0.5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h9.586L11.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L13.586 11H4a1 1 0 01-1-1z" clip-rule="evenodd" />
@@ -107,15 +107,15 @@
 
             <!-- Register Link -->
             <p class="text-center text-sm text-gray-500 mt-6">
-                Don't have an account?
+                {{ __('compro/auth.no_account') }}
                 <a href="{{ $signupUrl }}" class="text-blue-900 font-semibold hover:underline">
                     {{ __('compro/auth.signup_link') }}
                 </a>
             </p>
             <p class="text-center text-sm text-gray-500 mt-1">
-                Forgot your password?
+                {{ __('compro/auth.forgot_password') }}
                 <a href="{{ route('password.request') }}" class="text-blue-900 font-semibold hover:underline">
-                    Reset Password
+                    {{ __('compro/auth.reset_password') }}
                 </a>
             </p>
         </div>
@@ -130,16 +130,16 @@
             emailInput.value = email;
 
             const webauthn = new WebAuthn((name, message) => {
-                alert('Ralat Peranti: ' + message);
+                alert(@json(__('webauthn.device_error_prefix')) + message);
             });
 
             if (!webauthn.supported()) {
-                alert('Browser atau peranti anda tidak menyokong log masuk Biometrik (WebAuthn).');
+                alert(@json(__('webauthn.not_supported')));
                 return;
             }
 
             if (window.location.hostname !== 'localhost' && !window.isSecureContext) {
-                alert('Log masuk Biometrik hanya dibenarkan melalui sambungan selamat (HTTPS) atau localhost.');
+                alert(@json(__('webauthn.https_required')));
                 return;
             }
 
@@ -174,16 +174,16 @@
                         if (response.success) {
                             window.location.href = response.redirect;
                         } else {
-                            alert(response.error || response.message || 'Log masuk webauthn gagal.');
+                            alert(response.error || response.message || @json(__('webauthn.login_failed')));
                         }
                     })
-                    .catch(e => alert('Pengesahan log masuk cap jari menghadapi ralat.'));
+                    .catch(e => alert(@json(__('webauthn.login_verification_error'))));
                 });
             })
             .catch(error => {
                 console.error(error);
-                let msg = error.message || error.error || 'Pelayan gagal dihubungkan. Pastikan database MySQL berjalan.';
-                alert('Ralat Biometrik: ' + msg);
+                let msg = error.message || error.error || @json(__('webauthn.login_options_error'));
+                alert(@json(__('webauthn.login_error_prefix')) + msg);
             });
         });
     </script>

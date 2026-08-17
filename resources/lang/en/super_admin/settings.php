@@ -187,10 +187,15 @@ return [
     ],
     'forms' => [
         'save' => 'Save Changes',
+        'save_template' => 'Save Template',
         'save_note' => 'Only the active section is saved. Switch sections to edit other settings.',
         'app_name' => 'Application Name',
         'app_name_help' => 'This name is shown in the app shell and page titles.',
         'default_locale' => 'Default Language',
+        'locale_options' => [
+            'en' => 'English',
+            'my' => 'Malay',
+        ],
         'default_locale_help' => 'This is the language used when the app opens for the first time.',
         'support_email' => 'Support Email',
         'support_email_help' => 'Used for contact and support references.',

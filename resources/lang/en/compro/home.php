@@ -74,6 +74,7 @@ return [
     'package_popular_label' => 'POPULAR',
     'package_subscribed_count' => ':count companies subscribed',
     'package_choose_button' => 'Choose Plan',
+    'pricing_per_student' => 'Per Student',
     // Benefits / feature short texts
     'benefit_virtual_title' => 'Virtual Classes',
     'benefit_virtual_desc' => 'Learn from anywhere with the latest technology',

@@ -174,8 +174,8 @@ class SettingsController extends Controller
                         'type' => 'select',
                         'default' => app()->getLocale() ?: 'en',
                         'options' => [
-                            'en' => 'English',
-                            'my' => 'Bahasa Melayu',
+                            'en' => __('super_admin/settings.forms.locale_options.en'),
+                            'my' => __('super_admin/settings.forms.locale_options.my'),
                         ],
                         'help' => __('super_admin/settings.forms.default_locale_help'),
                     ],
@@ -425,6 +425,7 @@ class SettingsController extends Controller
             'label' => __('super_admin/settings.sections.reports.title'),
             'caption' => __('super_admin/settings.forms.allow_pdf_export'),
             'icon' => 'M4 19.5h16M6 16V9m4 7V6m4 10v-5m4 5V8',
+            'outline' => true,
             'tone' => 'from-sky-500 to-cyan-500',
         ],
         'communications' => [

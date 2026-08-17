@@ -25,9 +25,9 @@ return [
     'showcase_cta_join' => 'Sertai Sekarang',
 
     // Showcase features
-    'showcase_feature_dashboard_title' => 'Dashboard Utama',
+    'showcase_feature_dashboard_title' => 'Papan Pemuka Utama',
     'showcase_feature_dashboard_desc' => 'Antara muka ringkas untuk laporan kelas: kehadiran, nota guru, dan peratusan kehadiran.',
-    'showcase_feature_dashboard_alt' => 'Dashboard Utama',
+    'showcase_feature_dashboard_alt' => 'Papan Pemuka Utama',
 
     'showcase_feature_payroll_title' => 'Urus Gaji',
     'showcase_feature_payroll_desc' => 'Sistem penggajian bersepadu — telus, efisien, dan boleh dipercayai.',
@@ -51,7 +51,7 @@ return [
 
     // Companies
     'companies_title' => 'Syarikat Yang Mempercayai Kami',
-    'companies_subtext' => 'Bergabunglah dengan :count+ syarikat yang telah menggunakan eMind Tutor',
+    'companies_subtext' => 'Sertai :count+ syarikat yang telah menggunakan eMindTutor',
     'companies_cta' => 'Lihat Semua Syarikat',
     'companies_empty_title' => 'Tiada Syarikat Lagi',
     'companies_empty_desc' => 'Syarikat yang melanggan akan muncul di sini',
@@ -62,18 +62,19 @@ return [
     'card_schedule_alt' => 'Jadual Kelas',
 
     // Dashboards
-    'dashboard_student_title' => 'Dashboard Pelajar',
+    'dashboard_student_title' => 'Papan Pemuka Pelajar',
     'dashboard_student_desc' => 'Antara muka pelajar yang mudah digunakan dan fokus pada perkembangan pembelajaran.',
-    'dashboard_teacher_title' => 'Dashboard Guru',
+    'dashboard_teacher_title' => 'Papan Pemuka Guru',
     'dashboard_teacher_desc' => 'Antara muka guru yang ringkas untuk mengurus kelas dengan lebih cekap.',
 
     // CTA small
     'cta_join_now' => 'Sertai Sekarang',
 
     // Package / Pricing small labels
-    'package_popular_label' => 'TERPOPULER',
+    'package_popular_label' => 'PALING POPULAR',
     'package_subscribed_count' => ':count syarikat telah melanggan',
     'package_choose_button' => 'Pilih Pakej',
+    'pricing_per_student' => 'Setiap Pelajar',
     // Benefits / feature short texts
     'benefit_virtual_title' => 'Kelas Secara Maya',
     'benefit_virtual_desc' => 'Belajar dari mana-mana sahaja dengan teknologi terkini',
@@ -93,12 +94,12 @@ return [
     'benefit_companies_title' => 'Syarikat Berdaftar',
     'benefit_companies_desc' => ':count+ syarikat yang mempercayai perkhidmatan kami',
     // Companies section
-    'companies_cta_heading' => 'Ingin Jadi Murid?',
+    'companies_cta_heading' => 'Ingin Menjadi Pelajar?',
     'companies_contact_via_whatsapp' => 'Hubungi syarikat di bawah melalui <strong>WhatsApp</strong>',
     'companies_contact_note' => 'Klik butang "Chat WhatsApp" untuk mendaftar terus!',
     'companies_chat_whatsapp' => 'Sembang di WhatsApp untuk Mendaftar',
-    'whatsapp_message' => 'Halo, saya ingin mendaftar sebagai murid di eMind Tutor melalui syarikat :company',
-    'companies_more_note' => 'Dan masih banyak syarikat lain yang telah bergabung dengan kami',
+    'whatsapp_message' => 'Helo, saya ingin mendaftar sebagai pelajar di eMindTutor melalui syarikat :company',
+    'companies_more_note' => 'Dan banyak lagi syarikat telah menyertai kami',
 
     'partner' => 'Rakan Kongsi Rasmi'
 ];

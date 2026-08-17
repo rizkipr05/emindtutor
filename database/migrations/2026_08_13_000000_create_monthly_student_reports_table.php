@@ -9,6 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('monthly_student_reports')) {
+            // A previous attempt can create the table before MySQL rejects
+            // Laravel's generated index name. Add the missing index using a
+            // short explicit name when the migration is retried.
+            Schema::table('monthly_student_reports', function (Blueprint $table) {
+                $table->index(['company_id', 'report_year', 'report_month'], 'msr_company_period_idx');
+            });
+
             return;
         }
 
@@ -25,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['student_id', 'report_month', 'report_year'], 'monthly_student_report_period_unique');
-            $table->index(['company_id', 'report_year', 'report_month']);
+            $table->index(['company_id', 'report_year', 'report_month'], 'msr_company_period_idx');
         });
     }
 

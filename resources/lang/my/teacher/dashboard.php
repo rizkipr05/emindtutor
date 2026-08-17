@@ -15,7 +15,7 @@ return [
     'unavailability_heading' => 'Waktu Guru Tidak Terima Kelas',
 
     // Unavailability messages
-    'no_unavailability' => 'Tiada catatan unavailability.',
+    'no_unavailability' => 'Tiada rekod ketidaktersediaan.',
     'available_all_times' => 'Anda tersedia untuk semua waktu kelas.',
 
     // Password
@@ -45,7 +45,7 @@ return [
     'announcement_send_notice' => 'Sistem akan menghantar pengumuman ini kepada semua pelajar dalam syarikat anda.',
     'announcement_send_button' => 'Hantar Pengumuman',
     'announcement_recent_title' => 'Pengumuman Terkini',
-    'announcement_recent_desc' => 'Riwayat pengumuman yang telah anda kirim.',
+    'announcement_recent_desc' => 'Sejarah pengumuman yang telah anda hantar.',
     'view_all' => 'Lihat semua',
     'announcement_empty' => 'Belum ada pengumuman yang dihantar.',
     'announcement_target_prefix' => 'Untuk :target',
@@ -58,7 +58,7 @@ return [
     'biometric_title' => 'Log Masuk Cap Jari (Biometrik)',
     'biometric_desc' => 'Daftarkan cap jari anda pada peranti ini untuk di log masuk pada masa akan datang tanpa memasukkan kata laluan.',
     'biometric_register' => 'Daftar Cap Jari',
-    'biometric_not_supported' => 'Browser atau peranti anda tidak menyokong pendaftaran Biometrik (WebAuthn).',
+    'biometric_not_supported' => 'Pelayar atau peranti anda tidak menyokong pendaftaran biometrik (WebAuthn).',
     'biometric_https_required' => 'Pendaftaran Biometrik hanya dibenarkan melalui sambungan selamat (HTTPS) atau localhost.',
     'biometric_error_prefix' => 'Ralat Pendaftaran Biometrik: ',
     'biometric_device_error_prefix' => 'Ralat Peranti: ',
@@ -66,7 +66,7 @@ return [
     'biometric_success' => 'Cap Jari berjaya didaftarkan!',
     'biometric_failed' => 'Pendaftaran gagal.',
     'biometric_verification_error' => 'Pengesahan pendaftaran cap jari menghadapi ralat.',
-    'biometric_server_error' => 'Pelayan gagal dihubungkan. Pastikan database MySQL berjalan.',
+    'biometric_server_error' => 'Pelayan gagal dihubungkan. Pastikan pangkalan data MySQL berfungsi.',
 
     // Table headers
     'table_day' => 'Hari',
@@ -75,12 +75,12 @@ return [
 
     // Form labels & placeholders
     'label_current_password' => 'Kata Laluan Semasa',
-    'label_new_password' => 'Kata Laluan Baru',
-    'label_confirm_password' => 'Sahkan Kata Laluan Baru',
+    'label_new_password' => 'Kata Laluan Baharu',
+    'label_confirm_password' => 'Sahkan Kata Laluan Baharu',
     'placeholder_current_password' => 'Masukkan kata laluan semasa',
-    'placeholder_new_password' => 'Masukkan kata laluan baru',
-    'placeholder_confirm_password' => 'Sahkan kata laluan baru',
-    'update_password' => 'Kemaskini Kata Laluan',
+    'placeholder_new_password' => 'Masukkan kata laluan baharu',
+    'placeholder_confirm_password' => 'Sahkan kata laluan baharu',
+    'update_password' => 'Kemas Kini Kata Laluan',
     'days' => [
         'Sunday' => 'Ahad',
         'Monday' => 'Isnin',

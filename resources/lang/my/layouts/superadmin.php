@@ -8,7 +8,9 @@ return [
     'invoices' => 'Invois',
     'stats' => 'Laporan',
     'staff' => 'Staf Emindtutor',
-    'settings' => 'System Setting',
+    'settings' => 'Tetapan Sistem',
     'communications' => 'Hebahan',
+    'payment_gateway' => 'Gerbang Pembayaran',
+    'reminder_templates' => 'Templat Peringatan',
     'logout' => 'Log Keluar',
 ];

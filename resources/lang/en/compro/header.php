@@ -7,4 +7,5 @@ return [
     'company' => 'Company',
     'login' => 'Login',
     'signup' => 'Sign Up',
+    'language' => 'Language:',
 ];

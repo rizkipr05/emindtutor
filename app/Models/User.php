@@ -97,4 +97,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(WebauthnKey::class);
     }
+
+    /**
+     * Return an ASCII-safe label for WebAuthn credential options.
+     *
+     * Legacy imported user data can contain malformed UTF-8 bytes. WebAuthn
+     * options are JSON encoded, so use a safe identifier instead of exposing
+     * that data to the browser credential API.
+     */
+    public function getWebauthnUsernameAttribute(): string
+    {
+        return 'EMindTutor user '.$this->getAuthIdentifier();
+    }
 }

@@ -6,8 +6,11 @@ return [
     'login_email' => 'Email',
     'login_password' => 'Password',
     'login_submit' => 'Login',
+    'or' => 'OR',
     'no_account' => "Don't have an account?",
     'signup_link' => 'Sign Up',
+    'forgot_password' => 'Forgot your password?',
+    'reset_password' => 'Reset Password',
 
     'signup_title' => 'Create Your Account',
     'signup_subtext' => 'Fill the form below to get started',

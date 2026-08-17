@@ -2,6 +2,7 @@
 
 return [
     'copyright' => 'Hak Cipta © :year eMindTutor',
+    'copyright' => 'Hak Cipta © :year eMindTutor',
     'resources' => 'Sumber',
     'company' => 'Syarikat',
     'contact_us' => 'Hubungi Kami',

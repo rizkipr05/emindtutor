@@ -34,7 +34,7 @@ class WhatsAppReminderTemplateController extends Controller
     public function store(Request $request)
     {
         WhatsAppReminderTemplate::create($this->validated($request));
-        return redirect()->route('superadmin.whatsapp-reminder-templates.index', ['audience' => $request->audience])->with('success', 'Template berhasil dibuat.');
+        return redirect()->route('superadmin.whatsapp-reminder-templates.index', ['audience' => $request->audience])->with('success', __('super_admin/reminder_templates.created'));
     }
 
     public function edit(WhatsAppReminderTemplate $template)
@@ -45,24 +45,24 @@ class WhatsAppReminderTemplateController extends Controller
     public function update(Request $request, WhatsAppReminderTemplate $template)
     {
         $template->update($this->validated($request));
-        return redirect()->route('superadmin.whatsapp-reminder-templates.index', ['audience' => $template->audience])->with('success', 'Template berhasil diperbarui.');
+        return redirect()->route('superadmin.whatsapp-reminder-templates.index', ['audience' => $template->audience])->with('success', __('super_admin/reminder_templates.updated'));
     }
 
     public function destroy(WhatsAppReminderTemplate $template)
     {
         $audience = $template->audience;
         $template->delete();
-        return redirect()->route('superadmin.whatsapp-reminder-templates.index', ['audience' => $audience])->with('success', 'Template berhasil dihapus.');
+        return redirect()->route('superadmin.whatsapp-reminder-templates.index', ['audience' => $audience])->with('success', __('super_admin/reminder_templates.deleted'));
     }
 
     public function send(Request $request, WhatsAppReminderTemplate $template)
     {
         $request->validate(['company_id' => 'required|exists:companies,id']);
-        abort_unless($template->is_active, 422, 'Template tidak aktif.');
+        abort_unless($template->is_active, 422, __('super_admin/reminder_templates.not_active'));
 
         $company = Company::findOrFail($request->integer('company_id'));
         if ($template->audience === 'company' && ! filled($company->no_telefon)) {
-            return back()->with('error', 'Nomor WhatsApp perusahaan belum diisi.');
+            return back()->with('error', __('super_admin/reminder_templates.company_phone_missing'));
         }
         $recipients = match ($template->audience) {
             'teachers' => Teacher::where('company_id', $company->id)->where('status', 'active')->get(),
@@ -81,10 +81,10 @@ class WhatsAppReminderTemplateController extends Controller
         }
 
         if ($sentCount === 0) {
-            return back()->with('error', 'Pesan tidak dapat dikirim. Pastikan nomor WhatsApp penerima terisi dengan format internasional dan periksa log pengiriman.');
+            return back()->with('error', __('super_admin/reminder_templates.send_failed'));
         }
 
-        return back()->with('success', "Permintaan pengiriman diterima untuk {$sentCount} penerima. Periksa Riwayat Pesan Fonnte untuk status akhirnya.");
+        return back()->with('success', __('super_admin/reminder_templates.send_queued', ['count' => $sentCount]));
     }
 
     private function validated(Request $request): array

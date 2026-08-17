@@ -19,6 +19,13 @@ return [
     'overview_courses' => 'Courses',
     'overview_payments' => 'Paid Payments',
     'overview_access' => 'Active Access',
+    'dashboard_fallback' => 'Student Dashboard',
+    'profile_missing' => 'The student profile for this account is incomplete. Contact your administrator to complete it so courses, schedules, and payments can be displayed.',
+    'announcements_title' => 'Latest Announcements',
+    'announcements_description' => 'Latest updates from your teacher.',
+    'view_all' => 'View all',
+    'announcements_empty' => 'There are no announcements for you yet.',
+    'teacher_fallback' => 'Teacher',
 
     // Empty state
     'no_courses' => 'No Courses Yet',

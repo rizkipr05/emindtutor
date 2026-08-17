@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\ServerRequestInterface;
 use Rawilk\Webauthn\Facades\Webauthn;
 use Rawilk\Webauthn\Models\WebauthnKey;
@@ -191,7 +193,44 @@ class WebAuthnController extends Controller
             config(['webauthn.userless' => null]);
         }
 
-        return Webauthn::prepareAttestation($user);
+        try {
+            // Use a minimal copy for option creation. The imported database
+            // contains legacy records with invalid text bytes, while WebAuthn
+            // only requires an authenticated user's stable identifier here.
+            $webauthnUser = clone $user;
+            $webauthnUser->setRawAttributes([
+                'id' => $user->getAuthIdentifier(),
+                'webauthn_username' => 'EMindTutor user '.$user->getAuthIdentifier(),
+            ], true);
+
+            // Some legacy imported user records contain malformed UTF-8.
+            // Ensure those bytes cannot prevent WebAuthn data from being
+            // encoded and returned to the browser.
+            return response()->json(
+                Webauthn::prepareAttestation($webauthnUser),
+                200,
+                [],
+                JSON_INVALID_UTF8_SUBSTITUTE,
+            );
+        } catch (\Throwable $e) {
+            // Do not put the exception message into JSON because it can carry
+            // malformed legacy data and mask the original registration error.
+            $context = [
+                'user_id' => $user->getAuthIdentifier(),
+                'exception_class' => $e::class,
+            ];
+
+            if ($e instanceof QueryException) {
+                $context['sql_state'] = $e->getCode();
+                $context['database_error'] = $e->getPrevious()?->getMessage();
+            }
+
+            Log::error('Unable to prepare WebAuthn registration options.', $context);
+
+            return response()->json([
+                'error' => 'Pendaftaran biometrik tidak dapat disediakan untuk akaun ini.',
+            ], 422);
+        }
     }
 
     /**

@@ -6,8 +6,11 @@ return [
     'login_email' => 'Email',
     'login_password' => 'Kata Laluan',
     'login_submit' => 'Log Masuk',
+    'or' => 'ATAU',
     'no_account' => 'Tiada akaun?',
     'signup_link' => 'Daftar',
+    'forgot_password' => 'Lupa kata laluan?',
+    'reset_password' => 'Tetapkan Semula Kata Laluan',
 
     'signup_title' => 'Buat Akaun Anda',
     'signup_subtext' => 'Isikan borang di bawah untuk bermula',
