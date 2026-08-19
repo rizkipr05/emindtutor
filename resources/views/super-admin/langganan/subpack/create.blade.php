@@ -257,12 +257,11 @@
                 <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path d="M12 4A2 2 0 1 0 12 8 2 2 0 1 0 12 4z"></path><path d="M5 7A2 2 0 1 0 5 11 2 2 0 1 0 5 7z"></path><path d="M19 7A2 2 0 1 0 19 11 2 2 0 1 0 19 7z"></path><path d="m19.5,12h-.7c-.84,0-1.61.42-2.08,1.11l-3.26,4.89h-2.93l-3.26-4.89c-.46-.7-1.24-1.11-2.08-1.11h-.7c-1.38,0-2.5,1.12-2.5,2.5v5.5h5v-3.7l1.87,2.81c.37.56.99.89,1.66.89h2.93c.67,0,1.29-.33,1.66-.89l1.87-2.81v3.7h5v-5.5c0-1.38-1.12-2.5-2.5-2.5Z"></path><path d="m12.39,16l2.61-3.91v-1.59c0-.83-.67-1.5-1.5-1.5h-3c-.83,0-1.5.67-1.5,1.5v1.59l2.61,3.91h.79Z"></path>
                 </svg>
-                {{ __('super_admin/langganan.create.max_students') }} <span class="text-red-500">*</span>
+                {{ __('super_admin/langganan.create.max_students') }} <span class="text-xs text-gray-500 font-normal ml-1">(Optional)</span>
             </label>
-            <input type="number" name="maks_pelajar" id="maks_pelajar" min="1"
+            <input type="number" name="maks_pelajar" id="maks_pelajar" min="0"
                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:bg-white/80" 
-                   placeholder="{{ __('super_admin/langganan.create.max_students_placeholder') }}" 
-                   required>
+                   placeholder="{{ __('super_admin/langganan.create.max_students_placeholder') }}">
         </div>
 
         <!-- Maks Guru -->
@@ -271,12 +270,11 @@
                 <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                 </svg>
-                {{ __('super_admin/langganan.create.max_teachers') }} <span class="text-red-500">*</span>
+                {{ __('super_admin/langganan.create.max_teachers') }} <span class="text-xs text-gray-500 font-normal ml-1">(Optional)</span>
             </label>
-            <input type="number" name="maks_guru" id="maks_guru" min="1"
+            <input type="number" name="maks_guru" id="maks_guru" min="0"
                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:bg-white/80" 
-                   placeholder="{{ __('super_admin/langganan.create.max_teachers_placeholder') }}" 
-                   required>
+                   placeholder="{{ __('super_admin/langganan.create.max_teachers_placeholder') }}">
         </div>
 
         <!-- Maks Kelas -->
@@ -285,12 +283,11 @@
                 <svg class="w-4 h-4 mr-2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                 </svg>
-                {{ __('super_admin/langganan.create.max_classes') }} <span class="text-red-500">*</span>
+                {{ __('super_admin/langganan.create.max_classes') }} <span class="text-xs text-gray-500 font-normal ml-1">(Optional)</span>
             </label>
-            <input type="number" name="maks_kelas" id="maks_kelas" min="1"
+            <input type="number" name="maks_kelas" id="maks_kelas" min="0"
                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm hover:bg-white/80" 
-                   placeholder="{{ __('super_admin/langganan.create.max_classes_placeholder') }}" 
-                   required>
+                   placeholder="{{ __('super_admin/langganan.create.max_classes_placeholder') }}">
         </div>
     </div>
 </div>
@@ -374,17 +371,17 @@ function togglePricingFields() {
         hargaPerPelajarInput.setAttribute('disabled', 'disabled');
         hargaPerPelajarInput.value = '';
         
-        // Enable and add required to limitations
+        // Enable and ensure required is removed from limitations
         maksPelajarInput.removeAttribute('disabled');
-        maksPelajarInput.setAttribute('required', 'required');
+        maksPelajarInput.removeAttribute('required');
         if (maksPelajarInput.value === '0') maksPelajarInput.value = '';
         
         maksGuruInput.removeAttribute('disabled');
-        maksGuruInput.setAttribute('required', 'required');
+        maksGuruInput.removeAttribute('required');
         if (maksGuruInput.value === '0') maksGuruInput.value = '';
         
         maksKelasInput.removeAttribute('disabled');
-        maksKelasInput.setAttribute('required', 'required');
+        maksKelasInput.removeAttribute('required');
         if (maksKelasInput.value === '0') maksKelasInput.value = '';
     }
 }

@@ -43,12 +43,12 @@ class SubscriptionPackageController extends Controller
             $rules['maks_guru'] = 'nullable|integer';
             $rules['maks_kelas'] = 'nullable|integer';
         } else {
-            // Fixed Price: require harga and limitations
+            // Fixed Price: require harga, limitations are optional
             $rules['harga'] = 'required|numeric|min:0';
             $rules['harga_per_pelajar'] = 'nullable|numeric';
-            $rules['maks_pelajar'] = 'required|integer|min:1';
-            $rules['maks_guru'] = 'required|integer|min:1';
-            $rules['maks_kelas'] = 'required|integer|min:1';
+            $rules['maks_pelajar'] = 'nullable|integer|min:0';
+            $rules['maks_guru'] = 'nullable|integer|min:0';
+            $rules['maks_kelas'] = 'nullable|integer|min:0';
         }
         
         $validated = $request->validate($rules);
@@ -73,9 +73,9 @@ class SubscriptionPackageController extends Controller
         } else {
             // Fixed pricing
             $data['harga'] = $request->harga;
-            $data['maks_pelajar'] = $request->maks_pelajar;
-            $data['maks_guru'] = $request->maks_guru;
-            $data['maks_kelas'] = $request->maks_kelas;
+            $data['maks_pelajar'] = $request->filled('maks_pelajar') ? $request->maks_pelajar : 0;
+            $data['maks_guru'] = $request->filled('maks_guru') ? $request->maks_guru : 0;
+            $data['maks_kelas'] = $request->filled('maks_kelas') ? $request->maks_kelas : 0;
         }
         
         SubscriptionPackage::create($data);
@@ -95,9 +95,9 @@ class SubscriptionPackageController extends Controller
             'nama_pakej' => 'required|string|max:255',
             'duration_days' => 'required|integer|min:1',
             'harga' => 'required|numeric|min:0',
-            'maks_pelajar' => 'required|integer|min:0',
-            'maks_guru' => 'required|integer|min:0',
-            'maks_kelas' => 'required|integer|min:0',
+            'maks_pelajar' => 'nullable|integer|min:0',
+            'maks_guru' => 'nullable|integer|min:0',
+            'maks_kelas' => 'nullable|integer|min:0',
             'deskripsi' => 'nullable|string',
             'status' => 'required|in:aktif,tamat',
             'is_trial' => 'sometimes|boolean',
@@ -108,9 +108,9 @@ class SubscriptionPackageController extends Controller
             'nama_pakej' => $request->nama_pakej,
             'duration_days' => $request->duration_days,
             'harga' => $request->harga,
-            'maks_pelajar' => $request->maks_pelajar,
-            'maks_guru' => $request->maks_guru,
-            'maks_kelas' => $request->maks_kelas,
+            'maks_pelajar' => $request->filled('maks_pelajar') ? $request->maks_pelajar : 0,
+            'maks_guru' => $request->filled('maks_guru') ? $request->maks_guru : 0,
+            'maks_kelas' => $request->filled('maks_kelas') ? $request->maks_kelas : 0,
             'deskripsi' => $request->deskripsi,
             'status' => $request->status,
         ]);

@@ -62,6 +62,11 @@ return [
             'subtitle' => 'Edit welcome and payment confirmation emails sent to companies.',
             'badge' => 'Email control',
         ],
+        'payment_gateway' => [
+            'title' => 'Payment Gateway (ToyyibPay)',
+            'subtitle' => 'Global ToyyibPay settings used by companies without their own custom payment gateway.',
+            'badge' => 'ToyyibPay',
+        ],
     ],
     'metrics' => [
         'companies' => 'Companies',

@@ -130,6 +130,12 @@
             emailInput.value = email;
 
             const webauthn = new WebAuthn((name, message) => {
+                // Menekan Cancel atau menutup dialog cap jari ialah tindakan biasa,
+                // jadi tidak perlu memaparkan amaran ralat kepada pengguna.
+                if (name === 'NotAllowedError' || name === 'AbortError') {
+                    return;
+                }
+
                 alert(@json(__('webauthn.device_error_prefix')) + message);
             });
 

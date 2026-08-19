@@ -53,26 +53,21 @@ class AdminSettingsAndSubscriptionTest extends TestCase
             'tarikh_tamat' => $today->copy()->addDays(20)->toDateString(),  // Ends in 20 days (total 30 days)
         ]);
 
-        // 4. Test Dashboard contains expiry widget
+        // 4. Test Dashboard contains company overview summary
         $responseDashboard = $this->actingAs($user)
             ->get(route('a.dashboard.index'));
 
         $responseDashboard->assertOk();
-        $responseDashboard->assertSee('Tarikh Tamat Langganan');
-        $responseDashboard->assertSee($today->copy()->addDays(20)->translatedFormat('d F Y'));
-        $responseDashboard->assertSee('21 days'); 
-        $responseDashboard->assertSee('Perbaharui Langganan'); // since < 30 days remaining
+        $responseDashboard->assertSee($company->user->name);
+        $responseDashboard->assertSee('Company Overview');
 
         // 5. Test Settings Page displays info
         $responseSettings = $this->actingAs($user)
-            ->get(route('admin.settings.index'));
+            ->get(route('admin.settings.index', ['section' => 'subscription']));
 
         $responseSettings->assertOk();
-        $responseSettings->assertSee('Tetapan Sistem');
+        $responseSettings->assertSee('System Settings');
         $responseSettings->assertSee('Premium Test');
-        $responseSettings->assertSee('Status Langganan');
-        $responseSettings->assertSee('Baki Masa Langganan');
-        $responseSettings->assertSee('21 hari tersisa');
-        $responseSettings->assertSee('Maklumat Sistem');
+        $responseSettings->assertSee('Subscription Status');
     }
 }

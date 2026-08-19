@@ -25,8 +25,8 @@ class InvoiceController extends Controller
         }
 
         try {
-            $gateway = $invoice->student->company?->paymentGateway;
-            if (! $gateway || ! $gateway->is_active) {
+            $gateway = $invoice->student->company?->effectivePaymentGateway();
+            if (! $gateway) {
                 return back()->with('error', 'Payment Gateway perusahaan belum dikonfigurasi.');
             }
             $bill = app(ToyyibPayService::class)->createBill([

@@ -353,18 +353,26 @@ public function approved(Request $request)
 
     public function showApprovalForm($id)
     {
-        // $students = Student::with('user')->findOrFail($id);
-        // dd($students);
-        // dd("id: $id");
         $invoice = StudentInvoice::with('payment')
                     ->where('id', $id)
                     ->latest()
                     ->first();
 
-        // dd($invoice->id);
+        if (!$invoice) {
+            $invoice = StudentInvoice::with('payment')
+                        ->where('student_id', $id)
+                        ->latest()
+                        ->first();
+        }
 
+        if (!$invoice) {
+            return redirect()->back()->with('error', 'Maklumat invoice atau pelajar tidak dijumpai.');
+        }
 
-        $student = Student::with('user')->findOrFail($invoice->student_id);
+        $student = Student::with('user')->find($invoice->student_id);
+        if (!$student) {
+            $student = Student::with('user')->findOrFail($id);
+        }
 
         $companyId = Auth::user()->company->id;
 

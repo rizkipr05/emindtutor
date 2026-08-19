@@ -91,14 +91,91 @@
                             <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">{{ $currentSection['subtitle'] }}</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
-                                {{ __('super_admin/settings.sidebar.active') }}
-                            </span>
+                            @if($currentSectionKey === 'payment_gateway')
+                                @php
+                                    $isGwActive = false;
+                                    foreach($sectionFields as $f) {
+                                        if(($f['name'] ?? '') === 'is_active') {
+                                            $isGwActive = old('is_active', $f['value'] ?? '0') === '1';
+                                        }
+                                    }
+                                @endphp
+                                @if($isGwActive)
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-bold text-emerald-800 border border-emerald-300">
+                                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        STATUS: TELAH DIAKTIFKAN (AKTIF)
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3.5 py-1.5 text-xs font-bold text-slate-700 border border-slate-300">
+                                        <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                                        STATUS: TIDAK AKTIF
+                                    </span>
+                                @endif
+                            @else
+                                <span class="inline-flex w-fit items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
+                                    {{ __('super_admin/settings.sidebar.active') }}
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
 
                 <div class="p-6">
+                    @if($currentSectionKey === 'payment_gateway')
+                        @php
+                            $isGwActive = false;
+                            $hasSecretKey = false;
+                            foreach($sectionFields as $f) {
+                                if(($f['name'] ?? '') === 'is_active') {
+                                    $isGwActive = old('is_active', $f['value'] ?? '0') === '1';
+                                }
+                                if(($f['name'] ?? '') === 'user_secret_key' && !empty($f['value'])) {
+                                    $hasSecretKey = true;
+                                }
+                            }
+                        @endphp
+                        @if($isGwActive && $hasSecretKey)
+                            <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-200 text-emerald-800 font-bold text-lg">
+                                        ✓
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-emerald-900">✓ Konfigurasi tersimpan dan aktif</h4>
+                                        <p class="text-xs text-emerald-700 mt-0.5">Secret Key tersimpan terenkripsi. ToyyibPay Global sedia digunakan.</p>
+                                    </div>
+                                </div>
+                                <span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">AKTIF</span>
+                            </div>
+                        @elseif($hasSecretKey && !$isGwActive)
+                            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-800 font-bold text-lg">
+                                        !
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-amber-900">⚠️ Payment Gateway sedang tidak aktif</h4>
+                                        <p class="text-xs text-amber-700 mt-0.5">Konfigurasi wujud tetapi suis "Aktifkan Payment Gateway" belum ditandakan.</p>
+                                    </div>
+                                </div>
+                                <span class="rounded-full bg-amber-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">TIDAK AKTIF</span>
+                            </div>
+                        @else
+                            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-200 text-rose-800 font-bold text-lg">
+                                        ✕
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-rose-900">⚠️ Payment Gateway belum dikonfigurasi atau belum aktif / salah dimasukkan</h4>
+                                        <p class="text-xs text-rose-700 mt-0.5">Sila isi User Secret Key dan Category Code ToyyibPay yang sah di bawah.</p>
+                                    </div>
+                                </div>
+                                <span class="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">BELUM AKTIF</span>
+                            </div>
+                        @endif
+                    @endif
+
                     <div class="grid gap-4 lg:grid-cols-2">
                         @foreach($sectionFields as $field)
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 {{ !empty($field['full_width']) ? 'lg:col-span-2' : '' }}">

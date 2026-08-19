@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\Company;
 use App\Models\CompanyInvoice;
+use App\Models\PaymentGateway;
 use App\Models\StaffEmind;
 use App\Models\SubscriptionPackage;
 use App\Models\SystemSetting;
@@ -23,6 +24,30 @@ class SettingsController extends Controller
     public function update(Request $request, ?string $section = null)
     {
         $section = $this->normalizeSection($section);
+
+        // Payment gateway section saves to payment_gateways table, not system_settings.
+        if ($section === 'payment_gateway') {
+            $validated = $request->validate([
+                'user_secret_key'  => 'required|string|max:255',
+                'category_code'    => 'required|string|max:100',
+                'base_url'         => 'required|url|max:255',
+                'api_url'          => 'required|url|max:255',
+                'payment_channel'  => 'required|integer|in:0,1,2',
+                'expiry_days'      => 'required|integer|min:1|max:100',
+                'is_active'        => 'nullable|boolean',
+            ]);
+
+            $gateway = PaymentGateway::firstOrNew(['company_id' => null]);
+            $gateway->fill(array_merge($validated, [
+                'provider'  => 'toyyibpay',
+                'is_active' => $request->boolean('is_active'),
+            ]))->save();
+
+            return redirect()
+                ->route('superadmin.settings.index', ['section' => 'payment_gateway'])
+                ->with('success', __('super_admin/settings.messages.saved'));
+        }
+
         $sections = $this->buildSections();
         $fields = $sections[$section]['fields'];
 
@@ -67,9 +92,16 @@ class SettingsController extends Controller
         $settings = SystemSetting::query()->get()->keyBy('setting_key');
         $sections = $this->buildSections();
 
+        // For the payment_gateway section, populate field values from the DB row.
+        $gateway = PaymentGateway::query()->whereNull('company_id')->first();
+
         foreach ($sections as $key => &$definition) {
             foreach ($definition['fields'] as &$field) {
-                $field['value'] = $this->fieldValue($settings, $field);
+                if ($key === 'payment_gateway' && $gateway) {
+                    $field['value'] = (string) ($gateway->{$field['name']} ?? $field['default'] ?? '');
+                } else {
+                    $field['value'] = $this->fieldValue($settings, $field);
+                }
             }
             unset($field);
         }
@@ -385,6 +417,75 @@ class SettingsController extends Controller
                     ['label' => __('super_admin/settings.actions.open_communications.title'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
                 ],
             ],
+            'payment_gateway' => [
+                'title' => __('super_admin/settings.sections.payment_gateway.title'),
+                'subtitle' => __('super_admin/settings.sections.payment_gateway.subtitle'),
+                'badge' => __('super_admin/settings.sections.payment_gateway.badge'),
+                'fields' => [
+                    [
+                        'name'        => 'user_secret_key',
+                        'label'       => 'User Secret Key',
+                        'type'        => 'text',
+                        'default'     => '',
+                        'placeholder' => 'xxxxx-xxxxx-xxxxx',
+                        'help'        => __('admin/settings.secret_key_help'),
+                    ],
+                    [
+                        'name'        => 'category_code',
+                        'label'       => 'Category Code',
+                        'type'        => 'text',
+                        'default'     => '',
+                        'placeholder' => 'xxxxxxxx',
+                        'help'        => __('admin/settings.category_code_help'),
+                    ],
+                    [
+                        'name'        => 'base_url',
+                        'label'       => 'Base URL',
+                        'type'        => 'text',
+                        'default'     => 'https://toyyibpay.com',
+                        'placeholder' => 'https://toyyibpay.com',
+                        'help'        => 'Base URL ToyyibPay.',
+                    ],
+                    [
+                        'name'        => 'api_url',
+                        'label'       => 'API URL',
+                        'type'        => 'text',
+                        'default'     => 'https://toyyibpay.com',
+                        'placeholder' => 'https://toyyibpay.com',
+                        'help'        => 'API Endpoint URL ToyyibPay.',
+                    ],
+                    [
+                        'name'    => 'payment_channel',
+                        'label'   => __('admin/settings.payment_channel'),
+                        'type'    => 'select',
+                        'default' => '0',
+                        'options' => [
+                            '0' => __('admin/settings.all_fpx_card'),
+                            '1' => __('admin/settings.fpx_only'),
+                            '2' => __('admin/settings.credit_card_only'),
+                        ],
+                        'help'    => 'Saluran pembayaran yang dibenarkan.',
+                    ],
+                    [
+                        'name'    => 'expiry_days',
+                        'label'   => __('admin/settings.invoice_expiry_days'),
+                        'type'    => 'number',
+                        'default' => '3',
+                        'help'    => __('admin/settings.invoice_expiry_help'),
+                    ],
+                    [
+                        'name'    => 'is_active',
+                        'label'   => __('admin/settings.enable_gateway'),
+                        'type'    => 'toggle',
+                        'default' => '1',
+                        'help'    => __('admin/settings.gateway_disabled_help'),
+                        'full_width' => true,
+                    ],
+                ],
+                'features' => [
+                    ['label' => 'Senarai Invois', 'desc' => 'Urus semua invois syarikat.', 'url' => route('invoices.index')],
+                ],
+            ],
         ];
     }
 
@@ -439,6 +540,13 @@ class SettingsController extends Controller
             'caption' => __('super_admin/settings.sections.email_templates.subtitle'),
             'icon' => 'M4 6.5A2.5 2.5 0 016.5 4h11A2.5 2.5 0 0120 6.5v11a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 014 17.5v-11zm2.2.8l5.8 4.35 5.8-4.35-.9-1.2L12 9.75 7.1 6.1l-.9 1.2z',
             'tone' => 'from-cyan-500 to-blue-500',
+        ],
+        'payment_gateway' => [
+            'label'   => 'Payment Gateway',
+            'caption' => 'ToyyibPay global',
+            'icon'    => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
+            'outline' => true,
+            'tone'    => 'from-green-500 to-teal-500',
         ],
     ];
     }

@@ -282,10 +282,10 @@ class TeacherController extends Controller
         // Hitung jumlah teacher milik company
         $currentTeachers = Teacher::where('company_id', $company->id)->count();
 
-        // Ambil batas maksimum kelas dari package
-        $maxTeacher = $activeSubscription->package->maks_kelas;
+        // Ambil batas maksimum guru dari package (0 atau null berarti tanpa batas / unlimited)
+        $maxTeacher = $activeSubscription->package->maks_guru;
 
-        if ($currentTeachers >= $maxTeacher) {
+        if ($maxTeacher && $maxTeacher > 0 && $currentTeachers >= $maxTeacher) {
             return redirect()->route('admin.teachers.index')
                 ->with('error', 'Jumlah Teacher sudah mencapai maksimum (' . $maxTeacher . ').');
         }

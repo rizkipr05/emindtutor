@@ -91,6 +91,26 @@ class Company extends Model
         return $this->hasOne(PaymentGateway::class);
     }
 
+    /**
+     * Return the gateway that should be used for this company.
+     *
+     * A company-specific gateway takes priority. When one has not yet been
+     * configured, use the active global gateway configured by Super Admin.
+     * An explicitly disabled company gateway remains disabled.
+     */
+    public function effectivePaymentGateway(): ?PaymentGateway
+    {
+        $gateway = $this->relationLoaded('paymentGateway')
+            ? $this->getRelation('paymentGateway')
+            : $this->paymentGateway()->first();
+
+        if ($gateway) {
+            return $gateway->is_active ? $gateway : null;
+        }
+
+        return PaymentGateway::superAdmin();
+    }
+
     public function whatsAppReminders()
     {
         return $this->hasMany(WhatsAppReminder::class);

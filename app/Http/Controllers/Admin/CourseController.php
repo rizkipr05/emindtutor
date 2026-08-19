@@ -49,10 +49,10 @@ class CourseController extends Controller
         // Hitung jumlah course milik company
         $currentCourses = Course::where('company_id', $company->id)->count();
 
-        // Ambil batas maksimum kelas dari package
+        // Ambil batas maksimum kelas dari package (0 atau null berarti tanpa batas / unlimited)
         $maxClasses = $activeSubscription->package->maks_kelas;
 
-        if ($currentCourses >= $maxClasses) {
+        if ($maxClasses && $maxClasses > 0 && $currentCourses >= $maxClasses) {
             return redirect()->route('admin.courses.index')
                 ->with('error', 'Jumlah kelas sudah mencapai maksimum (' . $maxClasses . ').');
         }

@@ -50,7 +50,6 @@ class DashboardController extends Controller
             $totalDays     = max(1, $startDate->diffInDays($endDate) + 1);
         }
 
-        $showReviewPopup = app(ReviewController::class)->shouldShowReviewPopup();
         $summary = [
             'courses'       => Course::where('company_id', $company->id)->count(),
             'teachers'      => Teacher::where('company_id', $company->id)->count(),
@@ -66,7 +65,6 @@ class DashboardController extends Controller
             'remainingDays'   => $remainingDays,
             'expiryDate'      => $expiryDate,
             'totalDays'       => $totalDays,
-            'showReviewPopup' => $showReviewPopup,
             'summary'         => $summary,
         ]);
     }

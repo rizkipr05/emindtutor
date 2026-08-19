@@ -2,6 +2,7 @@
 
 return [
     'main_navigation' => 'Navigasi Utama',
+    'dashboard' => 'Dashboard',
     'company_info' => 'Maklumat Syarikat',
     'course_setting' => 'Kos Setting',
     'teacher_management' => 'Pengurusan Guru',
@@ -13,6 +14,7 @@ return [
     'new_student' => 'Pelajar Baru',
     'import_student' => 'Import Pelajar',
     'attendance_report' => 'Laporan Kehadiran & Prestasi',
+    'daily_attendance_report' => 'Laporan Kehadiran Harian',
     'payment_fee' => 'Bayaran & Yuran',
     'staff_management' => 'Pengurusan Staff',
     'back_to_superadmin' => 'Kembali ke Superadmin',

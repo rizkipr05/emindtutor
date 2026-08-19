@@ -179,7 +179,7 @@
                     <div class="info-item">
                         <span class="info-label">Status:</span>
                         <span class="info-value">
-                            <span class="status-badge">PAID</span>
+                            <span class="status-badge" style="background: {{ strtolower($invoice->status_bayaran) === 'paid' ? '#28a745' : (strtolower($invoice->status_bayaran) === 'expired' ? '#dc3545' : '#ffc107') }}; color: {{ strtolower($invoice->status_bayaran) === 'pending' ? '#000' : '#fff' }};">{{ strtoupper($invoice->status_bayaran) }}</span>
                         </span>
                     </div>
                 </div>

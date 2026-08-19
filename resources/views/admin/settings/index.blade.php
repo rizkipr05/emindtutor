@@ -75,7 +75,7 @@
                     <span>/</span>
                     <a href="{{ route('admin.settings.index') }}" class="text-teal-600 hover:underline">{{ __('admin/settings.settings') }}</a>
                     <span>/</span>
-                    <span class="font-semibold text-slate-800">{{ $navSections[$currentSectionKey]['label'] }}</span>
+                    <span class="font-semibold text-slate-800">{{ $navSections[$currentSectionKey]['label'] ?? $currentSectionKey }}</span>
                 </div>
             </div>
 
@@ -328,10 +328,21 @@
                                 {{ \Carbon\Carbon::parse($inv->tarikh_tamat)->format('d/m/Y') }}
                             </p>
                         </div>
-                        <span class="text-xs font-bold px-2.5 py-1 rounded-full border
-                            {{ $inv->status_bayaran === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200' }}">
-                            {{ ucfirst($inv->status_bayaran) }}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('admin.settings.subscription.receipt', $inv) }}"
+                               target="_blank"
+                               rel="noopener"
+                               class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m0 0l-3-3m3 3l3-3M3 16.5v2A2.5 2.5 0 005.5 21h13a2.5 2.5 0 002.5-2.5v-2M7 3h10v5H7z" />
+                                </svg>
+                                {{ __('admin/settings.paid_invoice') }}
+                            </a>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full border
+                                {{ $inv->status_bayaran === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200' }}">
+                                {{ ucfirst($inv->status_bayaran) }}
+                            </span>
+                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -381,20 +392,102 @@
             @elseif($currentSectionKey === 'payment_gateway')
             {{-- ─── PAYMENT GATEWAY ─── --}}
             <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-                <div class="border-b border-slate-200 px-6 py-5">
-                    <h2 class="text-xl font-bold text-slate-900">{{ __('admin/settings.payment_gateway.title') }}</h2>
-                    <p class="mt-1 text-sm text-slate-500">{{ __('admin/settings.payment_gateway.subtitle') }}</p>
+                <div class="border-b border-slate-200 px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">{{ __('admin/settings.payment_gateway.title') }}</h2>
+                        <p class="mt-1 text-sm text-slate-500">{{ __('admin/settings.payment_gateway.subtitle') }}</p>
+                    </div>
+                    <div>
+                        @if($gateway && $gateway->is_active)
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-bold text-emerald-800 border border-emerald-300">
+                                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                {{ __('admin/settings.status_active') }}
+                            </span>
+                        @elseif($gateway && !$gateway->is_active)
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3.5 py-1.5 text-xs font-bold text-amber-800 border border-amber-300">
+                                <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                                {{ __('admin/settings.status_inactive') }}
+                            </span>
+                        @elseif(!empty($globalGateway))
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3.5 py-1.5 text-xs font-bold text-blue-800 border border-blue-300">
+                                <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                {{ __('admin/settings.status_active_global') }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3.5 py-1.5 text-xs font-bold text-slate-700 border border-slate-300">
+                                <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                                {{ __('admin/settings.status_unconfigured') }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
                 <form method="POST" action="{{ route('admin.settings.update', ['section' => 'payment_gateway']) }}">
                     @csrf
                     <div class="p-6 grid gap-4 sm:grid-cols-2">
 
+                        {{-- Alert Status Banner --}}
+                        <div class="sm:col-span-2">
+                            @if($gateway && $gateway->is_active)
+                                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-200 text-emerald-800 font-bold text-lg">
+                                            ✓
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-emerald-900">{{ __('admin/settings.banner_active_title') }}</h4>
+                                            <p class="text-xs text-emerald-700 mt-0.5">{{ __('admin/settings.banner_active_desc', ['time' => $gateway->updated_at?->format('d M Y, H:i') ?? '-']) }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.enabled') }} ({{ __('admin/settings.admin_company') }})</span>
+                                </div>
+                            @elseif($gateway && !$gateway->is_active)
+                                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-800 font-bold text-lg">
+                                            !
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-amber-900">{{ __('admin/settings.banner_inactive_title') }}</h4>
+                                            <p class="text-xs text-amber-700 mt-0.5">{{ __('admin/settings.banner_inactive_desc') }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="rounded-full bg-amber-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.disabled') }}</span>
+                                </div>
+                            @elseif(!empty($globalGateway))
+                                <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-200 text-blue-800 font-bold text-lg">
+                                            ✓
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-blue-900">{{ __('admin/settings.banner_global_title') }}</h4>
+                                            <p class="text-xs text-blue-700 mt-0.5">{{ __('admin/settings.banner_global_desc') }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.enabled') }} (GLOBAL)</span>
+                                </div>
+                            @else
+                                <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-200 text-rose-800 font-bold text-lg">
+                                            ✕
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-rose-900">{{ __('admin/settings.banner_unconfigured_title') }}</h4>
+                                            <p class="text-xs text-rose-700 mt-0.5">{{ __('admin/settings.banner_unconfigured_desc') }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.status_unconfigured') }}</span>
+                                </div>
+                            @endif
+                        </div>
+
                         <div class="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                             <label class="block text-sm font-semibold text-slate-900 mb-1">User Secret Key (ToyyibPay)</label>
-                            <input type="text" name="user_secret_key"
-                                   value="{{ old('user_secret_key', $gateway?->user_secret_key) }}"
-                                   placeholder="xxxxx-xxxxx-xxxxx"
-                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none" required>
+                            <input type="password" name="user_secret_key"
+                                   value=""
+                                   placeholder="{{ $gateway ? __('admin/settings.secret_key_saved_placeholder') : 'xxxxx-xxxxx-xxxxx' }}"
+                                   class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none" {{ $gateway ? '' : 'required' }}>
                             <p class="mt-1.5 text-xs text-slate-500">{{ __('admin/settings.secret_key_help') }}</p>
                             @error('user_secret_key')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
@@ -413,7 +506,7 @@
                             <label class="block text-sm font-semibold text-slate-900 mb-1">{{ __('admin/settings.payment_channel') }}</label>
                             <select name="payment_channel"
                                     class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-100 focus:outline-none">
-                                <option value="0" {{ old('payment_channel', $gateway?->payment_channel) == 0 ? 'selected' : '' }}>{{ __('admin/settings.all_fpx_card') }}</option>
+                                <option value="0" {{ old('payment_channel', $gateway?->payment_channel ?? 0) == 0 ? 'selected' : '' }}>{{ __('admin/settings.all_fpx_card') }}</option>
                                 <option value="1" {{ old('payment_channel', $gateway?->payment_channel) == 1 ? 'selected' : '' }}>{{ __('admin/settings.fpx_only') }}</option>
                                 <option value="2" {{ old('payment_channel', $gateway?->payment_channel) == 2 ? 'selected' : '' }}>{{ __('admin/settings.credit_card_only') }}</option>
                             </select>
@@ -450,11 +543,18 @@
                             <div class="flex items-center justify-between gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold text-slate-900">{{ __('admin/settings.enable_gateway') }}</label>
-                                    <p class="mt-1 text-sm text-slate-500">{{ __('admin/settings.gateway_disabled_help') }}</p>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        {{ __('admin/settings.current_status') }} 
+                                        @if($gateway?->is_active ?? true)
+                                            <span class="font-bold text-emerald-600">{{ __('admin/settings.status_active') }}</span>
+                                        @else
+                                            <span class="font-bold text-amber-600">{{ __('admin/settings.status_inactive') }}</span>
+                                        @endif
+                                    </p>
                                 </div>
                                 <label class="relative inline-flex cursor-pointer items-center">
                                     <input type="checkbox" name="is_active" value="1" class="sr-only peer"
-                                           {{ old('is_active', $gateway?->is_active ? '1' : '0') === '1' || ($gateway?->is_active) ? 'checked' : '' }}>
+                                           @checked(old('is_active', $gateway?->is_active ?? true))>
                                     <div class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-teal-500"></div>
                                     <span class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span>
                                 </label>
@@ -592,16 +692,8 @@
                             <span class="mt-0.5 block text-xs text-slate-500">{{ __('admin/settings.bank_account_desc') }}</span>
                         </span>
                     </a>
-                    <a href="{{ route('admin.payment-gateway.edit') }}"
-                       class="group flex items-start gap-3 rounded-2xl border border-teal-100 bg-white px-4 py-3 transition hover:border-teal-200 hover:shadow-sm">
-                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        </span>
-                        <span>
-                            <span class="block text-sm font-semibold text-slate-900 group-hover:text-teal-700">{{ __('admin/settings.payment_gateway.title') }}</span>
-                            <span class="mt-0.5 block text-xs text-slate-500">{{ __('admin/settings.gateway_desc') }}</span>
-                        </span>
-                    </a>
+
+
                     <a href="{{ route('admin.subscribe.index') }}"
                        class="group flex items-start gap-3 rounded-2xl border border-teal-100 bg-white px-4 py-3 transition hover:border-teal-200 hover:shadow-sm">
                         <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700">
@@ -610,6 +702,16 @@
                         <span>
                             <span class="block text-sm font-semibold text-slate-900 group-hover:text-teal-700">{{ __('admin/settings.packages_subscription') }}</span>
                             <span class="mt-0.5 block text-xs text-slate-500">{{ __('admin/settings.packages_subscription_desc') }}</span>
+                        </span>
+                    </a>
+                    <a href="{{ route('admin.bayaran.index') }}"
+                       class="group flex items-start gap-3 rounded-2xl border border-teal-100 bg-white px-4 py-3 transition hover:border-teal-200 hover:shadow-sm">
+                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </span>
+                        <span>
+                            <span class="block text-sm font-semibold text-slate-900 group-hover:text-indigo-700">Senarai Invois Pelajar</span>
+                            <span class="mt-0.5 block text-xs text-slate-500">Lihat & urus status invois bayaran pelajar</span>
                         </span>
                     </a>
                 </div>

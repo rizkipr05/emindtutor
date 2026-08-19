@@ -133,8 +133,7 @@
             @endif
             <nav class="space-y-3">
                 <!-- Selalu tampil -->
-                <a href="{{ route('a.dashboard.index') }}" class="block p-2 rounded {{ request()->routeIs('a.dashboard.index', 'admin.maklumat.edit') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.company_info") }}</a>
-                <a href="{{ route('admin.payment-gateway.edit') }}" class="block p-2 rounded {{ request()->routeIs('admin.payment-gateway.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">Payment Gateway</a>
+                <a href="{{ route('a.dashboard.index') }}" class="block p-2 rounded {{ request()->routeIs('a.dashboard.index') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.dashboard") }}</a>
 
                 <!-- Charts & analytics -->
                 <div x-data="{ open: false }" class="space-y-1">
@@ -189,13 +188,13 @@
                         <svg x-bind:class="{ 'rotate-180': open }" class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                     </button>
                     <div x-show="open" x-transition class="ml-4 space-y-1">
-                        <a href="{{ route('admin.reports.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.attendance_report") }}</a>
+                        <a href="{{ route('admin.reports.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.daily_attendance_report") }}</a>
                         <a href="{{ route('admin.monthly-reports.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.monthly-reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('reports.monthly.menu') }}</a>
                     </div>
                 </div>
                 <!-- Payment & Fee -->
-                <div x-data="{ open: {{ request()->routeIs('admin.bayaran.*') ? 'true' : 'false' }} }" class="space-y-1">
-                    <button @click="open = !open" class="flex w-full items-center justify-between rounded p-2 {{ request()->routeIs('admin.bayaran.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">
+                <div x-data="{ open: {{ request()->routeIs('admin.bayaran.*', 'admin.settings.*') && request()->route('section') === 'payment_gateway' ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" class="flex w-full items-center justify-between rounded p-2 {{ request()->routeIs('admin.bayaran.*') || (request()->routeIs('admin.settings.*') && request()->route('section') === 'payment_gateway') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">
                         <span>{{ __("layouts/admin.payment_fee") }}</span>
                         <svg x-bind:class="{ 'rotate-180': open }" class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />

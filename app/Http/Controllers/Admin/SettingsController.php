@@ -8,10 +8,13 @@ use App\Models\CompanyBankDetail;
 use App\Models\CompanyInvoice;
 use App\Models\PaymentGateway;
 use App\Models\Staff;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class SettingsController extends Controller
 {
@@ -80,12 +83,13 @@ class SettingsController extends Controller
         $navSections       = $this->navSections();
         $currentSectionKey = $section;
         $gateway           = $company->paymentGateway;
+        $globalGateway     = PaymentGateway::superAdmin();
         $bankDetails       = CompanyBankDetail::where('company_id', $company->id)->get();
 
         $subscriptionData = $this->buildSubscriptionData($company);
 
         return view('admin.settings.index', array_merge(
-            compact('company', 'user', 'navSections', 'currentSectionKey', 'gateway', 'bankDetails'),
+            compact('company', 'user', 'navSections', 'currentSectionKey', 'gateway', 'globalGateway', 'bankDetails'),
             $subscriptionData
         ));
     }
@@ -116,12 +120,20 @@ class SettingsController extends Controller
 
                 if ($request->hasFile('logo_syarikat')) {
                     $uploadDirectory = public_path('uploads');
-                    if (!is_dir($uploadDirectory)) {
-                        mkdir($uploadDirectory, 0755, true);
+                    if (!File::isDirectory($uploadDirectory) && !File::makeDirectory($uploadDirectory, 0775, true, true)) {
+                        throw ValidationException::withMessages([
+                            'logo_syarikat' => 'Folder upload logo tidak dapat dibuat. Sila hubungi pentadbir hosting.',
+                        ]);
                     }
 
                     $file = $request->file('logo_syarikat');
-                    $filename = uniqid('company-logo-', true) . '.' . $file->getClientOriginalExtension();
+                    if (!is_writable($uploadDirectory)) {
+                        throw ValidationException::withMessages([
+                            'logo_syarikat' => 'Folder public/uploads tidak boleh ditulis. Tetapkan permission folder kepada 775 di hosting.',
+                        ]);
+                    }
+
+                    $filename = uniqid('company-logo-', true) . '.' . $file->extension();
                     $file->move($uploadDirectory, $filename);
                     $validated['logo_syarikat'] = $filename;
                 }
@@ -139,21 +151,32 @@ class SettingsController extends Controller
                     ->with('success', __('admin/settings.company_updated'));
 
             case 'payment_gateway':
-                $validated = $request->validate([
-                    'user_secret_key'  => 'required|string|max:255',
+                $hasExistingGateway = $company->paymentGateway()->exists();
+                $rules = [
+                    'user_secret_key'  => $hasExistingGateway ? 'nullable|string|max:255' : 'required|string|max:255',
                     'category_code'    => 'required|string|max:100',
                     'base_url'         => 'required|url|max:255',
                     'api_url'          => 'required|url|max:255',
                     'payment_channel'  => 'required|integer|in:0,1,2',
                     'expiry_days'      => 'required|integer|min:1|max:100',
                     'is_active'        => 'nullable|boolean',
-                ]);
-                $company->paymentGateway()->updateOrCreate([], array_merge($validated, [
-                    'provider'  => 'toyyibpay',
-                    'is_active' => $request->boolean('is_active'),
-                ]));
+                ];
+
+                $validated = $request->validate($rules);
+
+                if (empty($validated['user_secret_key'])) {
+                    unset($validated['user_secret_key']);
+                }
+
+                $validated['provider'] = 'toyyibpay';
+                $validated['is_active'] = $request->boolean('is_active', true);
+
+                $company->paymentGateway()->updateOrCreate([], $validated);
+
                 return redirect()->route('admin.settings.index', ['section' => 'payment_gateway'])
                     ->with('success', __('admin/settings.gateway_saved'));
+
+
 
             case 'monthly_reports':
                 $validated = $request->validate([
@@ -187,6 +210,23 @@ class SettingsController extends Controller
             default:
                 return redirect()->route('admin.settings.index', ['section' => $section]);
         }
+    }
+
+    public function subscriptionReceipt(CompanyInvoice $invoice)
+    {
+        $company = $this->resolveCompany();
+
+        abort_unless(
+            $company
+            && $invoice->company_id === $company->id,
+            404
+        );
+
+        $invoice->load(['company.user', 'package']);
+
+        return Pdf::loadView('super-admin.invoices.receipt', compact('invoice'))
+            ->setPaper('A4', 'portrait')
+            ->download("{$invoice->nomor_invoice}-{$invoice->company->user->name}.pdf");
     }
 
     private function normalizeSection(?string $section): string

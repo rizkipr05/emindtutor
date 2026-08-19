@@ -26,6 +26,7 @@ return [
 
     'buttons' => [
         'pay_now' => 'Pay Now',
+        'invoice' => 'Invoice',
         'back' => 'Back',
     ],
 ];

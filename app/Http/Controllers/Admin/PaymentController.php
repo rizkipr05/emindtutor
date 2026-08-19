@@ -181,7 +181,9 @@ class PaymentController extends Controller
         $externalId = (string) ($data['order_id'] ?? '');
         $companyInvoice = CompanyInvoice::with('package')->where('external_id', $externalId)->first();
         $studentInvoice = $companyInvoice ? null : StudentInvoice::with('student.company')->where('external_id', $externalId)->orWhere('nomor_invoice', $externalId)->first();
-        $gateway = $companyInvoice ? PaymentGateway::superAdmin() : $studentInvoice?->student?->company?->paymentGateway;
+        $gateway = $companyInvoice
+            ? PaymentGateway::superAdmin()
+            : $studentInvoice?->student?->company?->effectivePaymentGateway();
 
         if (! $gateway || ! app(ToyyibPayService::class)->isValidCallback($data, $gateway)) {
             abort(403, 'Invalid ToyyibPay callback hash.');

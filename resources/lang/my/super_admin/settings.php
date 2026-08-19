@@ -62,6 +62,11 @@ return [
             'subtitle' => 'Ubah emel selamat datang dan pengesahan pembayaran untuk syarikat.',
             'badge' => 'Kawalan email',
         ],
+        'payment_gateway' => [
+            'title' => 'Gerbang Bayaran (ToyyibPay)',
+            'subtitle' => 'Tetapan global ToyyibPay yang digunakan oleh semua syarikat yang tidak mempunyai gateway tersendiri.',
+            'badge' => 'ToyyibPay',
+        ],
     ],
     'metrics' => [
         'companies' => 'Syarikat',

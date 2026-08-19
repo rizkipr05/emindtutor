@@ -2,6 +2,7 @@
 
 return [
     'main_navigation' => 'Main Navigation',
+    'dashboard' => 'Dashboard',
     'company_info' => 'Company Information',
     'course_setting' => 'Course Setting',
     'teacher_management' => 'Teacher Management',
@@ -13,6 +14,7 @@ return [
     'new_student' => 'New Student',
     'import_student' => 'Import Student',
     'attendance_report' => 'Attendance & Performance Report',
+    'daily_attendance_report' => 'Daily Attendance & Performance',
     'payment_fee' => 'Payment & Fee',
     'staff_management' => 'Staff Management',
     'back_to_superadmin' => 'Back to Superadmin',
