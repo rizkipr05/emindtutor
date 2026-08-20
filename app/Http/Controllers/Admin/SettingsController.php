@@ -119,7 +119,12 @@ class SettingsController extends Controller
                 $previousLogo = $company->logo_syarikat;
 
                 if ($request->hasFile('logo_syarikat')) {
-                    $uploadDirectory = public_path('uploads');
+                    // cPanel deployments commonly expose ../public_html as the
+                    // web root while Laravel itself lives in ~/laravel.
+                    $hostingPublicUploads = base_path('../public_html/uploads');
+                    $uploadDirectory = File::isDirectory(base_path('../public_html'))
+                        ? $hostingPublicUploads
+                        : base_path('uploads');
                     if (!File::isDirectory($uploadDirectory) && !File::makeDirectory($uploadDirectory, 0775, true, true)) {
                         throw ValidationException::withMessages([
                             'logo_syarikat' => 'Folder upload logo tidak dapat dibuat. Sila hubungi pentadbir hosting.',
@@ -127,23 +132,39 @@ class SettingsController extends Controller
                     }
 
                     $file = $request->file('logo_syarikat');
-                    if (!is_writable($uploadDirectory)) {
+                    if (! $file->isValid()) {
                         throw ValidationException::withMessages([
-                            'logo_syarikat' => 'Folder public/uploads tidak boleh ditulis. Tetapkan permission folder kepada 775 di hosting.',
+                            'logo_syarikat' => 'Upload logo gagal. Semak had upload PHP di hosting (upload_max_filesize dan post_max_size).',
                         ]);
                     }
 
-                    $filename = uniqid('company-logo-', true) . '.' . $file->extension();
-                    $file->move($uploadDirectory, $filename);
+                    if (!is_writable($uploadDirectory)) {
+                        throw ValidationException::withMessages([
+                            'logo_syarikat' => 'Folder uploads tidak boleh ditulis. Tetapkan permission folder kepada 775 di hosting.',
+                        ]);
+                    }
+
+                    $filename = 'company-logo-' . now()->format('YmdHis') . '-' . bin2hex(random_bytes(6)) . '.' . $file->extension();
+                    try {
+                        $file->move($uploadDirectory, $filename);
+                    } catch (\Throwable $exception) {
+                        report($exception);
+
+                        throw ValidationException::withMessages([
+                            'logo_syarikat' => 'Logo tidak dapat disimpan. Pastikan folder uploads mempunyai permission 775 dan dimiliki oleh user hosting.',
+                        ]);
+                    }
+
                     $validated['logo_syarikat'] = $filename;
                 }
 
                 $company->update($validated);
 
                 if (isset($validated['logo_syarikat']) && $previousLogo) {
-                    $oldLogoPath = public_path('uploads/' . $previousLogo);
-                    if (file_exists($oldLogoPath)) {
-                        @unlink($oldLogoPath);
+                    foreach ([base_path('../public_html/uploads/' . $previousLogo), base_path('uploads/' . $previousLogo)] as $oldLogoPath) {
+                        if (file_exists($oldLogoPath)) {
+                            @unlink($oldLogoPath);
+                        }
                     }
                 }
 
@@ -164,12 +185,18 @@ class SettingsController extends Controller
 
                 $validated = $request->validate($rules);
 
-                if (empty($validated['user_secret_key'])) {
+                $secretKeyEntered = $request->filled('user_secret_key');
+
+                if (! $secretKeyEntered) {
                     unset($validated['user_secret_key']);
                 }
 
                 $validated['provider'] = 'toyyibpay';
-                $validated['is_active'] = $request->boolean('is_active', true);
+                // A newly entered/replaced secret key means the company wants
+                // to use ToyyibPay. Keep the explicit toggle for later manual
+                // deactivation, but do not save a newly configured gateway as
+                // inactive just because its switch was not clicked.
+                $validated['is_active'] = $secretKeyEntered || $request->boolean('is_active');
 
                 $company->paymentGateway()->updateOrCreate([], $validated);
 

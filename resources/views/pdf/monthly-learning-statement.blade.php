@@ -37,7 +37,10 @@
     $logoDataUri = null;
 
     if (!empty($company->logo_syarikat)) {
-        $logoPath = public_path('uploads/' . $company->logo_syarikat);
+        $logoPath = base_path('../public_html/uploads/' . $company->logo_syarikat);
+        if (!file_exists($logoPath)) {
+            $logoPath = base_path('uploads/' . $company->logo_syarikat);
+        }
 
         if (is_file($logoPath) && is_readable($logoPath)) {
             $mimeType = mime_content_type($logoPath) ?: 'image/png';

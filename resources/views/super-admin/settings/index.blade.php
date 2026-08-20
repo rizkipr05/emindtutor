@@ -142,7 +142,7 @@
                                     </div>
                                     <div>
                                         <h4 class="text-sm font-bold text-emerald-900">✓ Konfigurasi tersimpan dan aktif</h4>
-                                        <p class="text-xs text-emerald-700 mt-0.5">Secret Key tersimpan terenkripsi. ToyyibPay Global sedia digunakan.</p>
+                                        <p class="text-xs text-emerald-700 mt-0.5">Secret Key tersimpan terenkripsi. ToyyibPay Global sedia digunakan. Terakhir dikemas kini: {{ $gateway?->updated_at?->timezone(config('app.timezone'))->format('d M Y, H:i') ?? '-' }}.</p>
                                     </div>
                                 </div>
                                 <span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">AKTIF</span>

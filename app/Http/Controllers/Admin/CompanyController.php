@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use App\Models\Company;
 
 class CompanyController extends Controller
@@ -39,13 +40,21 @@ class CompanyController extends Controller
         if ($request->hasFile('logo_syarikat')) {
 
             // Delete old logo
-            if ($company->logo_syarikat && file_exists(public_path('uploads/' . $company->logo_syarikat))) {
-                @unlink(public_path('uploads/' . $company->logo_syarikat));
+            $uploadDirectory = is_dir(base_path('../public_html'))
+                ? base_path('../public_html/uploads')
+                : base_path('uploads');
+
+            if (! File::isDirectory($uploadDirectory)) {
+                File::makeDirectory($uploadDirectory, 0775, true, true);
+            }
+
+            if ($company->logo_syarikat && file_exists($uploadDirectory . '/' . $company->logo_syarikat)) {
+                @unlink($uploadDirectory . '/' . $company->logo_syarikat);
             }
 
             $file = $request->file('logo_syarikat');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads'), $filename);
+            $file->move($uploadDirectory, $filename);
 
             $validated['logo_syarikat'] = $filename;
         }

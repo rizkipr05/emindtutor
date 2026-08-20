@@ -24,7 +24,10 @@
     @php
         $company = $invoice->student->company;
         $companyName = $company?->user?->name ?: ($company?->nama_syarikat ?? '-');
-        $logoPath = $company?->logo_syarikat ? public_path('uploads/' . $company->logo_syarikat) : null;
+        $logoPath = $company?->logo_syarikat ? base_path('../public_html/uploads/' . $company->logo_syarikat) : null;
+        if ($logoPath && !file_exists($logoPath)) {
+            $logoPath = base_path('uploads/' . $company->logo_syarikat);
+        }
         $logoDataUri = null;
 
         if ($logoPath && file_exists($logoPath)) {

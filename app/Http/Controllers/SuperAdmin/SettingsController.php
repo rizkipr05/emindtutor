@@ -114,6 +114,7 @@ class SettingsController extends Controller
             'navSections' => $navSections,
             'currentSection' => $sections[$section],
             'currentSectionKey' => $section,
+            'gateway' => $gateway,
             'managementPanel' => $this->managementPanel($section),
             'stats' => $stats,
         ];

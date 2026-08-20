@@ -94,9 +94,9 @@ class Company extends Model
     /**
      * Return the gateway that should be used for this company.
      *
-     * A company-specific gateway takes priority. When one has not yet been
-     * configured, use the active global gateway configured by Super Admin.
-     * An explicitly disabled company gateway remains disabled.
+    * Company payments must only use this company's own active gateway.
+    * The Super Admin gateway is reserved for company registration and
+    * subscription payments.
      */
     public function effectivePaymentGateway(): ?PaymentGateway
     {
@@ -104,11 +104,7 @@ class Company extends Model
             ? $this->getRelation('paymentGateway')
             : $this->paymentGateway()->first();
 
-        if ($gateway) {
-            return $gateway->is_active ? $gateway : null;
-        }
-
-        return PaymentGateway::superAdmin();
+        return $gateway?->is_active ? $gateway : null;
     }
 
     public function whatsAppReminders()

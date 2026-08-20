@@ -408,11 +408,6 @@
                                 <span class="h-2 w-2 rounded-full bg-amber-500"></span>
                                 {{ __('admin/settings.status_inactive') }}
                             </span>
-                        @elseif(!empty($globalGateway))
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3.5 py-1.5 text-xs font-bold text-blue-800 border border-blue-300">
-                                <span class="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                {{ __('admin/settings.status_active_global') }}
-                            </span>
                         @else
                             <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3.5 py-1.5 text-xs font-bold text-slate-700 border border-slate-300">
                                 <span class="h-2 w-2 rounded-full bg-slate-400"></span>
@@ -435,7 +430,7 @@
                                         </div>
                                         <div>
                                             <h4 class="text-sm font-bold text-emerald-900">{{ __('admin/settings.banner_active_title') }}</h4>
-                                            <p class="text-xs text-emerald-700 mt-0.5">{{ __('admin/settings.banner_active_desc', ['time' => $gateway->updated_at?->format('d M Y, H:i') ?? '-']) }}</p>
+                                            <p class="text-xs text-emerald-700 mt-0.5">{{ __('admin/settings.banner_active_desc', ['time' => $gateway->updated_at?->timezone(config('app.timezone'))->format('d M Y, H:i') ?? '-']) }}</p>
                                         </div>
                                     </div>
                                     <span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.enabled') }} ({{ __('admin/settings.admin_company') }})</span>
@@ -452,19 +447,6 @@
                                         </div>
                                     </div>
                                     <span class="rounded-full bg-amber-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.disabled') }}</span>
-                                </div>
-                            @elseif(!empty($globalGateway))
-                                <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-200 text-blue-800 font-bold text-lg">
-                                            ✓
-                                        </div>
-                                        <div>
-                                            <h4 class="text-sm font-bold text-blue-900">{{ __('admin/settings.banner_global_title') }}</h4>
-                                            <p class="text-xs text-blue-700 mt-0.5">{{ __('admin/settings.banner_global_desc') }}</p>
-                                        </div>
-                                    </div>
-                                    <span class="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.enabled') }} (GLOBAL)</span>
                                 </div>
                             @else
                                 <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 flex items-center justify-between">

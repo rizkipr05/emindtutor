@@ -228,7 +228,10 @@
         $logoPath = null;
 
         if (!empty($company?->logo_syarikat)) {
-            $candidate = public_path('uploads/' . $company->logo_syarikat);
+            $candidate = base_path('../public_html/uploads/' . $company->logo_syarikat);
+            if (!file_exists($candidate)) {
+                $candidate = base_path('uploads/' . $company->logo_syarikat);
+            }
             if (file_exists($candidate)) {
                 $mimeType = mime_content_type($candidate) ?: 'image/png';
                 $logoPath = 'data:' . $mimeType . ';base64,' . base64_encode(file_get_contents($candidate));

@@ -23,6 +23,11 @@ class ToyyibPayService
             throw new RuntimeException('Nomor telepon pembayar wajib diisi untuk membuat bill ToyyibPay.');
         }
 
+        $amountInCents = (int) round(((float) ($attributes['amount'] ?? 0)) * 100);
+        if ($amountInCents <= 0) {
+            throw new RuntimeException('Jumlah invoice mesti lebih daripada RM 0 sebelum bill ToyyibPay boleh dibuat.');
+        }
+
         $response = $this->client()->post($this->apiUrl($gateway, '/index.php/api/createBill'), [
             'userSecretKey' => $secretKey,
             'categoryCode' => $categoryCode,
@@ -31,7 +36,7 @@ class ToyyibPayService
             'billPriceSetting' => 1,
             'billPayorInfo' => 1,
             // ToyyibPay expects the amount in cents; application prices are in RM.
-            'billAmount' => (int) round(((float) $attributes['amount']) * 100),
+            'billAmount' => $amountInCents,
             'billReturnUrl' => $attributes['return_url'],
             'billCallbackUrl' => $attributes['callback_url'],
             'billExternalReferenceNo' => $attributes['reference'],
