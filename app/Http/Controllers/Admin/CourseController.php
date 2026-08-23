@@ -78,7 +78,6 @@ class CourseController extends Controller
             'instructions_template' => 'nullable|string',
             'session_notes_template' => 'nullable|string',
             'jenis' => 'required|in:individu,kumpulan',
-            'registration_link' => 'nullable|url|max:255',
         ]);
         // dd($request->all());
 
@@ -100,7 +99,6 @@ class CourseController extends Controller
             'instructions_template' => $request->instructions_template,
             'session_notes_template' => $request->session_notes_template,
             'jenis' => $request->jenis,
-            'registration_link' => $request->registration_link,
         ]);
 
         return redirect()->route('admin.courses.index')->with('success', 'Course created successfully.');
@@ -137,7 +135,6 @@ class CourseController extends Controller
             'description' => 'nullable|string',
             'instructions_template' => 'nullable|string',
             'jenis' => 'required|in:individu,kumpulan',
-            'registration_link' => 'nullable|url|max:255',
         ]);
 
 

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Sallary;
 use App\Models\Teacher;
-use App\Models\Staff;
 use App\Models\TeacherAttendance;
 use App\Services\WhatsAppNotificationService;
 use Illuminate\Support\Facades\DB;
@@ -54,9 +53,19 @@ class SallaryController extends Controller
         // Cek salary records yang sudah ada
         $existingSalaries = $this->checkExistingSalaries($companyId, $selectedMonth, $selectedYear);
 
+        // Only teachers with completed attendance in a company class are eligible for payroll.
+        $eligibleTeacherIds = TeacherAttendance::query()
+            ->whereYear('check_in', $selectedYear)
+            ->whereMonth('check_in', $monthNumber)
+            ->whereNotNull('check_out')
+            ->whereHas('classSchedule', fn ($query) => $query->where('company_id', $companyId))
+            ->pluck('teacher_id')
+            ->unique();
+
         // ===== Guru: hitung dari class schedule allowance & type + attendance bulan terpilih =====
         $teachers = Teacher::with(['user'])
             ->where('company_id', $companyId)
+            ->whereIn('id', $eligibleTeacherIds)
             ->get();
 
         $teacherRows = collect();
@@ -67,6 +76,8 @@ class SallaryController extends Controller
                 ->where('teacher_id', $teacher->id)
                 ->whereYear('check_in', $selectedYear)
                 ->whereMonth('check_in', $monthNumber)
+                ->whereNotNull('check_out')
+                ->whereHas('classSchedule', fn ($query) => $query->where('company_id', $companyId))
                 ->get();
 
             // Kelompokkan kontribusi per schedule agar bisa hitung per_session/per_hour/per_month dengan benar
@@ -141,34 +152,11 @@ class SallaryController extends Controller
             ]);
         }
 
-        // ===== Staff: fixed monthly =====
-        $staffs = Staff::with('user')
-            ->where('company_id', $companyId)
-            ->get();
-
-        $staffRows = $staffs->map(function ($staff) use ($existingSalaries) {
-            // Cek apakah sudah ada salary record
-            $salaryKey = 'staff_' . $staff->id;
-            $status = $existingSalaries->has($salaryKey) ? 'paid' : 'pending';
-
-            return [
-                'type'             => 'Staff',
-                'name'             => $staff->user->name,
-                'teacher_id'       => null,
-                'staff_id'         => $staff->id,
-                'attendance_count' => '-',        // tidak relevan
-                'total_minutes'    => '-',        // tidak relevan
-                'salary'           => (float) ($staff->monthly_salary ?? 0),
-                'status'           => $status,
-            ];
-        });
-
-        // Gabungkan ke variabel yang namanya tetap 'sallaries' (biar kompatibel dgn view lama)
-        $sallaries = $teacherRows->merge($staffRows);
+        $sallaries = $teacherRows;
 
         // Summary (disesuaikan dengan struktur baru)
         $totalTeachers = $teacherRows->count();              // jumlah baris guru
-        $totalAmount   = $sallaries->sum('salary');          // total gaji (guru+staff)
+        $totalAmount   = $sallaries->sum('salary');
         $paidTeachers  = $sallaries->where('status', 'paid')->count(); // yang sudah dibayar
         $paidAmount    = $sallaries->where('status', 'paid')->sum('salary'); // jumlah yang sudah dibayar
 
@@ -247,6 +235,7 @@ class SallaryController extends Controller
                     'classSchedule.course',
                 ])
                 ->whereHas('teacher', fn ($query) => $query->where('company_id', $companyId))
+                ->whereHas('classSchedule', fn ($query) => $query->where('company_id', $companyId))
                 ->whereYear('check_in', $year)
                 ->whereMonth('check_in', $monthNumber)
                 ->whereNotNull('check_out')
@@ -327,6 +316,12 @@ class SallaryController extends Controller
 
         $month = $this->resolveMonthName($request->input('month'));
         $year = $request->input('year');
+        $monthNumber = $this->monthNumber($month);
+        $companyId = auth()->user()->company?->id;
+
+        if (! $companyId || ! $monthNumber) {
+            return redirect()->route('admin.teachers.sallaries.index')->with('error', 'Syarikat atau bulan tidak sah.');
+        }
         
         $createdCount = 0;
         $errors = [];
@@ -348,8 +343,27 @@ class SallaryController extends Controller
                     continue;
                 }
 
+                $teacher = Teacher::where('company_id', $companyId)->find($item['teacher_id']);
+                if (! $teacher) {
+                    $errors[] = "Guru tidak ditemui atau bukan milik syarikat anda.";
+                    continue;
+                }
+
+                $eligibleAttendance = TeacherAttendance::query()
+                    ->where('teacher_id', $teacher->id)
+                    ->whereYear('check_in', $year)
+                    ->whereMonth('check_in', $monthNumber)
+                    ->whereNotNull('check_out')
+                    ->whereHas('classSchedule', fn ($query) => $query->where('company_id', $companyId))
+                    ->exists();
+
+                if (! $eligibleAttendance) {
+                    $errors[] = "Guru {$teacher->user?->name} tiada attendance lengkap untuk tempoh dipilih.";
+                    continue;
+                }
+
                 // Cek apakah sudah ada record untuk teacher di bulan/tahun ini
-                $existingSalaries = Sallary::where('teacher_id', $item['teacher_id'])
+                $existingSalaries = Sallary::where('teacher_id', $teacher->id)
                     ->whereIn('month', $this->monthAliases($month))
                     ->where('year', $year)
                     ->get();
@@ -359,32 +373,12 @@ class SallaryController extends Controller
                         'status' => 'paid',
                         'payment_date' => now()->toDateString(),
                     ]);
-                    $this->notifyApprovedPayroll($item['teacher_id'], $month, (int) $year);
+                    $this->notifyApprovedPayroll($teacher->id, $month, (int) $year);
                     $createdCount++;
                     continue;
                 }
 
-                // Create description berdasarkan attendance
-                $description = "Gaji guru bulan {$month} {$year} - {$item['attendance_count']} sesi";
-                if (isset($item['total_minutes']) && $item['total_minutes'] > 0) {
-                    $hours = round($item['total_minutes'] / 60, 1);
-                    $description .= " ({$hours} jam)";
-                }
-
-                // Create salary record sesuai dengan fillable fields
-                $salaryData = [
-                    'teacher_id' => $item['teacher_id'],
-                    'amount' => $item['salary'],
-                    'description' => $description,
-                    'month' => $month,
-                    'year' => $year,
-                    'payment_date' => now()->toDateString(), // format date untuk payment_date
-                    'status' => 'paid',
-                ];
-
-                Sallary::create($salaryData);
-                $this->notifyApprovedPayroll($item['teacher_id'], $month, (int) $year);
-                $createdCount++;
+                $errors[] = "Sila masukkan rekod attendance untuk {$teacher->user?->name} sebelum menandakan gaji dibayar.";
             }
 
             // Untuk Staff, buat tabel terpisah atau handle berbeda jika diperlukan

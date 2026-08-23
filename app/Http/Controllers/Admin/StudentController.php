@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\InvoiceTagihanMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Student;
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentsImport;
 use Illuminate\Support\Collection;
@@ -30,6 +33,73 @@ use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
+    public function index(Request $request)
+    {
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
+
+        $students = Student::query()
+            ->where('company_id', $companyId)
+            ->with([
+                'user',
+                'invoices' => fn ($query) => $query->with('course')->latest('tarikh_terbit'),
+            ])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->input('search');
+
+                $query->where(function ($query) use ($search) {
+                    $query->where('ic_number', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($userQuery) => $userQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%"));
+                });
+            })
+            ->when($request->filled('approval'), fn ($query) => $query->where('is_approved', $request->input('approval')))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.students.index', compact('students'));
+    }
+
+    public function sendSubscriptionNotification($studentId, $invoiceId)
+    {
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
+
+        $student = Student::where('company_id', $companyId)->with('user')->findOrFail($studentId);
+        $invoice = StudentInvoice::with(['student.user', 'course'])
+            ->where('student_id', $student->id)
+            ->whereIn('status_bayaran', ['upcoming', 'overdue'])
+            ->findOrFail($invoiceId);
+
+        if (blank($student->user?->email)) {
+            return back()->with('error', 'Email pelajar tidak tersedia.');
+        }
+
+        try {
+            Mail::to($student->user->email)->send(new InvoiceTagihanMail($invoice));
+
+            Log::info('Student subscription notification sent.', [
+                'student_id' => $student->id,
+                'invoice_id' => $invoice->id,
+                'recipient' => $student->user->email,
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning('Student subscription notification failed.', [
+                'student_id' => $student->id,
+                'invoice_id' => $invoice->id,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return back()->with('error', 'Notifikasi langganan gagal dihantar. Sila semak konfigurasi email.');
+        }
+
+        return back()->with('success', 'Notifikasi langganan telah dihantar ke email pelajar.');
+    }
+
     public function pending(Request $request)
     {
         $search = $request->input('search');

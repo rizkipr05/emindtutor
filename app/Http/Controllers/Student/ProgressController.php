@@ -86,7 +86,7 @@ class ProgressController extends Controller
                         ->whereDate('attendance_date', $teacherAttendance->check_in->format('Y-m-d'))
                         ->first();
                         
-                    $isPresent = $studentAttendance ? ($studentAttendance->status === 'present' || $studentAttendance->status === 'hadir') : false;
+                    $isPresent = in_array($studentAttendance?->status, ['present', 'late', 'hadir'], true);
                     
                     if ($isPresent) {
                         $attendedSessions++;
@@ -100,6 +100,7 @@ class ProgressController extends Controller
                         'class_photo' => $teacherAttendance->class_photo,
                         'note' => $teacherAttendance->note,
                         'student_present' => $isPresent,
+                        'student_status' => $studentAttendance?->status,
                         'student_note' => $studentAttendance ? $studentAttendance->note : null,
                         'teacher_name' => $teacherAttendance->teacher->name ?? 'N/A',
                     ];

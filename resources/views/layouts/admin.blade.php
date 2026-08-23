@@ -176,7 +176,7 @@
                         </svg>
                     </button>
                     <div x-show="open" x-transition class="ml-4 space-y-1">
-                        <a href="{{ route('admin.students.approved') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.all_student") }}</a>
+                        <a href="{{ route('admin.students.index') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.all_student") }}</a>
                         <a href="{{ route('admin.students.pending') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.new_student") }}</a>
                         <a href="{{ route('admin.students.create') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.import_student") }}</a>
                     </div>

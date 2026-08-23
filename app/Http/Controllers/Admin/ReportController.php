@@ -60,6 +60,8 @@ class ReportController extends Controller
 
     public function index(Request $request)
     {
+        $companyId = auth()->user()->company?->id;
+        abort_unless($companyId, 403);
         // dd($request->all());
         $months = [
             1 => 'Januari',
@@ -81,16 +83,16 @@ class ReportController extends Controller
         $year = $request->get('year', now()->year); // default tahun sekarang
         // dd(now()->month);
         // 1. Ringkasan kehadiran pelajar & guru
-        $attendanceSummary = $this->getAttendanceSummary($month, $year);
+        $attendanceSummary = $this->getAttendanceSummary($companyId, $month, $year);
         
         // 2. Laporan kehadiran per kelas
-        $classAttendanceReports = $this->getClassAttendanceReports($month, $year);
+        $classAttendanceReports = $this->getClassAttendanceReports($companyId, $month, $year);
         
         // 3. Data untuk chart perbandingan prestasi
-        $classPerformanceChart = $this->getClassPerformanceData($month, $year);
+        $classPerformanceChart = $this->getClassPerformanceData($companyId, $month, $year);
         
         // 4. Laporan kelas yang tercicir/batal
-        $cancelledClasses = $this->getCancelledClassesReport($month, $year);
+        $cancelledClasses = $this->getCancelledClassesReport($companyId, $month, $year);
 
         return view('admin.reports.index', [
             'attendanceSummary' => $attendanceSummary,
@@ -103,13 +105,14 @@ class ReportController extends Controller
         ]);
     }
 
-    private function getAttendanceSummary($month, $year)
+    private function getAttendanceSummary($companyId, $month, $year)
     {
         // dd(now()->month);
         // Ringkasan kehadiran pelajar bulan ini
         $studentSummary = StudentAttendance::selectRaw('status, count(*) as total')
             ->whereMonth('attendance_date', $month)
             ->whereYear('attendance_date', $year)
+            ->whereHas('classSchedule', fn ($query) => $query->where('company_id', $companyId))
             ->groupBy('status')
             ->get()
             ->pluck('total', 'status');
@@ -118,6 +121,7 @@ class ReportController extends Controller
         $teacherSummary = TeacherAttendance::selectRaw('count(distinct teacher_id) as active_teachers, count(*) as total_sessions')
             ->whereMonth('check_in', $month)
             ->whereYear('check_in', $year)
+            ->whereHas('classSchedule', fn ($query) => $query->where('company_id', $companyId))
             ->first();
 
         return [
@@ -133,7 +137,7 @@ class ReportController extends Controller
         ];
     }
 
-    private function getClassAttendanceReports($month, $year)
+    private function getClassAttendanceReports($companyId, $month, $year)
     {
         return ClassSchedule::with([
             'teacher.user',
@@ -148,6 +152,7 @@ class ReportController extends Controller
                       ->whereYear('attendance_date', $year);
             }
         ])
+        ->where('company_id', $companyId)
         ->get()
         ->map(function ($class) {
             $totalSessions = $class->teacherAttendances->count();
@@ -185,9 +190,9 @@ class ReportController extends Controller
         });
     }
 
-    private function getClassPerformanceData($month, $year)
+    private function getClassPerformanceData($companyId, $month, $year)
     {
-        $classData = $this->getClassAttendanceReports($month, $year);
+        $classData = $this->getClassAttendanceReports($companyId, $month, $year);
         
         // dd($classData->first());
         return [
@@ -202,12 +207,13 @@ class ReportController extends Controller
 
     }
 
-    private function getCancelledClassesReport($month, $year)
+    private function getCancelledClassesReport($companyId, $month, $year)
     {
         // Cari kelas yang dibatalkan (guru check-in tapi tidak ada siswa hadir)
         return TeacherAttendance::with(['classSchedule', 'teacher.user'])
             ->whereMonth('check_in', $month)
             ->whereYear('check_in', $year)
+            ->whereHas('classSchedule', fn ($query) => $query->where('company_id', $companyId))
             ->get()
             ->filter(function ($teacherAttendance) {
                 // Cek apakah ada siswa yang hadir di tanggal yang sama
@@ -220,7 +226,7 @@ class ReportController extends Controller
             })
             ->map(function ($teacherAttendance) {
                 return [
-                    'class_name' => $teacherAttendance->classSchedule->class_name,
+                    'class_name' => $teacherAttendance->classSchedule->nama_kelas,
                     'teacher_name' => $teacherAttendance->teacher->user->name,
                     'date' => $teacherAttendance->check_in->format('Y-m-d'),
                     'time' => $teacherAttendance->check_in->format('H:i'),
@@ -232,7 +238,11 @@ class ReportController extends Controller
 
     public function downloadClassReport($classId, $type, $month, $year)
     {
-        $class = ClassSchedule::with(['teacher.user', 'teacherAttendances'])
+        $companyId = auth()->user()->company?->id;
+        abort_unless($companyId, 403);
+
+        $class = ClassSchedule::where('company_id', $companyId)
+            ->with(['teacher.user', 'teacherAttendances'])
             ->findOrFail($classId);
 
         if ($type === 'notes') {

@@ -322,8 +322,10 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
     });
 
     Route::controller(StudentController::class)->prefix('students')->name('admin.students.')->group(function () {
-        // Route::get('/', 'index')->name('index');
-        // Route::get('/approvals', 'approvals')->name('approvals');
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/create', 'store')->name('store');
+        Route::post('/import', 'import')->name('import');
         Route::get('/pending', 'pending')->name('pending');
         Route::get('/approved', 'approved')->name('approved');
         Route::get('/{id}', 'show')->name('show');
@@ -334,10 +336,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
         Route::get('/{id}/approve', 'showApprovalForm')->name('approval');
         // Route::post('/{id}/approve', 'approve')->name('approve');
         Route::post('/{student}/approve/{invoice}', 'approve')->name('approve');
-        Route::get('/students/create', 'create')->name('create');
-        Route::post('/students/create', 'store')->name('store');
-        Route::post('/students/import', 'import')->name('import');
-
+        Route::post('/{student}/subscription-notifications/{invoice}', 'sendSubscriptionNotification')->name('subscription-notifications.send');
     });
 
     Route::controller(StaffController::class)->prefix('staff')->name('admin.staff.')->group(function () {
@@ -436,6 +435,7 @@ Route::prefix('teacher')->middleware(['auth', 'teacher', 'localization'])->group
         Route::post('/{classSchedule}/checkout', 'teacherCheckOut')->name('checkout');
         Route::post('/{classSchedule}/store', 'storeAttendance')->name('store');
         Route::post('/{classSchedule}/students/{student}/clock', 'clockStudent')->name('student.clock');
+        Route::post('/{classSchedule}/students/{student}/status', 'setStudentStatus')->name('student.status');
     });
 
     Route::controller(TeachingReportController::class)->prefix('teaching-reports')->name('teacher.teaching-reports.')->group(function () {

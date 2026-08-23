@@ -25,7 +25,6 @@ class Course extends Model
 
         'charge_on_registration',
         'include_registration_fee',
-        'registration_link',
 
         'description',
         'instructions_template',

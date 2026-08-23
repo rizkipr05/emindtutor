@@ -19,14 +19,14 @@
 
         <div class="details">
             <p><strong>Nomor Invoice:</strong> {{ $invoice->nomor_invoice }}</p>
-            <p><strong>Kursus:</strong> {{ $invoice->course->name }}</p>
-            <p><strong>Jumlah:</strong> Rp {{ number_format($invoice->jumlah, 0, ',', '.') }}</p>
+            <p><strong>Kursus:</strong> {{ $invoice->course?->localized_name ?? $invoice->course?->nama_kos ?? '-' }}</p>
+            <p><strong>Jumlah:</strong> RM {{ number_format($invoice->jumlah, 2, '.', ',') }}</p>
             <p><strong>Jatuh Tempo:</strong> {{ \Carbon\Carbon::parse($invoice->tarikh_tamat)->format('d M Y') }}</p>
         </div>
 
         <p>Silakan lakukan pembayaran sebelum tanggal jatuh tempo. Jika sudah membayar, silakan upload bukti pembayaran di dashboard Anda.</p>
         
-        <a href="{{ url('/dashboard') }}" class="btn">Buka Dashboard</a>
+        <a href="{{ route('s.dashboard.index') }}" class="btn">Buka Dashboard</a>
 
         <div class="footer">
             <p>Pesan ini dihasilkan secara otomatis oleh sistem. Jangan membalas email ini.</p>

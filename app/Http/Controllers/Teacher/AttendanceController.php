@@ -175,6 +175,11 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'Data guru tidak ditemukan.'], 400);
         }
 
+        $request->validate([
+            'class_photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'teacher_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
         $today = Carbon::today();
         // dd($classScheduleId);
         
@@ -384,6 +389,10 @@ class AttendanceController extends Controller
             return back()->with('success', $student->user->name . ' clock in pada ' . $attendance->attendance_time . '.');
         }
 
+        if (in_array($attendance->status, ['late', 'absent'], true)) {
+            return back()->with('error', $student->user->name . ' telah ditandai ' . $attendance->status . '. Sila kemas kini status kehadiran melalui butang Late atau Absent.');
+        }
+
         if (! $attendance->check_out_time) {
             $attendance->update([
                 'check_out_time' => Carbon::now('Asia/Kuala_Lumpur')->format('H:i:s'),
@@ -393,6 +402,59 @@ class AttendanceController extends Controller
         }
 
         return back()->with('error', $student->user->name . ' sudah clock in dan clock out untuk sesi hari ini.');
+    }
+
+    public function setStudentStatus(Request $request, $classScheduleId, Student $student)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:late,absent'],
+            'note' => ['required', 'string', 'max:2000'],
+        ], [
+            'note.required' => 'Sila masukkan sebab pelajar lewat atau tidak hadir.',
+        ]);
+
+        $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
+        $classSchedule = ClassSchedule::where('id', $classScheduleId)
+            ->where('teacher_id', $teacher->id)
+            ->firstOrFail();
+        $today = Carbon::today('Asia/Kuala_Lumpur');
+
+        abort_unless($classSchedule->students()->whereKey($student->id)->exists(), 404);
+
+        $teacherCheckedIn = TeacherAttendance::where('teacher_id', $teacher->id)
+            ->where('class_schedule_id', $classSchedule->id)
+            ->whereDate('check_in', $today)
+            ->whereNotNull('check_in')
+            ->exists();
+
+        if (! $teacherCheckedIn) {
+            return back()->with('error', 'Anda perlu clock in sebelum merekod kehadiran pelajar.');
+        }
+
+        $attendance = StudentAttendance::where([
+            'user_id' => $student->user_id,
+            'class_schedule_id' => $classSchedule->id,
+            'attendance_date' => $today,
+        ])->first();
+
+        if ($attendance?->check_out_time) {
+            return back()->with('error', $student->user->name . ' telah clock out dan status kehadiran tidak boleh diubah.');
+        }
+
+        StudentAttendance::updateOrCreate([
+            'user_id' => $student->user_id,
+            'class_schedule_id' => $classSchedule->id,
+            'attendance_date' => $today,
+        ], [
+            'status' => $validated['status'],
+            'note' => $validated['note'],
+            'attendance_time' => $attendance?->attendance_time ?? Carbon::now('Asia/Kuala_Lumpur')->format('H:i:s'),
+            'check_out_time' => null,
+        ]);
+
+        $label = $validated['status'] === 'late' ? 'Late' : 'Absent';
+
+        return back()->with('success', $student->user->name . ' telah ditandai ' . $label . '.');
     }
 
     private function getClassStatus($classSchedule)

@@ -177,6 +177,7 @@
                             <p class="mt-1.5 text-xs text-slate-500">Format PNG, JPG, JPEG atau WEBP. Maksimum 2 MB.</p>
                             @error('logo_syarikat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
+
                     </div>
                     <div class="flex items-center justify-between gap-4 border-t border-slate-200 px-6 py-4">
                         <p class="text-sm text-slate-500">{{ __('admin/settings.changes_immediate') }}</p>
@@ -186,6 +187,9 @@
                     </div>
                 </form>
             </div>
+
+            @elseif(false)
+            <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm"><div class="border-b border-slate-200 px-6 py-5"><h2 class="text-xl font-bold text-slate-900">Setting Guru</h2><p class="mt-1 text-sm text-slate-500">Tetapkan peraturan kehadiran guru untuk syarikat anda.</p></div><form method="POST" action="{{ route('admin.settings.update', ['section' => 'teacher_attendance']) }}">@csrf<div class="divide-y divide-slate-100"><div class="flex items-center justify-between gap-4 px-6 py-5"><div><p class="font-semibold text-slate-900">Lokasi</p><p class="text-sm text-slate-500">Wajibkan lokasi semasa clock in dan clock out.</p></div><label class="relative inline-flex cursor-pointer items-center"><input type="hidden" name="teacher_location_required" value="0"><input type="checkbox" name="teacher_location_required" value="1" class="sr-only peer" @checked(old('teacher_location_required', $company->teacher_location_required ?? true))><span class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-teal-600"></span><span class="absolute left-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span></label></div><div class="flex items-center justify-between gap-4 px-6 py-5"><div><p class="font-semibold text-slate-900">Missed clock in/out</p><p class="text-sm text-slate-500">Benarkan rekod diteruskan jika guru terlepas clock in atau clock out.</p></div><label class="relative inline-flex cursor-pointer items-center"><input type="hidden" name="teacher_allow_missed_clock" value="0"><input type="checkbox" name="teacher_allow_missed_clock" value="1" class="sr-only peer" @checked(old('teacher_allow_missed_clock', $company->teacher_allow_missed_clock ?? true))><span class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-teal-600"></span><span class="absolute left-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span></label></div><div class="flex items-center justify-between gap-4 px-6 py-5"><div><p class="font-semibold text-slate-900">Gambar belajar</p><p class="text-sm text-slate-500">Wajibkan gambar aktiviti belajar semasa guru clock out.</p></div><label class="relative inline-flex cursor-pointer items-center"><input type="hidden" name="teacher_learning_photo_required" value="0"><input type="checkbox" name="teacher_learning_photo_required" value="1" class="sr-only peer" @checked(old('teacher_learning_photo_required', $company->teacher_learning_photo_required ?? true))><span class="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-teal-600"></span><span class="absolute left-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span></label></div></div><div class="flex justify-end border-t border-slate-200 px-6 py-4"><button class="rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-700">Simpan Setting Guru</button></div></form></div>
 
             @elseif($currentSectionKey === 'subscription')
             {{-- ─── SUBSCRIPTION ─── --}}
@@ -598,7 +602,8 @@
             </div>
             @endif
 
-            {{-- ─── QUICK LINKS PANEL (always visible at bottom) ─── --}}
+            @if($currentSectionKey === 'overview')
+            {{-- ─── QUICK LINKS PANEL (Company Profile only) ─── --}}
             <div class="overflow-hidden rounded-[1.5rem] border border-teal-100 bg-gradient-to-br from-teal-50 to-cyan-50 shadow-sm">
                 <div class="border-b border-teal-100 px-6 py-5">
                     <h3 class="text-lg font-bold text-slate-900">{{ __('admin/settings.quick_links') }}</h3>
@@ -649,6 +654,7 @@
                     </a>
                 </div>
             </div>
+            @endif
 
         </section>
     </div>

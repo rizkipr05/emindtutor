@@ -40,7 +40,7 @@
                     </h2>
 
                     @if($activeStudents->count() > 0)
-                        <p class="mb-5 text-sm text-slate-500">Tekan Clock in apabila pelajar hadir. Tekan sekali lagi untuk Clock out. Masa akan direkod secara automatik.</p>
+                        <p class="mb-5 text-sm text-slate-500">Gunakan Foto & Clock untuk pelajar hadir. Gunakan Late atau Absent dan nyatakan sebab untuk rekod yang memerlukan penjelasan.</p>
                         <div class="space-y-4">
                                 @foreach($activeStudents as $student)
                                     @php
@@ -62,17 +62,29 @@
                                                 </div>
                                             </div>
 
-                                            <button @click="openCamera('{{ route('teacher.attendance.student.clock', [$classSchedule, $student]) }}', '{{ $existingAttendance ? 'Clock out' : 'Clock in' }}')" {{ $existingAttendance && $existingAttendance->check_out_time ? 'disabled' : '' }} class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium {{ $existingAttendance ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} disabled:bg-slate-300 text-white">
-                                                <i class="fas fa-camera mr-2"></i>{{ $existingAttendance ? 'Foto & Clock out' : 'Foto & Clock in' }}
-                                            </button>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <button @click="openCamera('{{ route('teacher.attendance.student.clock', [$classSchedule, $student]) }}', '{{ $existingAttendance ? 'Clock out' : 'Clock in' }}')" {{ $existingAttendance && ($existingAttendance->check_out_time || in_array($existingAttendance->status, ['late', 'absent'])) ? 'disabled' : '' }} class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium {{ $existingAttendance ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} disabled:bg-slate-300 text-white">
+                                                    <i class="fas fa-camera mr-2"></i>{{ $existingAttendance ? 'Foto & Clock out' : 'Foto & Clock in' }}
+                                                </button>
+                                                <button @click="openStatusModal('{{ route('teacher.attendance.student.status', [$classSchedule, $student]) }}', 'late', '{{ addslashes($student->user->name) }}')" {{ $existingAttendance && $existingAttendance->check_out_time ? 'disabled' : '' }} class="inline-flex items-center rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:bg-slate-300">
+                                                    <i class="fas fa-clock mr-1"></i>Late
+                                                </button>
+                                                <button @click="openStatusModal('{{ route('teacher.attendance.student.status', [$classSchedule, $student]) }}', 'absent', '{{ addslashes($student->user->name) }}')" {{ $existingAttendance && $existingAttendance->check_out_time ? 'disabled' : '' }} class="inline-flex items-center rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-slate-300">
+                                                    <i class="fas fa-user-times mr-1"></i>Absent
+                                                </button>
+                                            </div>
                                         </div>
 
                                         @if($existingAttendance)
                                             <div class="mt-3 pt-3 border-t border-gray-200">
                                                 <span class="text-xs text-gray-500">
+                                                    <span class="mr-2 rounded-full px-2 py-1 font-semibold {{ $existingAttendance->status === 'late' ? 'bg-amber-100 text-amber-800' : ($existingAttendance->status === 'absent' ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800') }}">{{ ucfirst($existingAttendance->status) }}</span>
                                                     Clock in: {{ \Carbon\Carbon::parse($existingAttendance->attendance_time)->format('H:i') }} · {{ \Carbon\Carbon::parse($existingAttendance->attendance_date)->format('d M Y') }}
                                                     @if($existingAttendance->check_out_time) · Clock out: {{ \Carbon\Carbon::parse($existingAttendance->check_out_time)->format('H:i') }} @endif
                                                 </span>
+                                                @if($existingAttendance->note)
+                                                    <p class="mt-2 text-sm text-slate-600"><span class="font-semibold">Sebab:</span> {{ $existingAttendance->note }}</p>
+                                                @endif
                                             </div>
                                         @endif
                                     </div>
@@ -170,6 +182,16 @@
             <div class="mt-5 flex justify-end gap-3"><button @click="closeCamera()" class="rounded-lg border px-4 py-2">Batal</button><button @click="captureAndClock()" :disabled="cameraBusy" class="rounded-lg bg-teal-600 px-4 py-2 font-medium text-white disabled:bg-slate-400"><span x-text="cameraBusy ? 'Menyimpan…' : 'Ambil Foto & Simpan'"></span></button></div>
         </div>
     </div>
+
+    <div x-show="showStatusModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
+            <div class="flex items-center justify-between"><h3 class="text-lg font-bold text-slate-900" x-text="statusTitle"></h3><button @click="closeStatusModal()" class="text-slate-500 hover:text-slate-800">✕</button></div>
+            <p class="mt-1 text-sm text-slate-500">Masukkan sebab untuk rekod kehadiran <span class="font-semibold" x-text="statusStudent"></span>.</p>
+            <textarea x-model="statusNote" rows="4" maxlength="2000" class="mt-4 w-full rounded-lg border-slate-300" placeholder="Contoh: Datang lewat kerana urusan keluarga" required></textarea>
+            <p x-show="statusError" x-text="statusError" class="mt-2 text-sm text-red-600"></p>
+            <div class="mt-5 flex justify-end gap-3"><button @click="closeStatusModal()" class="rounded-lg border px-4 py-2">Batal</button><button @click="saveStatus()" :disabled="statusBusy" class="rounded-lg px-4 py-2 font-medium text-white disabled:bg-slate-400" :class="statusType === 'late' ? 'bg-amber-500' : 'bg-red-600'"><span x-text="statusBusy ? 'Menyimpan…' : 'Simpan status'"></span></button></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -182,6 +204,17 @@ function attendanceManager() {
         cameraStream: null,
         cameraBusy: false,
         cameraError: '',
+        showStatusModal: false,
+        statusUrl: '',
+        statusType: '',
+        statusStudent: '',
+        statusNote: '',
+        statusBusy: false,
+        statusError: '',
+
+        get statusTitle() {
+            return this.statusType === 'late' ? 'Tandai Late' : 'Tandai Absent';
+        },
 
         async openCamera(url, action) {
             this.cameraUrl = url;
@@ -200,6 +233,41 @@ function attendanceManager() {
             this.cameraStream?.getTracks().forEach((track) => track.stop());
             this.cameraStream = null;
             this.showCamera = false;
+        },
+
+        openStatusModal(url, status, student) {
+            this.statusUrl = url;
+            this.statusType = status;
+            this.statusStudent = student;
+            this.statusNote = '';
+            this.statusError = '';
+            this.showStatusModal = true;
+        },
+
+        closeStatusModal() {
+            this.showStatusModal = false;
+        },
+
+        async saveStatus() {
+            if (!this.statusNote.trim()) {
+                this.statusError = 'Sila masukkan sebab kehadiran.';
+                return;
+            }
+            this.statusBusy = true;
+            this.statusError = '';
+            const formData = new FormData();
+            formData.append('status', this.statusType);
+            formData.append('note', this.statusNote.trim());
+            formData.append('_token', '{{ csrf_token() }}');
+            try {
+                const response = await fetch(this.statusUrl, { method: 'POST', body: formData, headers: { Accept: 'text/html' } });
+                if (!response.ok) throw new Error('Gagal menyimpan status kehadiran.');
+                location.reload();
+            } catch (error) {
+                this.statusError = error.message;
+            } finally {
+                this.statusBusy = false;
+            }
         },
 
         async captureAndClock() {

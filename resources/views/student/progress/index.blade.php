@@ -195,7 +195,11 @@
                                                                 @endif
                                                             </div>
                                                             <div class="flex items-center">
-                                                                @if($detail['student_present'])
+                                                                @if(($detail['student_status'] ?? null) === 'late')
+                                                                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
+                                                                        <i class="fas fa-clock mr-1"></i>Late
+                                                                    </span>
+                                                                @elseif($detail['student_present'])
                                                                     <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
                                                                         <i class="fas fa-check mr-1"></i>{{ __('student/progress/index.attendance_status.hadir') }}
                                                                     </span>
@@ -223,7 +227,7 @@
                                                         @if($detail['student_note'])
                                                             <div class="text-sm bg-blue-50 border border-blue-200 rounded-lg p-3">
                                                                 <i class="fas fa-user-edit mr-2 text-blue-600"></i>
-                                                                <span class="font-medium text-blue-800">{{ __('student/progress/index.student_note') }}:</span>
+                                                                <span class="font-medium text-blue-800">{{ in_array($detail['student_status'] ?? null, ['late', 'absent']) ? 'Sebab kehadiran' : __('student/progress/index.student_note') }}:</span>
                                                                 <p class="text-blue-700 mt-1">{{ $detail['student_note'] }}</p>
                                                             </div>
                                                         @endif

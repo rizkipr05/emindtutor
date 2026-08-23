@@ -200,36 +200,7 @@
                                 </p>
                             </div>
 
-                            <div class="text-center p-4 bg-gray-50 rounded-xl border">
-                                <div class="w-12 h-12 mx-auto mb-3 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                                    </svg>
-                                </div>
-                                <h3 class="font-semibold text-gray-900 mb-1">{{ __('admin/courses/show.registration_link') }}</h3>
-                                <p class="text-sm text-gray-600">
-                                    {{ $course->registration_link ? __('admin/courses/show.registration_link_available') : __('admin/courses/show.registration_link_unset') }}
-                                </p>
-                            </div>
                         </div>
-
-                        @if($course->registration_link)
-                            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                                <label class="block text-sm font-semibold text-blue-900 mb-2">{{ __('admin/courses/show.registration_link_label') }}</label>
-                                <div class="flex items-center gap-3">
-                                    <code class="flex-1 bg-white px-3 py-2 rounded border text-blue-800 text-sm break-all">
-                                        {{ $course->registration_link }}
-                                    </code>
-                                    <a href="{{ $course->registration_link }}" target="_blank" 
-                                       class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                                        </svg>
-                                        Buka
-                                    </a>
-                                </div>
-                            </div>
-                        @endif
                     </div>
                 </div>
 
