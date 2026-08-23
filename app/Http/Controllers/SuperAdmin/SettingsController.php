@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\CompanyInvoice;
 use App\Models\PaymentGateway;
-use App\Models\StaffEmind;
 use App\Models\SubscriptionPackage;
 use App\Models\SystemSetting;
+use App\Mail\WelcomeEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SettingsController extends Controller
 {
@@ -88,6 +90,53 @@ class SettingsController extends Controller
             ->with('success', __('super_admin/settings.messages.saved'));
     }
 
+    public function sendWelcomeEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'company_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'company_ids.*' => ['integer', 'distinct', 'exists:companies,id'],
+        ]);
+
+        $companies = Company::with('user')->whereIn('id', $validated['company_ids'])->get();
+        $sent = 0;
+        $skipped = 0;
+
+        foreach ($companies as $company) {
+            $recipient = $company->user?->email ?: $company->pic_email ?: $company->email_syarikat;
+
+            if (! $company->user || blank($recipient)) {
+                $skipped++;
+                continue;
+            }
+
+            try {
+                Mail::to($recipient)->send(new WelcomeEmail($company->user));
+                $sent++;
+
+                Log::info('Manual welcome email accepted by the configured mailer.', [
+                    'company_id' => $company->id,
+                    'recipient' => $recipient,
+                ]);
+            } catch (\Throwable $exception) {
+                $skipped++;
+                Log::warning('Manual welcome email could not be sent.', [
+                    'company_id' => $company->id,
+                    'recipient' => $recipient,
+                    'exception' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        $message = "Welcome email sent to {$sent} company account(s).";
+        if ($skipped > 0) {
+            $message .= " {$skipped} company account(s) were skipped or failed.";
+        }
+
+        return redirect()
+            ->route('superadmin.settings.index', ['section' => 'email_templates'])
+            ->with($sent > 0 ? 'success' : 'error', $message);
+    }
+
     private function buildPageData(string $section): array
     {
         $stats = [
@@ -96,7 +145,6 @@ class SettingsController extends Controller
             'packages' => SubscriptionPackage::count(),
             'invoices' => CompanyInvoice::count(),
             'paidInvoices' => CompanyInvoice::where('status_bayaran', 'paid')->count(),
-            'staff' => StaffEmind::count(),
         ];
 
         $settings = SystemSetting::query()->get()->keyBy('setting_key');
@@ -127,6 +175,9 @@ class SettingsController extends Controller
             'gateway' => $gateway,
             'managementPanel' => $this->managementPanel($section),
             'stats' => $stats,
+            'emailCompanies' => $section === 'email_templates'
+                ? Company::with('user')->orderBy('nama_syarikat')->orderBy('nama_wakil_syarikat')->get()
+                : collect(),
         ];
     }
 
@@ -144,19 +195,6 @@ class SettingsController extends Controller
                     'status' => $company->status ? __('super_admin/settings.management.active') : __('super_admin/settings.management.inactive'),
                     'edit_url' => route('companies.edit', $company),
                     'delete_url' => route('companies.destroy', $company),
-                ]),
-            ],
-            'staff' => [
-                'title' => __('super_admin/settings.management.staff.title'),
-                'subtitle' => __('super_admin/settings.management.staff.subtitle'),
-                'create_url' => route('superadmin.staff.create'),
-                'manage_url' => route('superadmin.staff.index'),
-                'records' => StaffEmind::with('user')->latest()->take(5)->get()->map(fn (StaffEmind $staff) => [
-                    'title' => $staff->user?->name ?? $staff->ic_number,
-                    'meta' => $staff->user?->email ?? $staff->phone,
-                    'status' => $staff->status,
-                    'edit_url' => route('superadmin.staff.edit', $staff),
-                    'delete_url' => route('superadmin.staff.destroy', $staff),
                 ]),
             ],
             'billing' => [
@@ -223,7 +261,6 @@ class SettingsController extends Controller
                     ['label' => __('layouts/superadmin.companies'), 'desc' => __('super_admin/settings.actions.manage_companies.desc'), 'url' => route('companies.index')],
                     ['label' => __('layouts/superadmin.subscription_packages'), 'desc' => __('super_admin/settings.actions.manage_packages.desc'), 'url' => route('subscription-packages.index')],
                     ['label' => __('layouts/superadmin.invoices'), 'desc' => __('super_admin/settings.actions.manage_billing.desc'), 'url' => route('invoices.index')],
-                    ['label' => __('layouts/superadmin.staff'), 'desc' => __('super_admin/settings.actions.manage_staff.desc'), 'url' => route('superadmin.staff.index')],
                 ],
             ],
             'companies' => [
@@ -319,30 +356,6 @@ class SettingsController extends Controller
                     ['label' => 'View Invoices', 'desc' => 'Open an invoice PDF to check your branding changes.', 'url' => route('invoices.index')],
                 ],
             ],
-            'staff' => [
-                'title' => __('super_admin/settings.sections.staff.title'),
-                'subtitle' => __('super_admin/settings.sections.staff.subtitle'),
-                'badge' => __('super_admin/settings.sections.staff.badge', ['count' => StaffEmind::count()]),
-                'fields' => [
-                    [
-                        'name' => 'enable_staff_module',
-                        'label' => __('super_admin/settings.forms.enable_staff_module'),
-                        'type' => 'toggle',
-                        'default' => '1',
-                        'help' => __('super_admin/settings.forms.enable_staff_module_help'),
-                    ],
-                    [
-                        'name' => 'auto_activate_staff',
-                        'label' => __('super_admin/settings.forms.auto_activate_staff'),
-                        'type' => 'toggle',
-                        'default' => '0',
-                        'help' => __('super_admin/settings.forms.auto_activate_staff_help'),
-                    ],
-                ],
-                'features' => [
-                    ['label' => __('super_admin/settings.actions.manage_staff.title'), 'desc' => __('super_admin/settings.actions.manage_staff.desc'), 'url' => route('superadmin.staff.index')],
-                ],
-            ],
             'email_templates' => [
                 'title' => __('super_admin/settings.sections.email_templates.title'),
                 'subtitle' => __('super_admin/settings.sections.email_templates.subtitle'),
@@ -435,12 +448,6 @@ class SettingsController extends Controller
             'icon' => 'M7 3h7l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2zm6 1.5V8h3.5',
             'outline' => true,
             'tone' => 'from-fuchsia-500 to-pink-500',
-        ],
-        'staff' => [
-            'label' => __('super_admin/settings.sections.staff.title'),
-            'caption' => __('super_admin/settings.forms.enable_staff_module'),
-            'icon' => 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H5z',
-            'tone' => 'from-rose-500 to-pink-500',
         ],
         'email_templates' => [
             'label' => __('super_admin/settings.sections.email_templates.title'),

@@ -186,6 +186,63 @@
                 </div>
             </form>
 
+            @if($currentSectionKey === 'email_templates')
+                <form method="POST" action="{{ route('superadmin.settings.email-templates.send') }}" class="overflow-hidden rounded-[1.5rem] border border-cyan-200 bg-white shadow-sm">
+                    @csrf
+
+                    <div class="border-b border-cyan-100 bg-cyan-50 px-6 py-5">
+                        <h3 class="text-xl font-bold text-slate-900">Send Welcome Email Manually</h3>
+                        <p class="mt-1 text-sm leading-6 text-slate-600">Select one or more company accounts. The saved Welcome Email template will be sent to each selected account.</p>
+                    </div>
+
+                    <div class="p-6">
+                        @error('company_ids')
+                            <p class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">{{ $message }}</p>
+                        @enderror
+
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                            <p class="text-sm font-semibold text-slate-700">Company accounts</p>
+                            <button type="button" id="toggle-all-email-companies" class="rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-bold text-cyan-700 hover:bg-cyan-50">Select all</button>
+                        </div>
+
+                        <div class="max-h-80 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200">
+                            @forelse($emailCompanies as $company)
+                                @php
+                                    $email = $company->user?->email ?: $company->pic_email ?: $company->email_syarikat;
+                                    $companyName = $company->nama_syarikat ?: $company->nama_wakil_syarikat ?: 'Company #' . $company->id;
+                                @endphp
+                                <label class="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-slate-50">
+                                    <input type="checkbox" name="company_ids[]" value="{{ $company->id }}" class="email-company-checkbox h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500" {{ in_array($company->id, old('company_ids', [])) ? 'checked' : '' }}>
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block truncate text-sm font-bold text-slate-900">{{ $companyName }}</span>
+                                        <span class="block truncate text-sm text-slate-500">{{ $email ?: 'No email address available' }}</span>
+                                    </span>
+                                    @if(!$company->user || blank($email))
+                                        <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">Will be skipped</span>
+                                    @endif
+                                </label>
+                            @empty
+                                <p class="px-4 py-8 text-center text-sm text-slate-500">No company accounts are available.</p>
+                            @endforelse
+                        </div>
+
+                        <div class="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                            <p class="text-sm text-slate-500">Emails are sent immediately using the current Welcome Email subject and body.</p>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700">Send Welcome Email</button>
+                        </div>
+                    </div>
+                </form>
+
+                <script>
+                    document.getElementById('toggle-all-email-companies')?.addEventListener('click', function () {
+                        const checkboxes = [...document.querySelectorAll('.email-company-checkbox')];
+                        const selectAll = checkboxes.some((checkbox) => !checkbox.checked);
+                        checkboxes.forEach((checkbox) => checkbox.checked = selectAll);
+                        this.textContent = selectAll ? 'Clear selection' : 'Select all';
+                    });
+                </script>
+            @endif
+
             @if($managementPanel)
                 <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
                     <div class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 lg:flex-row lg:items-start lg:justify-between">

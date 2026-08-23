@@ -30,10 +30,6 @@
                 <p class="text-3xl font-bold text-amber-600">{{ $metrics['paidInvoices'] }}</p>
             </div>
             <div class="bg-white rounded-xl shadow p-5">
-                <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.total_staff') }}</p>
-                <p class="text-3xl font-bold text-violet-600">{{ $metrics['totalStaff'] }}</p>
-            </div>
-            <div class="bg-white rounded-xl shadow p-5">
                 <p class="text-sm text-gray-500">{{ __('super_admin/dashboard.metrics.total_users') }}</p>
                 <p class="text-3xl font-bold text-cyan-600">{{ $metrics['totalUsers'] }}</p>
             </div>
@@ -49,14 +45,6 @@
     </div>
 
     <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition">
-            <div class="text-indigo-500 mb-3">
-                <i class="fas fa-users text-3xl"></i>
-            </div>
-            <h2 class="text-lg font-semibold">{{ __('super_admin/dashboard.cards.staff.title') }}</h2>
-            <p class="text-gray-500 text-sm">{{ __('super_admin/dashboard.cards.staff.desc') }}</p>
-        </div>
-
         <a href="{{ route('superadmin.settings.index') }}" class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition block">
             <div class="text-green-500 mb-3">
                 <i class="fas fa-cogs text-3xl"></i>

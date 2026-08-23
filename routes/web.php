@@ -28,7 +28,6 @@ use App\Http\Controllers\Admin\TeacherUnavailabilityController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\SuperAdmin\CompanyInvoiceController;
 use App\Http\Controllers\SuperAdmin\StatsController;
-use App\Http\Controllers\SuperAdmin\StaffEmindController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubAktifController;
 use App\Http\Controllers\Compro\AboutController;
@@ -215,23 +214,10 @@ Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])
     Route::get('/statistics/export/excel/{period}/{startDate}/{endDate}', [StatsController::class, 'exportExcel'])->name('superadmin.stats.export.excel');
 
     Route::get('/settings/{section?}', [SettingsController::class, 'index'])->name('superadmin.settings.index');
+    Route::post('/settings/email-templates/send', [SettingsController::class, 'sendWelcomeEmail'])->name('superadmin.settings.email-templates.send');
     Route::post('/settings/{section?}', [SettingsController::class, 'update'])->name('superadmin.settings.update');
 
 
-    Route::controller(StaffEmindController::class)->prefix('staff')->name('superadmin.staff.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
-        Route::post('/', 'store')->name('store');
-        Route::get('/{staff}', 'show')->name('show');
-        Route::get('/{staff}/edit', 'edit')->name('edit');
-        Route::put('/{staff}', 'update')->name('update');
-        Route::delete('/{staff}', 'destroy')->name('destroy');
-        Route::post('/bulk-activate', 'bulkActivate')->name('bulkActivate');
-        Route::post('/bulk-deactivate', 'bulkDeactivate')->name('bulkDeactivate');
-        Route::post('/activate', 'activate')->name('activate');
-        Route::post('/deactivate', 'deactivate')->name('deactivate');
-    });
-    
     Route::post('/sub-aktif/toggle', [SubAktifController::class, 'toggle'])->name('sub-aktif.toggle');
 });
 

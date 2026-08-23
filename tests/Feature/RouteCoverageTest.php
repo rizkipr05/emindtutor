@@ -56,7 +56,6 @@ class RouteCoverageTest extends TestCase
         $this->actingAs($user)->get(route('subscription-packages.create'))->assertOk();
         $this->actingAs($user)->get(route('subscription-packages.show', $package))->assertOk();
         $this->actingAs($user)->get(route('superadmin.stats.index'))->assertOk();
-        $this->actingAs($user)->get(route('superadmin.staff.index'))->assertOk();
         $this->actingAs($user)->get(route('langganan.index'))->assertOk();
     }
 

@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Announcement;
 use App\Models\Company;
 use App\Models\CompanyInvoice;
-use App\Models\StaffEmind;
 use App\Models\SubscriptionPackage;
 use App\Models\User;
 
@@ -21,7 +20,6 @@ class DashboardController extends Controller
             'totalPackages' => SubscriptionPackage::count(),
             'totalInvoices' => CompanyInvoice::count(),
             'paidInvoices' => CompanyInvoice::where('status_bayaran', 'paid')->count(),
-            'totalStaff' => StaffEmind::count(),
             'totalUsers' => User::count(),
             'totalAnnouncements' => Announcement::count(),
         ];
