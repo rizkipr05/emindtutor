@@ -228,7 +228,7 @@
 
                         <div class="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
                             <p class="text-sm text-slate-500">Emails are sent immediately using the current Welcome Email subject and body.</p>
-                            <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700">Send Welcome Email</button>
+                            <button type="submit" class="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition hover:opacity-90" style="background-color: #0891b2 !important; color: #ffffff !important; border: 1px solid #0e7490;">Send Welcome Email</button>
                         </div>
                     </div>
                 </form>
