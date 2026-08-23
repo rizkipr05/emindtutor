@@ -56,7 +56,7 @@ class SubscriptionPackageController extends Controller
         // Prepare data for creation
         $data = [
             'is_trial' => $request->is_trial == '1',
-            'is_per_student' => $isPerStudent,
+            'pricing_per_student' => $isPerStudent,
             'nama_pakej' => $request->nama_pakej,
             'duration_days' => $request->duration_days,
             'deskripsi' => $request->deskripsi,
@@ -66,13 +66,15 @@ class SubscriptionPackageController extends Controller
         // Set pricing and limitations based on type
         if ($isPerStudent) {
             // Per Student pricing
-            $data['harga'] = $request->harga_per_pelajar; // Store per-student price in harga field
+            $data['harga'] = 0;
+            $data['harga_per_pelajar'] = $request->harga_per_pelajar;
             $data['maks_pelajar'] = 0; // No limit
             $data['maks_guru'] = 0; // No limit
             $data['maks_kelas'] = 0; // No limit
         } else {
             // Fixed pricing
             $data['harga'] = $request->harga;
+            $data['harga_per_pelajar'] = null;
             $data['maks_pelajar'] = $request->filled('maks_pelajar') ? $request->maks_pelajar : 0;
             $data['maks_guru'] = $request->filled('maks_guru') ? $request->maks_guru : 0;
             $data['maks_kelas'] = $request->filled('maks_kelas') ? $request->maks_kelas : 0;

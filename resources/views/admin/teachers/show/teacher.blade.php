@@ -141,14 +141,6 @@
 
                                     <div class="space-y-3">
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start group">
-                                            <div class="text-sm font-semibold text-gray-600 pt-1">{{ __('admin/teachers/show/teacher.fields.allowance') }}</div>
-                                            <div class="sm:col-span-2 bg-white rounded-lg p-3 shadow-sm border border-gray-200 group-hover:border-green-300 transition-colors">
-                                                <span class="font-medium">{{ $teacher->allowance }}</span>
-                                                <span class="text-gray-500 ml-2">({{ __('admin/teachers/show/teacher.fields.allowance_type_' . $teacher->allowance_type) }})</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start group">
                                             <div class="text-sm font-semibold text-gray-600 pt-1">{{ __('admin/teachers/show/teacher.fields.bank_name') }}</div>
                                             <div class="sm:col-span-2 bg-white rounded-lg p-3 shadow-sm border border-gray-200 group-hover:border-green-300 transition-colors">
                                                 {{ $teacher->bank_name }}

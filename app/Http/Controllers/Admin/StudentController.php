@@ -538,8 +538,8 @@ public function approved(Request $request)
                 $request->validate([
                     'nama_kelas' => 'required|string|max:255',
                     'teacher_id' => 'required|exists:teachers,id',
-                    'allowance_type' => 'nullable|in:per_month,per_session,per_hour',
-                    'allowance' => 'nullable|numeric|min:0',
+                    'allowance_type' => 'required|in:per_month,per_session,per_hour',
+                    'allowance' => 'required|numeric|min:0',
                     'link_group' => 'nullable|url',
                     'notes' => 'nullable|string',
                     'days' => 'required|array',

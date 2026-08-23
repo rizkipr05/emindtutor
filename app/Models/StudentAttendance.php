@@ -14,6 +14,7 @@ class StudentAttendance extends Model
         'class_schedule_id',
         'attendance_date',
         'attendance_time',
+        'check_out_time',
         'status',
         'note',
         'attendance_photo',

@@ -294,7 +294,6 @@
                         <tr><td class="meta-label">NRIC</td><td class="meta-sep">:</td><td>{{ $pdfFields['employee_nric'] ?? ($teacher->ic_number ?? '-') }}</td></tr>
                         <tr><td class="meta-label">Bank</td><td class="meta-sep">:</td><td>{{ $pdfFields['bank_name'] ?? strtoupper($teacher->bank_name ?? '-') }}</td></tr>
                         <tr><td class="meta-label">Bank #</td><td class="meta-sep">:</td><td>{{ $pdfFields['bank_account_number'] ?? ($teacher->bank_account_number ?? '-') }}</td></tr>
-                        <tr><td class="meta-label">Outlet</td><td class="meta-sep">:</td><td>{{ $outletName ?: '-' }}</td></tr>
                     </table>
                 </td>
                 <td>
@@ -385,46 +384,6 @@
             </tr>
         </table>
 
-        <table class="bottom-grid">
-            <tr>
-                <td>
-                    <div class="bottom-title">Employee's Ref. No.</div>
-                    <table class="bottom-table">
-                        <tr><td>EPF</td><td>:</td><td>{{ $employeeRef }}</td></tr>
-                        <tr><td>SOCSO</td><td>:</td><td>{{ $pdfFields['employee_nric'] ?? ($teacher->ic_number ?? '-') }}</td></tr>
-                        <tr><td>PCB</td><td>:</td><td>-</td></tr>
-                    </table>
-                </td>
-                <td>
-                    <div class="bottom-title">Annual Leave</div>
-                    <table class="bottom-table">
-                        <tr><td>Entitlement</td><td>:</td><td>{{ $pdfFields['annual_leave_entitlement'] ?? '0.00' }}</td></tr>
-                        <tr><td>Earned Leave</td><td>:</td><td>{{ $pdfFields['annual_leave_earned'] ?? '0.00' }}</td></tr>
-                        <tr><td>C/F</td><td>:</td><td>{{ $pdfFields['annual_leave_cf'] ?? '0.00' }}</td></tr>
-                        <tr><td>Taken</td><td>:</td><td>{{ $pdfFields['annual_leave_taken'] ?? '0.00' }}</td></tr>
-                        <tr><td>Balance</td><td>:</td><td>{{ $pdfFields['annual_leave_balance'] ?? '0.00' }}</td></tr>
-                    </table>
-                </td>
-                <td>
-                    <div class="bottom-title">Medical Leave</div>
-                    <table class="bottom-table">
-                        <tr><td>Entitlement</td><td>:</td><td>{{ $pdfFields['medical_leave_entitlement'] ?? '14.00' }}</td></tr>
-                        <tr><td>Taken</td><td>:</td><td>{{ $pdfFields['medical_leave_taken'] ?? '0.00' }}</td></tr>
-                        <tr><td>Balance</td><td>:</td><td>{{ $pdfFields['medical_leave_balance'] ?? '14.00' }}</td></tr>
-                    </table>
-                </td>
-                <td>
-                    <div class="bottom-title">Employer Contribution</div>
-                    <table class="bottom-table">
-                        <tr><td>EPF</td><td>:</td><td>{{ $employerEpf }}</td></tr>
-                        <tr><td>SOCSO</td><td>:</td><td>{{ $employerSocso }}</td></tr>
-                        <tr><td>EIS</td><td>:</td><td>{{ $employerEis }}</td></tr>
-                        <tr><td>PCB</td><td>:</td><td>{{ $pdfFields['employer_pcb'] ?? '0.00' }}</td></tr>
-                        <tr><td>HRD</td><td>:</td><td>{{ $pdfFields['employer_hrd'] ?? '0.00' }}</td></tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
     </div>
 </body>
 </html>

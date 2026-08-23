@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Student;
 use App\Models\Announcement;
+use App\Models\Course;
+use App\Models\ClassSchedule;
 
 
 class DashboardController extends Controller
@@ -49,5 +51,26 @@ class DashboardController extends Controller
         ];
 
         return view('student.dashboard.index', compact('student', 'courses', 'announcements', 'profileMissing', 'overview'));
+    }
+
+    public function courseDetail(Course $course)
+    {
+        $student = Student::where('user_id', Auth::id())->firstOrFail();
+
+        abort_unless(
+            $student->invoices()
+                ->where('course_id', $course->id)
+                ->where('status_bayaran', 'paid')
+                ->exists(),
+            404
+        );
+
+        $schedules = ClassSchedule::with(['teacher.user', 'classScheduleDays'])
+            ->where('course_id', $course->id)
+            ->whereHas('classScheduleStudent', fn ($query) => $query->where('student_id', $student->id))
+            ->orderBy('nama_kelas')
+            ->get();
+
+        return view('student.dashboard.course-detail', compact('course', 'schedules'));
     }
 }

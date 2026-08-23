@@ -189,6 +189,7 @@
                     </button>
                     <div x-show="open" x-transition class="ml-4 space-y-1">
                         <a href="{{ route('admin.reports.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.daily_attendance_report") }}</a>
+                        <a href="{{ route('admin.student-attendances.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.student-attendances.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">Student Attendance</a>
                         <a href="{{ route('admin.monthly-reports.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.monthly-reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('reports.monthly.menu') }}</a>
                     </div>
                 </div>

@@ -10,10 +10,12 @@ use App\Models\StudentInvoice;
 use App\Models\ClassScheduleSession;
 use App\Models\SystemSetting;
 use App\Models\Teacher;
+use App\Models\Company;
 use App\Services\WhatsAppNotificationService;
 use App\Services\MonthlyStudentReportCollector;
 use App\Mail\CompanyInvoiceExpiredMail;
 use App\Mail\InvoiceTagihanMail;
+use App\Mail\CompanySubscriptionInvoiceMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -25,6 +27,60 @@ Artisan::command('inspire', function () {
 Schedule::dailyAt('00:10')->call(function () {
     app(MonthlyStudentReportCollector::class)->collectDueReports();
 });
+
+// Pakej harga per pelajar: bulan pertama percuma. Pada 1 haribulan,
+// keluarkan invoice bagi bulan lepas berdasarkan pelajar yang masih aktif.
+Schedule::monthlyOn(1, '00:15')->call(function () {
+    $previousMonthStart = now()->subMonthNoOverflow()->startOfMonth()->toDateString();
+    $previousMonthEnd = now()->subMonthNoOverflow()->endOfMonth()->toDateString();
+    $dueDate = now()->addDays(7)->toDateString();
+
+    Company::with(['invoices' => fn ($query) => $query->with('package')->latest()])
+        ->whereHas('invoices.package', fn ($query) => $query->where('pricing_per_student', true))
+        ->each(function (Company $company) use ($previousMonthStart, $previousMonthEnd, $dueDate) {
+            $latestInvoice = $company->invoices->first();
+
+            if (! $latestInvoice?->package?->pricing_per_student || CompanyInvoice::where('company_id', $company->id)
+                ->whereDate('billing_period_start', $previousMonthStart)
+                ->exists()) {
+                return;
+            }
+
+            $activeStudents = $company->students()->where('status', 'active')->count();
+            $amount = round($activeStudents * (float) $latestInvoice->package->harga_per_pelajar, 2);
+            $sequence = str_pad((string) (CompanyInvoice::whereDate('created_at', today())->count() + 1), 4, '0', STR_PAD_LEFT);
+            $invoice = CompanyInvoice::create([
+                'company_id' => $company->id,
+                'package_id' => $latestInvoice->package_id,
+                'nomor_invoice' => 'INV-' . now()->format('Ymd') . '-' . $sequence . '-STUDENT',
+                'jumlah' => $amount,
+                'status_bayaran' => $activeStudents === 0 ? 'paid' : 'upcoming',
+                'status' => $activeStudents === 0 ? 'active' : 'inactive',
+                'tarikh_terbit' => today(),
+                'tarikh_tamat' => $activeStudents === 0 ? now()->endOfMonth() : $dueDate,
+                'billing_period_start' => $previousMonthStart,
+                'billing_period_end' => $previousMonthEnd,
+                'active_student_count' => $activeStudents,
+            ]);
+
+            if ($activeStudents === 0) {
+                $company->update(['status' => 1]);
+                Subscription::create([
+                    'company_id' => $company->id,
+                    'package_id' => $latestInvoice->package_id,
+                    'start_date' => today(),
+                    'end_date' => now()->endOfMonth(),
+                    'status' => 'active',
+                ]);
+                return;
+            }
+
+            $recipient = $company->user?->email ?? $company->pic_email ?? $company->email_syarikat;
+            if ($recipient) {
+                Mail::to($recipient)->send(new CompanySubscriptionInvoiceMail($invoice));
+            }
+        });
+})->name('Generate per-student subscription invoices');
 
 
 Schedule::daily()->call(function () {

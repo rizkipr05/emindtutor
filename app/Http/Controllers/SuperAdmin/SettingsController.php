@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Announcement;
 use App\Models\Company;
 use App\Models\CompanyInvoice;
 use App\Models\PaymentGateway;
@@ -11,6 +10,7 @@ use App\Models\StaffEmind;
 use App\Models\SubscriptionPackage;
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 
 class SettingsController extends Controller
 {
@@ -25,26 +25,25 @@ class SettingsController extends Controller
     {
         $section = $this->normalizeSection($section);
 
-        // Payment gateway section saves to payment_gateways table, not system_settings.
         if ($section === 'payment_gateway') {
             $validated = $request->validate([
-                'user_secret_key'  => 'required|string|max:255',
-                'category_code'    => 'required|string|max:100',
-                'base_url'         => 'required|url|max:255',
-                'api_url'          => 'required|url|max:255',
-                'payment_channel'  => 'required|integer|in:0,1,2',
-                'expiry_days'      => 'required|integer|min:1|max:100',
-                'is_active'        => 'nullable|boolean',
+                'user_secret_key' => 'required|string|max:255',
+                'category_code' => 'required|string|max:100',
+                'base_url' => 'required|url|max:255',
+                'api_url' => 'required|url|max:255',
+                'payment_channel' => 'required|integer|in:0,1,2',
+                'expiry_days' => 'required|integer|min:1|max:100',
+                'is_active' => 'nullable|boolean',
             ]);
 
-            $gateway = PaymentGateway::firstOrNew(['company_id' => null]);
-            $gateway->fill(array_merge($validated, [
-                'provider'  => 'toyyibpay',
-                'is_active' => $request->boolean('is_active'),
-            ]))->save();
+            PaymentGateway::firstOrNew(['company_id' => null])
+                ->fill(array_merge($validated, [
+                    'provider' => 'toyyibpay',
+                    'is_active' => $request->boolean('is_active'),
+                ]))
+                ->save();
 
-            return redirect()
-                ->route('superadmin.settings.index', ['section' => 'payment_gateway'])
+            return redirect()->route('superadmin.settings.index', ['section' => 'payment_gateway'])
                 ->with('success', __('super_admin/settings.messages.saved'));
         }
 
@@ -59,7 +58,19 @@ class SettingsController extends Controller
         $validated = $request->validate($rules);
 
         foreach ($fields as $field) {
+            if (($field['sensitive'] ?? false) && blank($validated[$field['name']] ?? null)) {
+                continue;
+            }
+
             $value = $this->resolveFieldValue($request, $field, $validated);
+
+            if (($field['type'] ?? null) === 'file' && $value === '') {
+                continue;
+            }
+
+            if ($field['sensitive'] ?? false) {
+                $value = Crypt::encryptString($value);
+            }
 
             SystemSetting::updateOrCreate(
                 ['setting_key' => $field['name']],
@@ -86,19 +97,18 @@ class SettingsController extends Controller
             'invoices' => CompanyInvoice::count(),
             'paidInvoices' => CompanyInvoice::where('status_bayaran', 'paid')->count(),
             'staff' => StaffEmind::count(),
-            'announcements' => Announcement::count(),
         ];
 
         $settings = SystemSetting::query()->get()->keyBy('setting_key');
         $sections = $this->buildSections();
-
-        // For the payment_gateway section, populate field values from the DB row.
         $gateway = PaymentGateway::query()->whereNull('company_id')->first();
 
         foreach ($sections as $key => &$definition) {
             foreach ($definition['fields'] as &$field) {
                 if ($key === 'payment_gateway' && $gateway) {
                     $field['value'] = (string) ($gateway->{$field['name']} ?? $field['default'] ?? '');
+                } elseif ($field['sensitive'] ?? false) {
+                    $field['value'] = '';
                 } else {
                     $field['value'] = $this->fieldValue($settings, $field);
                 }
@@ -159,18 +169,6 @@ class SettingsController extends Controller
                     'status' => $invoice->status_bayaran,
                 ]),
             ],
-            'communications' => [
-                'title' => __('super_admin/settings.management.communications.title'),
-                'subtitle' => __('super_admin/settings.management.communications.subtitle'),
-                'create_url' => route('broadcasts.create'),
-                'manage_url' => route('broadcasts.index'),
-                'records' => Announcement::latest()->take(5)->get()->map(fn (Announcement $announcement) => [
-                    'title' => $announcement->title,
-                    'meta' => $announcement->target_audience,
-                    'status' => __('super_admin/settings.management.sent'),
-                    'view_url' => route('broadcasts.show', $announcement->id),
-                ]),
-            ],
             default => null,
         };
     }
@@ -226,8 +224,6 @@ class SettingsController extends Controller
                     ['label' => __('layouts/superadmin.subscription_packages'), 'desc' => __('super_admin/settings.actions.manage_packages.desc'), 'url' => route('subscription-packages.index')],
                     ['label' => __('layouts/superadmin.invoices'), 'desc' => __('super_admin/settings.actions.manage_billing.desc'), 'url' => route('invoices.index')],
                     ['label' => __('layouts/superadmin.staff'), 'desc' => __('super_admin/settings.actions.manage_staff.desc'), 'url' => route('superadmin.staff.index')],
-                    ['label' => __('layouts/superadmin.stats'), 'desc' => __('super_admin/settings.actions.open_reports.desc'), 'url' => route('superadmin.stats.index')],
-                    ['label' => __('layouts/superadmin.communications'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
                 ],
             ],
             'companies' => [
@@ -302,6 +298,27 @@ class SettingsController extends Controller
                     ['label' => __('super_admin/settings.actions.export_excel.title'), 'desc' => __('super_admin/settings.actions.export_excel.desc'), 'url' => route('superadmin.stats.export-excel')],
                 ],
             ],
+            'invoice_pdf' => [
+                'title' => 'Invoice PDF Branding',
+                'subtitle' => 'Edit logo, company information, payment instructions, and notes shown on every Invoice PDF.',
+                'badge' => 'PDF Invoice',
+                'fields' => [
+                    ['name' => 'invoice_pdf_logo', 'label' => 'Logo Invoice', 'type' => 'file', 'default' => '', 'help' => 'Upload PNG, JPG, or WEBP. Recommended: transparent PNG, maximum 2MB.', 'full_width' => true],
+                    ['name' => 'invoice_pdf_company_name', 'label' => 'Company Name', 'type' => 'text', 'default' => 'Your Company Name', 'full_width' => true],
+                    ['name' => 'invoice_pdf_tagline', 'label' => 'Tagline', 'type' => 'text', 'default' => ''],
+                    ['name' => 'invoice_pdf_phone', 'label' => 'Phone Number', 'type' => 'text', 'default' => ''],
+                    ['name' => 'invoice_pdf_address', 'label' => 'Company Address', 'type' => 'textarea', 'rows' => 3, 'default' => '', 'full_width' => true],
+                    ['name' => 'invoice_pdf_email', 'label' => 'Billing Email', 'type' => 'email', 'default' => 'billing@example.com'],
+                    ['name' => 'invoice_pdf_website', 'label' => 'Website', 'type' => 'text', 'default' => ''],
+                    ['name' => 'invoice_pdf_bank_name', 'label' => 'Bank Name', 'type' => 'text', 'default' => ''],
+                    ['name' => 'invoice_pdf_bank_account', 'label' => 'Bank Account Number', 'type' => 'text', 'default' => ''],
+                    ['name' => 'invoice_pdf_payment_note', 'label' => 'Payment Instructions', 'type' => 'textarea', 'rows' => 4, 'default' => 'Please use the invoice number as your payment reference.', 'full_width' => true],
+                    ['name' => 'invoice_pdf_important_note', 'label' => 'Important Notes', 'type' => 'textarea', 'rows' => 4, 'default' => 'Please keep this invoice as your payment reference.', 'full_width' => true],
+                ],
+                'features' => [
+                    ['label' => 'View Invoices', 'desc' => 'Open an invoice PDF to check your branding changes.', 'url' => route('invoices.index')],
+                ],
+            ],
             'staff' => [
                 'title' => __('super_admin/settings.sections.staff.title'),
                 'subtitle' => __('super_admin/settings.sections.staff.subtitle'),
@@ -324,62 +341,6 @@ class SettingsController extends Controller
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.manage_staff.title'), 'desc' => __('super_admin/settings.actions.manage_staff.desc'), 'url' => route('superadmin.staff.index')],
-                ],
-            ],
-            'reports' => [
-                'title' => __('super_admin/settings.sections.reports.title'),
-                'subtitle' => __('super_admin/settings.sections.reports.subtitle'),
-                'badge' => __('super_admin/settings.sections.reports.badge'),
-                'fields' => [
-                    [
-                        'name' => 'allow_pdf_export',
-                        'label' => __('super_admin/settings.forms.allow_pdf_export'),
-                        'type' => 'toggle',
-                        'default' => '1',
-                        'help' => __('super_admin/settings.forms.allow_pdf_export_help'),
-                    ],
-                    [
-                        'name' => 'allow_excel_export',
-                        'label' => __('super_admin/settings.forms.allow_excel_export'),
-                        'type' => 'toggle',
-                        'default' => '1',
-                        'help' => __('super_admin/settings.forms.allow_excel_export_help'),
-                    ],
-                ],
-                'features' => [
-                    ['label' => __('super_admin/settings.actions.open_reports.title'), 'desc' => __('super_admin/settings.actions.open_reports.desc'), 'url' => route('superadmin.stats.index')],
-                    ['label' => __('super_admin/settings.actions.export_pdf.title'), 'desc' => __('super_admin/settings.actions.export_pdf.desc'), 'url' => route('superadmin.stats.export-pdf')],
-                    ['label' => __('super_admin/settings.actions.export_excel.title'), 'desc' => __('super_admin/settings.actions.export_excel.desc'), 'url' => route('superadmin.stats.export-excel')],
-                ],
-            ],
-            'communications' => [
-                'title' => __('super_admin/settings.sections.communications.title'),
-                'subtitle' => __('super_admin/settings.sections.communications.subtitle'),
-                'badge' => __('super_admin/settings.sections.communications.badge', ['count' => Announcement::count()]),
-                'fields' => [
-                    [
-                        'name' => 'enable_broadcasts',
-                        'label' => __('super_admin/settings.forms.enable_broadcasts'),
-                        'type' => 'toggle',
-                        'default' => '1',
-                        'help' => __('super_admin/settings.forms.enable_broadcasts_help'),
-                    ],
-                    [
-                        'name' => 'default_audience',
-                        'label' => __('super_admin/settings.forms.default_audience'),
-                        'type' => 'select',
-                        'default' => 'all',
-                        'options' => [
-                            'all' => __('super_admin/settings.forms.default_audience_options.all'),
-                            'companies' => __('super_admin/settings.forms.default_audience_options.companies'),
-                            'teachers' => __('super_admin/settings.forms.default_audience_options.teachers'),
-                            'students' => __('super_admin/settings.forms.default_audience_options.students'),
-                        ],
-                        'help' => __('super_admin/settings.forms.default_audience_help'),
-                    ],
-                ],
-                'features' => [
-                    ['label' => __('super_admin/settings.actions.open_communications.title'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
                 ],
             ],
             'email_templates' => [
@@ -415,7 +376,6 @@ class SettingsController extends Controller
                 ],
                 'features' => [
                     ['label' => __('super_admin/settings.actions.manage_billing.title'), 'desc' => __('super_admin/settings.actions.manage_billing.desc'), 'url' => route('invoices.index')],
-                    ['label' => __('super_admin/settings.actions.open_communications.title'), 'desc' => __('super_admin/settings.actions.open_communications.desc'), 'url' => route('broadcasts.index')],
                 ],
             ],
             'payment_gateway' => [
@@ -423,65 +383,17 @@ class SettingsController extends Controller
                 'subtitle' => __('super_admin/settings.sections.payment_gateway.subtitle'),
                 'badge' => __('super_admin/settings.sections.payment_gateway.badge'),
                 'fields' => [
+                    ['name' => 'user_secret_key', 'label' => 'User Secret Key', 'type' => 'text', 'default' => '', 'placeholder' => 'xxxxx-xxxxx-xxxxx', 'help' => __('admin/settings.secret_key_help')],
+                    ['name' => 'category_code', 'label' => 'Category Code', 'type' => 'text', 'default' => '', 'placeholder' => 'xxxxxxxx', 'help' => __('admin/settings.category_code_help')],
+                    ['name' => 'base_url', 'label' => 'Base URL', 'type' => 'text', 'default' => 'https://toyyibpay.com', 'placeholder' => 'https://toyyibpay.com', 'help' => 'Base URL ToyyibPay.'],
+                    ['name' => 'api_url', 'label' => 'API URL', 'type' => 'text', 'default' => 'https://toyyibpay.com', 'placeholder' => 'https://toyyibpay.com', 'help' => 'API Endpoint URL ToyyibPay.'],
                     [
-                        'name'        => 'user_secret_key',
-                        'label'       => 'User Secret Key',
-                        'type'        => 'text',
-                        'default'     => '',
-                        'placeholder' => 'xxxxx-xxxxx-xxxxx',
-                        'help'        => __('admin/settings.secret_key_help'),
+                        'name' => 'payment_channel', 'label' => __('admin/settings.payment_channel'), 'type' => 'select', 'default' => '0',
+                        'options' => ['0' => __('admin/settings.all_fpx_card'), '1' => __('admin/settings.fpx_only'), '2' => __('admin/settings.credit_card_only')],
+                        'help' => 'Saluran pembayaran yang dibenarkan.',
                     ],
-                    [
-                        'name'        => 'category_code',
-                        'label'       => 'Category Code',
-                        'type'        => 'text',
-                        'default'     => '',
-                        'placeholder' => 'xxxxxxxx',
-                        'help'        => __('admin/settings.category_code_help'),
-                    ],
-                    [
-                        'name'        => 'base_url',
-                        'label'       => 'Base URL',
-                        'type'        => 'text',
-                        'default'     => 'https://toyyibpay.com',
-                        'placeholder' => 'https://toyyibpay.com',
-                        'help'        => 'Base URL ToyyibPay.',
-                    ],
-                    [
-                        'name'        => 'api_url',
-                        'label'       => 'API URL',
-                        'type'        => 'text',
-                        'default'     => 'https://toyyibpay.com',
-                        'placeholder' => 'https://toyyibpay.com',
-                        'help'        => 'API Endpoint URL ToyyibPay.',
-                    ],
-                    [
-                        'name'    => 'payment_channel',
-                        'label'   => __('admin/settings.payment_channel'),
-                        'type'    => 'select',
-                        'default' => '0',
-                        'options' => [
-                            '0' => __('admin/settings.all_fpx_card'),
-                            '1' => __('admin/settings.fpx_only'),
-                            '2' => __('admin/settings.credit_card_only'),
-                        ],
-                        'help'    => 'Saluran pembayaran yang dibenarkan.',
-                    ],
-                    [
-                        'name'    => 'expiry_days',
-                        'label'   => __('admin/settings.invoice_expiry_days'),
-                        'type'    => 'number',
-                        'default' => '3',
-                        'help'    => __('admin/settings.invoice_expiry_help'),
-                    ],
-                    [
-                        'name'    => 'is_active',
-                        'label'   => __('admin/settings.enable_gateway'),
-                        'type'    => 'toggle',
-                        'default' => '1',
-                        'help'    => __('admin/settings.gateway_disabled_help'),
-                        'full_width' => true,
-                    ],
+                    ['name' => 'expiry_days', 'label' => __('admin/settings.invoice_expiry_days'), 'type' => 'number', 'default' => '3', 'help' => __('admin/settings.invoice_expiry_help')],
+                    ['name' => 'is_active', 'label' => __('admin/settings.enable_gateway'), 'type' => 'toggle', 'default' => '1', 'help' => __('admin/settings.gateway_disabled_help'), 'full_width' => true],
                 ],
                 'features' => [
                     ['label' => 'Senarai Invois', 'desc' => 'Urus semua invois syarikat.', 'url' => route('invoices.index')],
@@ -517,24 +429,18 @@ class SettingsController extends Controller
             'icon' => 'M7 4h10a1 1 0 011 1v14l-4-2-4 2-4-2-4 2V5a1 1 0 011-1h4zm1.5 4.5h7v1.5h-7zm0 3h7V13h-7z',
             'tone' => 'from-amber-500 to-orange-500',
         ],
+        'invoice_pdf' => [
+            'label' => 'Invoice PDF',
+            'caption' => 'Logo & document details',
+            'icon' => 'M7 3h7l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2zm6 1.5V8h3.5',
+            'outline' => true,
+            'tone' => 'from-fuchsia-500 to-pink-500',
+        ],
         'staff' => [
             'label' => __('super_admin/settings.sections.staff.title'),
             'caption' => __('super_admin/settings.forms.enable_staff_module'),
             'icon' => 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0H5z',
             'tone' => 'from-rose-500 to-pink-500',
-        ],
-        'reports' => [
-            'label' => __('super_admin/settings.sections.reports.title'),
-            'caption' => __('super_admin/settings.forms.allow_pdf_export'),
-            'icon' => 'M4 19.5h16M6 16V9m4 7V6m4 10v-5m4 5V8',
-            'outline' => true,
-            'tone' => 'from-sky-500 to-cyan-500',
-        ],
-        'communications' => [
-            'label' => __('super_admin/settings.sections.communications.title'),
-            'caption' => __('super_admin/settings.forms.enable_broadcasts'),
-            'icon' => 'M3 6.75A2.75 2.75 0 015.75 4h12.5A2.75 2.75 0 0121 6.75v7.5A2.75 2.75 0 0118.25 17H9l-5 3v-3H5.75A2.75 2.75 0 013 14.25z',
-            'tone' => 'from-emerald-500 to-teal-500',
         ],
         'email_templates' => [
             'label' => __('super_admin/settings.sections.email_templates.title'),
@@ -543,11 +449,11 @@ class SettingsController extends Controller
             'tone' => 'from-cyan-500 to-blue-500',
         ],
         'payment_gateway' => [
-            'label'   => 'Payment Gateway',
+            'label' => 'Payment Gateway',
             'caption' => 'ToyyibPay global',
-            'icon'    => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
+            'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0z',
             'outline' => true,
-            'tone'    => 'from-green-500 to-teal-500',
+            'tone' => 'from-green-500 to-teal-500',
         ],
     ];
     }
@@ -575,6 +481,7 @@ class SettingsController extends Controller
     {
         return match ($field['type']) {
             'email' => ['required', 'email', 'max:255'],
+            'file' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'number' => ['required', 'integer', 'min:0'],
             'textarea' => ['required', 'string', 'max:10000'],
             'select' => array_values(array_filter([
@@ -583,6 +490,7 @@ class SettingsController extends Controller
                 ! empty($field['options']) ? 'in:' . implode(',', array_keys($field['options'])) : null,
             ])),
             'toggle' => ['boolean'],
+            'password' => [($field['sensitive'] ?? false) ? 'nullable' : 'required', 'string', 'max:255'],
             default => ['required', 'string', 'max:255'],
         };
     }
@@ -591,6 +499,9 @@ class SettingsController extends Controller
     {
         return match ($field['type']) {
             'toggle' => $request->boolean($field['name']) ? '1' : '0',
+            'file' => $request->hasFile($field['name'])
+                ? 'storage/' . $request->file($field['name'])->store('invoice-branding', 'public')
+                : '',
             default => (string) ($validated[$field['name']] ?? ''),
         };
     }

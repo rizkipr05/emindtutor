@@ -22,6 +22,10 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">{{ session('error') }}</div>
+        @endif
+
         <!-- Company Header -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
             <div class="p-6 border-b border-gray-100">
@@ -62,6 +66,13 @@
             <!-- Quick Actions -->
             <div class="p-6 bg-gray-50">
                 <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('companies.account', $company) }}"
+                       class="inline-flex items-center px-4 py-2 border border-violet-300 text-sm font-medium rounded-md text-violet-700 bg-white hover:bg-violet-50 transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-3-3v6m9 3a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h7a2 2 0 012 2v10z"/>
+                        </svg>
+                        Rekod Akaun
+                    </a>
                     <a href="{{ route('companies.edit', $company->id) }}" 
                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +205,7 @@
                                 </span>
                             </div>
                             
-                                    <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-sm font-medium text-gray-600">{{ __('super_admin/companies.show.invoice.amount') }}</label>
                                     <p class="text-lg font-semibold text-gray-900 mt-1">RM {{ number_format($latestInvoice->jumlah, 2) }}</p>
@@ -227,6 +238,12 @@
                                     </p>
                                 </div>
                             </div>
+
+                            <form action="{{ route('companies.invoice-reminder', $company) }}" method="POST" class="mt-5 flex gap-2 border-t border-gray-100 pt-4">
+                                @csrf
+                                <button name="channel" value="whatsapp" type="submit" class="inline-flex flex-1 items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700">Kirim WhatsApp</button>
+                                <button name="channel" value="email" type="submit" class="inline-flex flex-1 items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Kirim Email</button>
+                            </form>
                         </div>
                         
                         <!-- Current Subscription Status -->
@@ -323,6 +340,83 @@
                 </div>
             </div>
         </div>
+
+        {{-- Rekod Akaun dipindahkan ke halaman khusus: companies.account --}}
+        @if (false)
+        <!-- Rekod Akaun: manual invoice, pembayaran dan baki kredit -->
+        @php
+            $balanceIsCredit = $accountBalance < 0;
+            $balanceClass = $balanceIsCredit ? 'text-emerald-600' : ($accountBalance > 0 ? 'text-red-600' : 'text-gray-900');
+        @endphp
+        <section class="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Rekod Akaun</h2>
+                    <p class="text-sm text-gray-500">Ringkasan invoice dan pembayaran company.</p>
+                </div>
+                <div class="rounded-lg bg-emerald-50 px-6 py-3 text-center">
+                    <p class="text-xs font-medium text-emerald-900">Akaun Semasa (Baki)</p>
+                    <p class="text-2xl font-bold {{ $balanceClass }}">{{ $accountBalance < 0 ? '-' : '' }}RM {{ number_format(abs($accountBalance), 2) }}</p>
+                    <p class="text-xs font-medium {{ $balanceIsCredit ? 'text-emerald-700' : 'text-gray-600' }}">{{ $balanceIsCredit ? 'Pembayaran berlebihan (kredit)' : ($accountBalance > 0 ? 'Baki perlu dibayar' : 'Tiada baki') }}</p>
+                </div>
+            </div>
+
+            <div class="mt-6 grid gap-4 md:grid-cols-3">
+                <div class="rounded-lg border border-blue-100 bg-blue-50 p-4"><p class="text-sm text-gray-600">Jumlah Invoice</p><p class="mt-1 text-xl font-bold text-gray-900">RM {{ number_format($totalInvoiceAmount, 2) }}</p></div>
+                <div class="rounded-lg border border-emerald-100 bg-emerald-50 p-4"><p class="text-sm text-gray-600">Jumlah Pembayaran</p><p class="mt-1 text-xl font-bold text-gray-900">RM {{ number_format($totalPaymentAmount, 2) }}</p></div>
+                <div class="rounded-lg border border-purple-100 bg-purple-50 p-4"><p class="text-sm text-gray-600">Baki Akaun</p><p class="mt-1 text-xl font-bold {{ $balanceClass }}">{{ $accountBalance < 0 ? '-' : '' }}RM {{ number_format(abs($accountBalance), 2) }}</p></div>
+            </div>
+
+            <div class="mt-6 grid gap-6 xl:grid-cols-3">
+                <div class="space-y-6 xl:col-span-2">
+                    <div class="rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between border-b border-gray-100 p-4">
+                            <h3 class="font-semibold text-gray-900">Invoice Dikeluarkan</h3>
+                            <details class="relative">
+                                <summary class="cursor-pointer list-none rounded-lg border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50">+ Buat Invoice Manual</summary>
+                                <form action="{{ route('companies.manual-invoices.store', $company) }}" method="POST" class="absolute right-0 z-10 mt-2 w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-xl">
+                                    @csrf
+                                    <p class="mb-3 font-semibold text-gray-900">Buat Invoice Manual</p>
+                                    <label class="mb-1 block text-xs font-medium">Keterangan</label><textarea name="description" required rows="3" class="mb-3 w-full rounded border-gray-300 text-sm" placeholder="Contoh: Caj tambahan"></textarea>
+                                    <label class="mb-1 block text-xs font-medium">Jumlah (RM)</label><input name="amount" type="number" min="0.01" step="0.01" required class="mb-3 w-full rounded border-gray-300 text-sm">
+                                    <label class="mb-1 block text-xs font-medium">Tarikh jatuh tempo</label><input name="due_date" type="date" value="{{ now()->addDays(7)->toDateString() }}" required class="mb-3 w-full rounded border-gray-300 text-sm">
+                                    <button class="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">Generate & Simpan</button>
+                                </form>
+                            </details>
+                        </div>
+                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-left text-xs text-gray-500"><tr><th class="p-3">Tarikh</th><th class="p-3">No. Invoice</th><th class="p-3">Jenis / Keterangan</th><th class="p-3 text-right">Jumlah</th><th class="p-3">Status</th></tr></thead><tbody>
+                            @forelse($accountInvoices as $invoice)<tr class="border-t"><td class="p-3">{{ optional($invoice->tarikh_terbit)->format('d M Y') ?? $invoice->created_at->format('d M Y') }}</td><td class="p-3 font-medium">{{ $invoice->nomor_invoice }}<a href="{{ route('invoices.receipt', $invoice) }}" class="ml-2 text-xs text-blue-600 hover:underline">PDF</a></td><td class="p-3"><span class="rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">{{ $invoice->invoice_type === 'manual' ? 'Manual' : 'Langganan' }}</span><p class="mt-1 text-xs text-gray-500">{{ $invoice->description ?: '-' }}</p></td><td class="p-3 text-right">RM {{ number_format($invoice->jumlah, 2) }}</td><td class="p-3"><span class="rounded-full px-2 py-1 text-xs {{ $invoice->status_bayaran === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">{{ ucfirst($invoice->status_bayaran) }}</span></td></tr>@empty<tr><td colspan="5" class="p-5 text-center text-gray-500">Belum ada invoice.</td></tr>@endforelse
+                        </tbody><tfoot class="border-t bg-gray-50 font-semibold"><tr><td colspan="3" class="p-3">Jumlah Invoice</td><td class="p-3 text-right">RM {{ number_format($totalInvoiceAmount, 2) }}</td><td></td></tr></tfoot></table></div>
+                    </div>
+
+                    <div class="rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between border-b border-gray-100 p-4">
+                            <h3 class="font-semibold text-gray-900">Sejarah Pembayaran (Dana Masuk)</h3>
+                            <details class="relative">
+                                <summary class="cursor-pointer list-none rounded-lg border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50">+ Catat Pembayaran</summary>
+                                <form action="{{ route('companies.manual-payments.store', $company) }}" method="POST" class="absolute right-0 z-10 mt-2 w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-xl">
+                                    @csrf
+                                    <p class="mb-3 font-semibold text-gray-900">Catat Pembayaran</p>
+                                    <label class="mb-1 block text-xs font-medium">Invoice / Referensi</label><select name="company_invoice_id" required class="mb-3 w-full rounded border-gray-300 text-sm">@foreach($accountInvoices as $invoice)<option value="{{ $invoice->id }}">{{ $invoice->nomor_invoice }} — RM {{ number_format($invoice->jumlah, 2) }}</option>@endforeach</select>
+                                    <label class="mb-1 block text-xs font-medium">Jumlah (RM)</label><input name="amount" type="number" min="0.01" step="0.01" required class="mb-3 w-full rounded border-gray-300 text-sm">
+                                    <label class="mb-1 block text-xs font-medium">Metode pembayaran</label><select name="payment_method" required class="mb-3 w-full rounded border-gray-300 text-sm"><option value="transfer_bank">Transfer Bank</option><option value="cash">Tunai</option><option value="cheque">Cek</option><option value="other">Lainnya</option></select>
+                                    <label class="mb-1 block text-xs font-medium">Tarikh pembayaran</label><input name="paid_at" type="date" value="{{ now()->toDateString() }}" required class="mb-3 w-full rounded border-gray-300 text-sm">
+                                    <label class="mb-1 block text-xs font-medium">No. rujukan (opsional)</label><input name="reference_number" class="mb-3 w-full rounded border-gray-300 text-sm"><textarea name="notes" rows="2" class="mb-3 w-full rounded border-gray-300 text-sm" placeholder="Catatan (opsional)"></textarea>
+                                    <button class="w-full rounded bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700">Simpan Pembayaran</button>
+                                </form>
+                            </details>
+                        </div>
+                        <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-left text-xs text-gray-500"><tr><th class="p-3">Tarikh</th><th class="p-3">No. Rujukan</th><th class="p-3">Metode</th><th class="p-3">Invoice</th><th class="p-3 text-right">Jumlah</th><th class="p-3 text-right">Baki Selepas</th></tr></thead><tbody>
+                            @forelse($accountPayments as $payment)<tr class="border-t"><td class="p-3">{{ optional($payment->dibayar_pada)->format('d M Y') ?? $payment->created_at->format('d M Y') }}</td><td class="p-3 font-medium">{{ $payment->reference_number ?: $payment->transaction_id }}</td><td class="p-3">{{ ucwords(str_replace('_', ' ', $payment->payment_method)) }}</td><td class="p-3 text-xs">{{ $payment->invoice?->nomor_invoice }}</td><td class="p-3 text-right">RM {{ number_format($payment->jumlah, 2) }}</td><td class="p-3 text-right {{ $payment->balance_after < 0 ? 'font-semibold text-emerald-600' : '' }}">{{ $payment->balance_after < 0 ? '-' : '' }}RM {{ number_format(abs((float) $payment->balance_after), 2) }}</td></tr>@empty<tr><td colspan="6" class="p-5 text-center text-gray-500">Belum ada pembayaran dicatat.</td></tr>@endforelse
+                        </tbody><tfoot class="border-t bg-gray-50 font-semibold"><tr><td colspan="4" class="p-3">Jumlah Pembayaran</td><td class="p-3 text-right">RM {{ number_format($totalPaymentAmount, 2) }}</td><td></td></tr></tfoot></table></div>
+                    </div>
+                </div>
+                <aside class="rounded-lg bg-gray-50 p-4"><h3 class="font-semibold text-gray-900">Aliran Akaun</h3><div class="mt-4 space-y-4 border-l-2 border-gray-200 pl-4">@foreach($accountInvoices->take(5) as $invoice)<div><p class="text-xs text-gray-500">{{ optional($invoice->tarikh_terbit)->format('d M Y') ?? $invoice->created_at->format('d M Y') }} · Invoice</p><p class="text-sm font-medium">{{ $invoice->nomor_invoice }}</p><p class="text-sm">+ RM {{ number_format($invoice->jumlah, 2) }}</p></div>@endforeach @foreach($accountPayments->take(5) as $payment)<div><p class="text-xs text-gray-500">{{ optional($payment->dibayar_pada)->format('d M Y') ?? $payment->created_at->format('d M Y') }} · Bayaran</p><p class="text-sm font-medium">{{ $payment->reference_number ?: $payment->transaction_id }}</p><p class="text-sm text-emerald-700">- RM {{ number_format($payment->jumlah, 2) }}</p></div>@endforeach</div></aside>
+            </div>
+            <p class="mt-5 rounded bg-blue-50 p-3 text-xs text-blue-800">Baki akaun dikira daripada jumlah invoice ditolak jumlah pembayaran. Baki negatif bermaksud company mempunyai pembayaran berlebihan yang automatik mengurangkan baki invoice berikutnya.</p>
+        </section>
+
+        @endif
 
         <!-- Company Statistics -->
         <div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">

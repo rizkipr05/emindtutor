@@ -26,6 +26,9 @@
         <div class="mt-6">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">{{ __('admin/teachers/sallaries/index.filter.button') }}</button>
         </div>
+        <div class="mt-6">
+            <a href="{{ route('admin.teachers.sallaries.index', ['month' => $selectedMonth, 'year' => $selectedYear, 'download' => 1]) }}" class="inline-block bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded">Download Summary</a>
+        </div>
     </form>
 
     {{-- Statistik Ringkas --}}

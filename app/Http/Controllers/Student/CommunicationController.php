@@ -12,6 +12,7 @@ use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Company;
 use App\Models\Announcement;
+use App\Models\SystemSetting;
 use App\Mail\AnnouncementEmail;
 use Illuminate\Support\Facades\Mail;
 
@@ -20,6 +21,8 @@ class CommunicationController extends Controller
 {
     public function index()
     {
+        $this->ensureBroadcastsEnabled();
+
         $user = auth()->user();
 
         // Announcements yang dikirim oleh user ini
@@ -39,6 +42,8 @@ class CommunicationController extends Controller
 
     public function show($id)
     {
+        $this->ensureBroadcastsEnabled();
+
         $user = auth()->user();
 
         // ambil announcement + data creator
@@ -63,9 +68,11 @@ class CommunicationController extends Controller
     // MessageController.php
     public function create()
     {
+        $this->ensureBroadcastsEnabled();
+
         $user = auth()->user();
 
-        abort_if($user->role === 'teacher', 403, 'Guru hanya dapat menerima pengumuman dari perusahaan.');
+        abort_unless(in_array($user->role, ['admin', 'super admin'], true), 403, 'Anda tidak diizinkan membuat pengumuman.');
 
         // Default kosong
         $teachers = collect();
@@ -154,12 +161,20 @@ class CommunicationController extends Controller
         }
 
 
-        return view('student.communication.create', compact('teachers', 'students', 'admins'));
+        $defaultAudience = $user->role === 'super admin'
+            ? SystemSetting::value('default_audience', 'all')
+            : null;
+
+        return view('student.communication.create', compact('teachers', 'students', 'admins', 'defaultAudience'));
     }
 
     public function store(Request $request)
     {
-        abort_if(auth()->user()->role === 'teacher', 403, 'Guru tidak diizinkan membuat pengumuman.');
+        $this->ensureBroadcastsEnabled();
+
+        $user = auth()->user();
+
+        abort_unless(in_array($user->role, ['admin', 'super admin'], true), 403, 'Anda tidak diizinkan membuat pengumuman.');
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -168,15 +183,22 @@ class CommunicationController extends Controller
             'redirect_route' => 'nullable|string|in:broadcasts.index,t.dashboard.index',
         ]);
 
-        $user = auth()->user();
+        $allowedAudiences = $user->role === 'super admin'
+            ? ['all', 'companies', 'teachers', 'students']
+            : ['teachers', 'students'];
+
+        abort_unless(in_array($request->target_audience, $allowedAudiences, true), 403, 'Target penerima tidak diizinkan.');
 
         $targetUsers = collect();
 
         // 1️⃣ Jika Super Admin
         if ($user->role === 'super admin') {
-            if ($request->target_audience === 'companies') {
-                $targetUsers = Company::pluck('user_id');
-            }
+            $targetUsers = match ($request->target_audience) {
+                'companies' => Company::whereNotNull('user_id')->pluck('user_id'),
+                'teachers' => Teacher::whereNotNull('user_id')->pluck('user_id'),
+                'students' => Student::whereNotNull('user_id')->pluck('user_id'),
+                'all' => User::whereIn('role', ['admin', 'teacher', 'student'])->pluck('id'),
+            };
         } 
         // 2️⃣ Jika Admin Company
         else {
@@ -257,6 +279,11 @@ class CommunicationController extends Controller
         $redirectRoute = $request->input('redirect_route', 'broadcasts.index');
 
         return redirect()->route($redirectRoute)->with('success', 'Pengumuman berhasil dikirim.');
+    }
+
+    private function ensureBroadcastsEnabled(): void
+    {
+        abort_if(SystemSetting::value('enable_broadcasts', '1') !== '1', 403, 'Modul broadcast sedang dinonaktifkan oleh Super Admin.');
     }
 
 }

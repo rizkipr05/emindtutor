@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppNotificationService
 {
-    public function sendOnce(Model $notifiable, string $type, ?string $phone, string $message): bool
+    public function sendOnce(Model $notifiable, string $type, ?string $phone, string $message, ?string $attachmentUrl = null): bool
     {
         if (! $phone) {
             Log::warning('WhatsApp notification skipped because the recipient phone number is empty.', ['type' => $type, 'notifiable_id' => $notifiable->getKey()]);
@@ -32,7 +32,7 @@ class WhatsAppNotificationService
         }
 
         try {
-            $response = FonnteService::sendMessage($delivery->recipient, $message);
+            $response = FonnteService::sendMessage($delivery->recipient, $message, $attachmentUrl);
             $delivery->update([
                 'status' => 'sent',
                 'response' => $response,

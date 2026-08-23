@@ -79,9 +79,8 @@ class SallaryController extends Controller
 
                 $sid       = $att->class_schedule_id;
                 $schedule  = $att->classSchedule;
-                $scheduleAllowance = (float) ($schedule->allowance ?? 0);
-                $allowance = $scheduleAllowance > 0 ? $scheduleAllowance : (float) ($teacher->allowance ?? 0);
-                $type      = $schedule->allowance_type ?: $teacher->allowance_type; // 'per_session' | 'per_hour' | 'per_month'
+                $allowance = (float) ($schedule->allowance ?? 0);
+                $type      = $schedule->allowance_type; // 'per_session' | 'per_hour' | 'per_month'
 
                 if (!isset($bySchedule[$sid])) {
                     $bySchedule[$sid] = [
@@ -172,6 +171,33 @@ class SallaryController extends Controller
         $totalAmount   = $sallaries->sum('salary');          // total gaji (guru+staff)
         $paidTeachers  = $sallaries->where('status', 'paid')->count(); // yang sudah dibayar
         $paidAmount    = $sallaries->where('status', 'paid')->sum('salary'); // jumlah yang sudah dibayar
+
+        if ($request->boolean('download')) {
+            $filename = sprintf('ringkasan-gaji-%s-%s.csv', str_pad($selectedMonth, 2, '0', STR_PAD_LEFT), $selectedYear);
+
+            return response()->streamDownload(function () use ($sallaries, $months, $selectedMonth, $selectedYear, $totalAmount, $paidAmount) {
+                $output = fopen('php://output', 'w');
+                fputcsv($output, ['Ringkasan Gaji', ($months[$selectedMonth] ?? $selectedMonth) . ' ' . $selectedYear]);
+                fputcsv($output, []);
+                fputcsv($output, ['Jenis', 'Nama', 'Kehadiran', 'Jumlah Jam', 'Gaji (RM)', 'Status']);
+
+                foreach ($sallaries as $salary) {
+                    fputcsv($output, [
+                        $salary['type'],
+                        $salary['name'],
+                        $salary['attendance_count'],
+                        is_numeric($salary['total_minutes']) ? number_format($salary['total_minutes'] / 60, 1, '.', '') : '-',
+                        number_format($salary['salary'], 2, '.', ''),
+                        $salary['status'] === 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar',
+                    ]);
+                }
+
+                fputcsv($output, []);
+                fputcsv($output, ['Total Gaji (RM)', number_format($totalAmount, 2, '.', '')]);
+                fputcsv($output, ['Sudah Dibayar (RM)', number_format($paidAmount, 2, '.', '')]);
+                fclose($output);
+            }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }
 
         return view('admin.teachers.sallaries.index', compact(
             'months',
@@ -418,9 +444,8 @@ private function attendanceSalaryAmount(TeacherAttendance $attendance): float
         return 0;
     }
 
-    $allowanceType = $schedule->allowance_type ?: $teacher?->allowance_type;
-    $scheduleAllowance = (float) ($schedule->allowance ?? 0);
-    $allowance = $scheduleAllowance > 0 ? $scheduleAllowance : (float) ($teacher?->allowance ?? 0);
+    $allowanceType = $schedule->allowance_type;
+    $allowance = (float) ($schedule->allowance ?? 0);
 
     return match ($allowanceType) {
         'per_session' => $allowance,

@@ -300,8 +300,6 @@ class TeacherController extends Controller
             'email' => 'required|email|unique:users,email',
             'ic_number' => 'required|string|max:255|unique:teachers,ic_number',
             'phone' => 'nullable|string|max:20',
-            'allowance' => 'required|numeric',
-            'allowance_type' => 'required|in:per_hour,per_session,per_month',
             'bank_name' => 'required|string|max:255',
             'bank_account_number' => 'required|string|max:255',
             'bank_account_holder' => 'required|string|max:255',
@@ -322,8 +320,10 @@ class TeacherController extends Controller
             'company_id' => Auth::user()->company->id,
             'phone' => $request->phone,
             'ic_number' => $request->ic_number,
-            'allowance' => $request->allowance,
-            'allowance_type' => $request->allowance_type,
+            // Kadar elaun ditetapkan semasa guru di-assign ke kelas/pelajar.
+            // Nilai lalai dikekalkan untuk keserasian struktur jadual teachers lama.
+            'allowance' => 0,
+            'allowance_type' => 'per_session',
             'bank_name' => $request->bank_name,
             'bank_account_number' => $request->bank_account_number,
             'bank_account_holder' => $request->bank_account_holder,
@@ -352,8 +352,6 @@ class TeacherController extends Controller
             'bank_account_number' => 'required|string|max:100',
             'bank_account_holder' => 'required|string|max:100',
             'account_holders_ic_number' => 'nullable|string|max:20',
-            'allowance' => 'required|string|max:100',
-            'allowance_type' => 'required|in:per_hour,per_session,per_month',
         ]);
 
         // Update User (name & email)
@@ -366,8 +364,6 @@ class TeacherController extends Controller
         $teacher->update([
             'phone' => $request->phone,
             'ic_number' => $request->ic_number,
-            'allowance' => $request->allowance,
-            'allowance_type' => $request->allowance_type,
             'bank_name' => $request->bank_name,
             'bank_account_number' => $request->bank_account_number,
             'bank_account_holder' => $request->bank_account_holder,

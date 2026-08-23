@@ -56,6 +56,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Student\InvoiceController;
 use App\Http\Controllers\Admin\BankController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\StudentAttendanceController as AdminStudentAttendanceController;
 use App\Http\Controllers\SuperAdmin\WhatsAppReminderTemplateController;
 
 Route::group(['middleware' => ['localization']], function () {
@@ -158,6 +159,7 @@ Route::middleware(['auth', 'localization'])->group(function () {
 Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])->group(function () {
     Route::controller(WhatsAppReminderTemplateController::class)->prefix('whatsapp-reminder-templates')->name('superadmin.whatsapp-reminder-templates.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::post('/fonnte-token', 'updateFonnteToken')->name('fonnte-token.update');
         Route::get('/create', 'create')->name('create');
         Route::post('/', 'store')->name('store');
         Route::post('/{template}/send', 'send')->name('send');
@@ -179,11 +181,15 @@ Route::prefix('superadmin')->middleware(['auth', 'super admin', 'localization'])
         Route::get('/syarikat', 'index')->name('companies.index');
         Route::get('/syarikat/tambah', 'create')->name('companies.create');
         Route::post('/syarikat/tambah', 'store')->name('companies.store');
+        Route::get('/syarikat/{company}/account', 'account')->name('companies.account');
         Route::get('/syarikat/{company}', 'show')->name('companies.show');
         Route::get('/syarikat/{company}/edit', 'edit')->name('companies.edit');
         Route::put('/syarikat/{company}', 'update')->name('companies.update');
         Route::delete('/syarikat/{company}', 'destroy')->name('companies.destroy');
         Route::post('/companies/{id}/toggle-status', [CompanyController::class, 'toggleStatus'])->name('companies.toggleStatus');
+        Route::post('/syarikat/{company}/invoice-reminder', 'sendInvoiceReminder')->name('companies.invoice-reminder');
+        Route::post('/syarikat/{company}/manual-invoices', 'storeManualInvoice')->name('companies.manual-invoices.store');
+        Route::post('/syarikat/{company}/manual-payments', 'storeManualPayment')->name('companies.manual-payments.store');
         Route::post('/companies/{id}/login-as', [CompanyController::class, 'loginAs'])->name('companies.loginAs');
     });
     Route::resource('subscription-packages', SubscriptionPackageController::class);
@@ -266,6 +272,11 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
         Route::get('/kursus/{course}/edit', 'edit')->name('admin.courses.edit');
         Route::put('/kursus/{course}', 'update')->name('admin.courses.update');
         Route::delete('/kursus/{course}', 'destroy')->name('admin.courses.destroy');
+    });
+    Route::controller(AdminStudentAttendanceController::class)->prefix('student-attendances')->name('admin.student-attendances.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{attendance}/edit', 'edit')->name('edit');
+        Route::put('/{attendance}', 'update')->name('update');
     });
     Route::controller(SallaryController::class)->prefix('teachers/sallaries')->name('admin.teachers.sallaries.')->group(function () {
         Route::get('/', 'index')->name('index');
@@ -438,6 +449,7 @@ Route::prefix('teacher')->middleware(['auth', 'teacher', 'localization'])->group
         Route::post('/{classSchedule}/checkin', 'teacherCheckIn')->name('checkin');
         Route::post('/{classSchedule}/checkout', 'teacherCheckOut')->name('checkout');
         Route::post('/{classSchedule}/store', 'storeAttendance')->name('store');
+        Route::post('/{classSchedule}/students/{student}/clock', 'clockStudent')->name('student.clock');
     });
 
     Route::controller(TeachingReportController::class)->prefix('teaching-reports')->name('teacher.teaching-reports.')->group(function () {
@@ -472,6 +484,7 @@ Route::get('/student', [SDashController::class, 'index'])
     ->name('s.dashboard.index');
 
 Route::prefix('student')->middleware(['auth', 'student', 'localization'])->group(function () {
+    Route::get('/courses/{course}', [SDashController::class, 'courseDetail'])->name('student.courses.detail');
     Route::get('/monthly-reports', [MonthlyReportController::class, 'index'])->name('student.monthly-reports.index');
     Route::get('/monthly-reports/{report}/download', [MonthlyReportController::class, 'download'])->name('student.monthly-reports.download');
     Route::controller(TeacherReviewController::class)->prefix('feedbacks')->name('student.reviews.')->group(function () {

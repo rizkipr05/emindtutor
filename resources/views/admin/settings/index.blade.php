@@ -433,7 +433,6 @@
                                             <p class="text-xs text-emerald-700 mt-0.5">{{ __('admin/settings.banner_active_desc', ['time' => $gateway->updated_at?->timezone(config('app.timezone'))->format('d M Y, H:i') ?? '-']) }}</p>
                                         </div>
                                     </div>
-                                    <span class="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">{{ __('admin/settings.enabled') }} ({{ __('admin/settings.admin_company') }})</span>
                                 </div>
                             @elseif($gateway && !$gateway->is_active)
                                 <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
@@ -551,54 +550,6 @@
                     </div>
                 </form>
             </div>
-
-            @elseif($currentSectionKey === 'monthly_reports')
-            <div class="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-                <div class="border-b border-slate-200 px-6 py-5">
-                    <h2 class="text-xl font-bold text-slate-900">{{ __('reports.monthly.settings_title') }}</h2>
-                    <p class="mt-1 text-sm text-slate-500">{{ __('reports.monthly.settings_subtitle') }}</p>
-                </div>
-                <form method="POST" action="{{ route('admin.settings.update', ['section' => 'monthly_reports']) }}">
-                    @csrf
-                    <div class="space-y-4 p-6">
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <label for="monthly_report_schedule" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.collection_date') }}</label>
-                            <select id="monthly_report_schedule" name="monthly_report_schedule" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100">
-                                <option value="first_day" {{ old('monthly_report_schedule', $company->monthly_report_schedule) === 'first_day' ? 'selected' : '' }}>{{ __('reports.monthly.first_day') }}</option>
-                                <option value="last_day" {{ old('monthly_report_schedule', $company->monthly_report_schedule) === 'last_day' ? 'selected' : '' }}>{{ __('reports.monthly.last_day') }}</option>
-                                <option value="custom_day" {{ old('monthly_report_schedule', $company->monthly_report_schedule) === 'custom_day' ? 'selected' : '' }}>{{ __('reports.monthly.custom_day') }}</option>
-                            </select>
-                            @error('monthly_report_schedule')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                        </div>
-                        <div id="custom-report-day" class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <label for="monthly_report_custom_day" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.custom_day_label') }}</label>
-                            <input id="monthly_report_custom_day" type="number" name="monthly_report_custom_day" min="1" max="31" value="{{ old('monthly_report_custom_day', $company->monthly_report_custom_day) }}" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100">
-                            <p class="mt-1.5 text-xs text-slate-500">{{ __('reports.monthly.custom_day_help') }}</p>
-                            @error('monthly_report_custom_day')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <label for="monthly_report_pdf_title" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.pdf_title') }}</label>
-                            <input id="monthly_report_pdf_title" name="monthly_report_pdf_title" value="{{ old('monthly_report_pdf_title', $company->monthly_report_pdf_title) }}" placeholder="Monthly Learning Statement" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900">
-                        </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <label for="monthly_report_pdf_footer" class="mb-1 block text-sm font-semibold text-slate-900">{{ __('reports.monthly.pdf_footer') }}</label>
-                            <textarea id="monthly_report_pdf_footer" name="monthly_report_pdf_footer" rows="3" class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="Contoh: Dokumen ini dijana secara automatik.">{{ old('monthly_report_pdf_footer', $company->monthly_report_pdf_footer) }}</textarea>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between gap-4 border-t border-slate-200 px-6 py-4">
-                        <p class="text-sm text-slate-500">{{ __('reports.monthly.student_visibility') }}</p>
-                        <button type="submit" class="inline-flex items-center rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700">{{ __('reports.monthly.save') }}</button>
-                    </div>
-                </form>
-            </div>
-
-            <script>
-                const scheduleInput = document.getElementById('monthly_report_schedule');
-                const customDayInput = document.getElementById('custom-report-day');
-                const toggleCustomDay = () => customDayInput.classList.toggle('hidden', scheduleInput.value !== 'custom_day');
-                scheduleInput.addEventListener('change', toggleCustomDay);
-                toggleCustomDay();
-            </script>
 
             @elseif($currentSectionKey === 'security')
             {{-- ─── SECURITY: Change Password ─── --}}

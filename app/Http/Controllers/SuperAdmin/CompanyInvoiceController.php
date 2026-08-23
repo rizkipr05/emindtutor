@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CompanyInvoice;
 use App\Models\Company;
 use App\Models\SubscriptionPackage;
+use App\Models\SystemSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -24,23 +25,37 @@ class CompanyInvoiceController extends Controller
 
     public function receipt(CompanyInvoice $invoice)
     {
-        // Pastikan invoice sudah dibayar
-        if ($invoice->status_bayaran !== 'paid') {
-            abort(404, 'Receipt not available for unpaid invoices.');
-        }
-
-        // Load relationships yang diperlukan dari CompanyInvoice model
         $invoice->load([
             'company.user',
-            'package'
+            'package',
+            'payments',
         ]);
+        $paidAmount = (float) $invoice->payments->where('status', 'success')->sum('jumlah');
+        $balanceDue = max(0, (float) $invoice->jumlah - $paidAmount);
+        $invoiceSettings = [
+            'logo' => SystemSetting::value('invoice_pdf_logo'),
+            'company_name' => SystemSetting::value('invoice_pdf_company_name', 'Your Company Name'),
+            'tagline' => SystemSetting::value('invoice_pdf_tagline', ''),
+            'address' => SystemSetting::value('invoice_pdf_address', ''),
+            'phone' => SystemSetting::value('invoice_pdf_phone', ''),
+            'email' => SystemSetting::value('invoice_pdf_email', ''),
+            'website' => SystemSetting::value('invoice_pdf_website', ''),
+            'bank_name' => SystemSetting::value('invoice_pdf_bank_name', ''),
+            'bank_account' => SystemSetting::value('invoice_pdf_bank_account', ''),
+            'payment_note' => SystemSetting::value('invoice_pdf_payment_note', 'Please use the invoice number as your payment reference.'),
+            'important_note' => SystemSetting::value('invoice_pdf_important_note', 'Please keep this invoice as your payment reference.'),
+        ];
+
         // Generate PDF
         $pdf = \PDF::loadView('super-admin.invoices.receipt', [
             'invoice' => $invoice,
+            'paidAmount' => $paidAmount,
+            'balanceDue' => $balanceDue,
+            'invoiceSettings' => $invoiceSettings,
         ]);
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->download("{$invoice->nomor_invoice}-{$invoice->company->user->name}.pdf");
+        return $pdf->download("Invoice-{$invoice->nomor_invoice}.pdf");
     }   
 
     public function create($companyId)

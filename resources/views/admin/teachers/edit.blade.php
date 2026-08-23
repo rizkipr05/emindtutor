@@ -134,48 +134,6 @@
                     </div>
                 </div>
 
-                <!-- Payment Information Section -->
-                <div class="mb-8 border-t border-gray-200 pt-8">
-                    <div class="flex items-center mb-4">
-                        <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold text-gray-900">{{ __('admin/teachers/edit.allowance_info') }}</h3>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-1">
-                            <label class="block text-sm font-medium text-gray-700">
-                                {{ __('admin/teachers/edit.allowance_amount') }} <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <input type="number" 
-                                       step="0.01" 
-                                       name="allowance" 
-                                       value="{{ old('allowance', $teacher->allowance) }}"
-                                       class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                                       placeholder="{{ __('admin/teachers/edit.allowance_amount_placeholder') }}"
-                                       required>
-                                <span class="absolute left-3 top-2.5 text-gray-500 text-sm">RM</span>
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="block text-sm font-medium text-gray-700">
-                                {{ __('admin/teachers/edit.allowance_type') }} <span class="text-red-500">*</span>
-                            </label>
-                            <select name="allowance_type" 
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                                    required>
-                                <option value="">{{ __('admin/teachers/edit.allowance_type_placeholder') }}</option>
-                                <option value="per_session" {{ old('allowance_type', $teacher->allowance_type) == 'per_session' ? 'selected' : '' }}>{{ __('admin/teachers/edit.allowance_type_per_session') }}</option>
-                                <option value="per_hour" {{ old('allowance_type', $teacher->allowance_type) == 'per_hour' ? 'selected' : '' }}>{{ __('admin/teachers/edit.allowance_type_per_hour') }}</option>
-                                <option value="per_month" {{ old('allowance_type', $teacher->allowance_type) == 'per_month' ? 'selected' : '' }}>{{ __('admin/teachers/edit.allowance_type_per_month') }}</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Bank Information Section -->
                 <div class="mb-8 border-t border-gray-200 pt-8">
                     <div class="flex items-center mb-4">

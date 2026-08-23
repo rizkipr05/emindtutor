@@ -98,13 +98,10 @@ class AttendanceController extends Controller
         $activeStudents = $this->getActiveStudents($classSchedule);
 
         // Get existing student attendances for today
-        $existingAttendances = [];
-        if ($teacherAttendance) {
-            $existingAttendances = StudentAttendance::where('class_schedule_id', $classSchedule->id)
-                ->whereDate('attendance_date', $today)
-                ->get()
-                ->keyBy('user_id');
-        }
+        $existingAttendances = StudentAttendance::where('class_schedule_id', $classSchedule->id)
+            ->whereDate('attendance_date', $today)
+            ->get()
+            ->keyBy('user_id');
 
         return view('teacher.attendance.take', compact(
             'classSchedule', 
@@ -357,6 +354,45 @@ class AttendanceController extends Controller
 
         return redirect()->route('teacher.attendance.index')
             ->with('success', __('teacher/attendance.attendance_saved_success'));
+    }
+
+    public function clockStudent(Request $request, $classScheduleId, Student $student)
+    {
+        $request->validate(['attendance_photo' => ['required', 'image', 'max:5120']]);
+
+        $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
+        $classSchedule = ClassSchedule::where('id', $classScheduleId)
+            ->where('teacher_id', $teacher->id)
+            ->firstOrFail();
+        $today = Carbon::today('Asia/Kuala_Lumpur');
+
+        abort_unless($classSchedule->students()->whereKey($student->id)->exists(), 404);
+
+        $photoPath = $request->file('attendance_photo')->store('student_attendances', 'public');
+
+        $attendance = StudentAttendance::firstOrCreate([
+            'user_id' => $student->user_id,
+            'class_schedule_id' => $classSchedule->id,
+            'attendance_date' => $today,
+        ], [
+            'status' => 'present',
+            'attendance_time' => Carbon::now('Asia/Kuala_Lumpur')->format('H:i:s'),
+            'attendance_photo' => $photoPath,
+        ]);
+
+        if ($attendance->wasRecentlyCreated) {
+            return back()->with('success', $student->user->name . ' clock in pada ' . $attendance->attendance_time . '.');
+        }
+
+        if (! $attendance->check_out_time) {
+            $attendance->update([
+                'check_out_time' => Carbon::now('Asia/Kuala_Lumpur')->format('H:i:s'),
+                'attendance_photo' => $photoPath,
+            ]);
+            return back()->with('success', $student->user->name . ' clock out pada ' . $attendance->check_out_time . '.');
+        }
+
+        return back()->with('error', $student->user->name . ' sudah clock in dan clock out untuk sesi hari ini.');
     }
 
     private function getClassStatus($classSchedule)

@@ -35,6 +35,13 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="mb-6 flex items-center rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+                <svg class="mr-3 h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.5a.75.75 0 00-1.5 0v4a.75.75 0 001.5 0v-4zm0 7a.75.75 0 00-1.5 0v.01a.75.75 0 001.5 0V13.5z" clip-rule="evenodd"/></svg>
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($companies as $company)
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
@@ -103,6 +110,7 @@
                                     {{ \Carbon\Carbon::parse($company->latestPaidInvoice->tarikh_tamat)->format('d M Y') }}
                                 </div>
                             @endif
+
                         </div>
                     </div>
 

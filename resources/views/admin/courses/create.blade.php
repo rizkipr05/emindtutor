@@ -378,15 +378,14 @@
                         <!-- Registrasi Link -->
                         <div class="md:col-span-2">
                             <label for="registration_link" class="block text-sm font-semibold text-gray-700 mb-2">
-                                {{ __('admin/courses/create.registration_link') }} <span class="text-red-500">*</span>
+                                {{ __('admin/courses/create.registration_link') }} <span class="text-gray-500 font-normal">(opsional)</span>
                             </label>
                             <input type="url" 
                                 id="registration_link" 
                                 name="registration_link" 
                                 value="{{ old('registration_link', $course->registration_link ?? '') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors {{ $errors->has('registration_link') ? 'border-red-500 bg-red-50' : '' }}" 
-                                placeholder="{{ __('admin/courses/create.registration_link_placeholder') }}"
-                                required>
+                                placeholder="{{ __('admin/courses/create.registration_link_placeholder') }}">
                             <p class="mt-1 text-sm text-gray-500">{{ __('admin/courses/create.registration_link_note') }}</p>
                             
                             @error('registration_link')

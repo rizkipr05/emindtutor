@@ -2,24 +2,31 @@
 
 namespace App\Services;
 
+use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Http;
 
 class FonnteService
 {
-    public static function sendMessage($target, $message)
+    public static function sendMessage($target, $message, ?string $attachmentUrl = null)
     {
-        $token = config('services.fonnte.token');
+        $token = SystemSetting::fonnteToken() ?: config('services.fonnte.token');
 
         if (! $token) {
             throw new \RuntimeException('Fonnte token has not been configured.');
         }
 
+        $payload = [
+            'target'  => $target,
+            'message' => $message,
+        ];
+
+        if ($attachmentUrl) {
+            $payload['url'] = $attachmentUrl;
+        }
+
         $response = Http::timeout(15)->withHeaders([
             'Authorization' => $token,
-        ])->post('https://api.fonnte.com/send', [
-            'target'  => $target,     // nomor tujuan
-            'message' => $message,    // isi pesan
-        ]);
+        ])->post('https://api.fonnte.com/send', $payload);
 
         $response->throw();
 

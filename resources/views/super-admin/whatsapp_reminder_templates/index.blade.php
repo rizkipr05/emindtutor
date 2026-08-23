@@ -7,6 +7,20 @@
         <div><h1 class="text-2xl font-bold">{{ __('super_admin/reminder_templates.title') }}</h1><p class="text-gray-500">{{ __('super_admin/reminder_templates.subtitle') }}</p></div>
         <a href="{{ route('superadmin.whatsapp-reminder-templates.create', ['audience' => $audience]) }}" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">+ {{ __('super_admin/reminder_templates.create') }}</a>
     </div>
+    <div class="mb-5 rounded-xl border {{ $hasFonnteToken ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }} p-4">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h2 class="font-semibold text-gray-900">Token Fonnte untuk WhatsApp Reminder</h2>
+                <p class="mt-1 text-sm {{ $hasFonnteToken ? 'text-emerald-800' : 'text-amber-800' }}">{{ $hasFonnteToken ? 'Token telah dikonfigurasi dan disimpan secara terenkripsi.' : 'Token belum dikonfigurasi. Reminder WhatsApp tidak dapat dihantar.' }}</p>
+            </div>
+            <form method="POST" action="{{ route('superadmin.whatsapp-reminder-templates.fonnte-token.update', ['audience' => $audience]) }}" class="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+                @csrf
+                <input type="password" name="fonnte_token" required autocomplete="new-password" placeholder="{{ $hasFonnteToken ? 'Masukkan token baharu untuk ganti' : 'Masukkan token Fonnte' }}" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm lg:w-80">
+                <button type="submit" class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">{{ $hasFonnteToken ? 'Tukar Token' : 'Simpan Token' }}</button>
+            </form>
+        </div>
+        @error('fonnte_token')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+    </div>
     <div class="flex gap-2 mb-5">@foreach($labels as $key => $label)<a href="{{ route('superadmin.whatsapp-reminder-templates.index', ['audience' => $key]) }}" class="px-4 py-2 rounded-lg {{ $audience === $key ? 'bg-teal-600 text-white' : 'bg-white border text-gray-600' }}">{{ __('super_admin/reminder_templates.tab', ['audience' => $label]) }}</a>@endforeach</div>
     @if(session('success'))<div class="mb-4 px-4 py-3 rounded border border-green-300 bg-green-100 text-green-800">{{ session('success') }}</div>@endif
     @if(session('error'))<div class="mb-4 px-4 py-3 rounded border border-red-300 bg-red-100 text-red-800">{{ session('error') }}</div>@endif

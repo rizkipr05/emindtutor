@@ -78,7 +78,7 @@ class PaymentController extends Controller
         $companyId = $company->id;
         $packageId = $request->package_id;
         $package   = SubscriptionPackage::findOrFail($packageId);
-        $harga     = $package->harga;
+        $harga     = $package->pricing_per_student ? 0 : $package->harga;
 
         if ($package->is_trial && $this->hasUsedTrial($companyId)) {
             return redirect()->route('admin.subscribe.index')
@@ -110,6 +110,43 @@ class PaymentController extends Controller
         // Buat External ID Unik
         $externalId = "EMT-{$todayStr}-{$sequence}-" . time();
         $nomorInvoice = "INV-{$todayStr}-{$sequence}";
+
+        // Pakej harga per pelajar tidak dicaj ketika dipilih. Akses bulan pertama
+        // diberikan percuma; bil pertama akan dijana pada awal bulan berikutnya
+        // berdasarkan bilangan pelajar yang masih aktif.
+        if ($package->pricing_per_student) {
+            $periodStart = Carbon::today();
+            $periodEnd = Carbon::today()->endOfMonth();
+
+            $invoice = CompanyInvoice::create([
+                'company_id' => $companyId,
+                'package_id' => $package->id,
+                'nomor_invoice' => $nomorInvoice . '-FIRST-MONTH',
+                'external_id' => $externalId . '-FIRST-MONTH',
+                'jumlah' => 0,
+                'status_bayaran' => 'paid',
+                'status' => 'active',
+                'tarikh_terbit' => $periodStart,
+                'tarikh_tamat' => $periodEnd,
+                'billing_period_start' => $periodStart,
+                'billing_period_end' => $periodEnd,
+                'active_student_count' => 0,
+            ]);
+
+            $company->update(['status' => 1]);
+            Subscription::create([
+                'company_id' => $companyId,
+                'package_id' => $package->id,
+                'start_date' => $periodStart,
+                'end_date' => $periodEnd,
+                'status' => 'active',
+            ]);
+
+            return redirect()->route('a.dashboard.index')->with(
+                'success',
+                'Pakej harga per pelajar telah dipilih. Bulan pertama adalah percuma; invoice akan dijana pada awal bulan berikutnya.'
+            );
+        }
 
         // 2. Handle TRIAL (Tidak perlu ke payment gateway)
         if ($package->is_trial) {
@@ -292,7 +329,28 @@ class PaymentController extends Controller
                         ->latest()
                         ->first();
 
+        $package = SubscriptionPackage::find($packageId);
         $startDate = Carbon::today();
+
+        if ($package?->pricing_per_student) {
+            $endDate = Carbon::today()->endOfMonth();
+
+            Subscription::create([
+                'company_id' => $companyId,
+                'package_id' => $packageId,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'status' => 'active',
+            ]);
+
+            CompanyInvoice::where('company_id', $companyId)
+                ->where('package_id', $packageId)
+                ->latest()
+                ->first()
+                ?->update(['tarikh_tamat' => $endDate]);
+
+            return;
+        }
         
         if ($subscription && $subscription->end_date >= Carbon::today()) {
             $startDate = Carbon::parse($subscription->end_date)->addDay();

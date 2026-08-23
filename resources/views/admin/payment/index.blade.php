@@ -18,12 +18,15 @@
                     @endif
                 </p>
                 
-                <p class="text-gray-600">
-                    {{ __('admin/payment/index.package.price') }}: 
-                    <span class="font-semibold text-gray-900">
-                        RM {{ number_format($package->harga, 2) }}
-                    </span>
-                </p>
+                @if($package->pricing_per_student)
+                    <p class="text-gray-600">Harga per pelajar aktif: <span class="font-semibold text-gray-900">RM {{ number_format($package->harga_per_pelajar, 2) }}</span></p>
+                    <p class="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">Bulan pertama percuma. Invoice akan dikeluarkan pada awal bulan berikutnya berdasarkan jumlah pelajar aktif.</p>
+                @else
+                    <p class="text-gray-600">
+                        {{ __('admin/payment/index.package.price') }}:
+                        <span class="font-semibold text-gray-900">RM {{ number_format($package->harga, 2) }}</span>
+                    </p>
+                @endif
                 
                 <p class="text-gray-600">
                     {{ __('admin/payment/index.package.duration') }}: 
@@ -66,6 +69,7 @@
             <input type="hidden" name="package_id" value="{{ $package->id }}">
 
             <!-- Diskon -->
+            @unless($package->pricing_per_student)
             <div class="mb-6">
                 <h3 class="text-lg font-semibold mb-2">{{ __('admin/payment/index.discount.title') }}</h3>
 
@@ -96,6 +100,7 @@
                     </div>
                 @endif
             </div>
+            @endunless
 
             <!-- Tombol -->
             <div class="flex justify-between items-center">
@@ -103,7 +108,7 @@
                     {{ __('admin/payment/index.buttons.cancel') }}
                 </a>
                 <button type="submit" class="px-6 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700">
-                    {{ __('admin/payment/index.buttons.pay') }}
+                    {{ $package->pricing_per_student ? 'Pilih Pakej' : __('admin/payment/index.buttons.pay') }}
                 </button>
             </div>
         </form>

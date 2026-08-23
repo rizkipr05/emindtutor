@@ -116,14 +116,16 @@
                             class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pr-10 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none appearance-none bg-white cursor-pointer" 
                             required>
                             @if(auth()->user()->role === 'super admin')
-                                {{-- Super Admin: hanya bisa kirim ke All Company --}}
-                                <option value="companies">All Company</option>
+                                <option value="all" {{ old('target_audience', $defaultAudience ?? 'all') === 'all' ? 'selected' : '' }}>All Users</option>
+                                <option value="companies" {{ old('target_audience', $defaultAudience ?? 'all') === 'companies' ? 'selected' : '' }}>All Companies</option>
+                                <option value="teachers" {{ old('target_audience', $defaultAudience ?? 'all') === 'teachers' ? 'selected' : '' }}>All Teachers</option>
+                                <option value="students" {{ old('target_audience', $defaultAudience ?? 'all') === 'students' ? 'selected' : '' }}>All Students</option>
                             @elseif(auth()->user()->role === 'teacher')
                                 <option value="students">Students</option>
                             @else
                                 {{-- Role lain: hanya bisa kirim ke Teachers dan Students --}}
-                                <option value="teachers">Teachers</option>
-                                <option value="students">Students</option>
+                                <option value="teachers" {{ old('target_audience') === 'teachers' ? 'selected' : '' }}>Teachers</option>
+                                <option value="students" {{ old('target_audience') === 'students' ? 'selected' : '' }}>Students</option>
                             @endif
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">

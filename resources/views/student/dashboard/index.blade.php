@@ -193,7 +193,7 @@
                                 @endif
                                 
                                 <!-- Link to course detail or learning page -->
-                                    <a href="#" 
+                                    <a href="{{ route('student.courses.detail', $course) }}"
                                    class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200">
                                     {{ __('student/dashboard/dashboard.view_detail') }}
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

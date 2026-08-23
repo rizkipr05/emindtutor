@@ -9,6 +9,10 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\CompanyInvoice;
 use App\Models\StudentInvoice;
+use App\Models\CompanyPayment;
+use App\Mail\CompanySubscriptionInvoiceMail;
+use App\Services\WhatsAppNotificationService;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -95,7 +99,7 @@ class CompanyController extends Controller
 
     public function show(Company $company)
     {
-        $company->load('user');
+        $company->load(['user', 'invoices.payments']);
 
         // ambil semua student_id dari company ini
         $studentIds = $company->students->pluck('id');
@@ -110,7 +114,111 @@ class CompanyController extends Controller
             ->where('status_bayaran', 'paid')
             ->sum('jumlah'); // pastikan kolom jumlah ada di tabel student_invoices
 
-        return view('super-admin.syarikat.show', compact('company', 'totalPaidInvoices', 'totalRevenue'));
+        $accountInvoices = $company->invoices->sortByDesc(fn (CompanyInvoice $invoice) => $invoice->tarikh_terbit ?? $invoice->created_at);
+        $accountPayments = CompanyPayment::with('invoice')
+            ->whereHas('invoice', fn ($query) => $query->where('company_id', $company->id))
+            ->orderByDesc('dibayar_pada')
+            ->orderByDesc('id')
+            ->get();
+        $totalInvoiceAmount = (float) $accountInvoices->sum('jumlah');
+        $totalPaymentAmount = (float) $accountPayments->where('status', 'success')->sum('jumlah');
+        $accountBalance = round($totalInvoiceAmount - $totalPaymentAmount, 2);
+
+        return view('super-admin.syarikat.show', compact(
+            'company', 'totalPaidInvoices', 'totalRevenue', 'accountInvoices', 'accountPayments',
+            'totalInvoiceAmount', 'totalPaymentAmount', 'accountBalance'
+        ));
+    }
+
+    public function account(Company $company)
+    {
+        $company->load(['user', 'invoices.payments']);
+        $accountInvoices = $company->invoices->sortByDesc(fn (CompanyInvoice $invoice) => $invoice->tarikh_terbit ?? $invoice->created_at);
+        $accountPayments = CompanyPayment::with('invoice')
+            ->whereHas('invoice', fn ($query) => $query->where('company_id', $company->id))
+            ->orderByDesc('dibayar_pada')->orderByDesc('id')->get();
+        $totalInvoiceAmount = (float) $accountInvoices->sum('jumlah');
+        $totalPaymentAmount = (float) $accountPayments->where('status', 'success')->sum('jumlah');
+        $accountBalance = round($totalInvoiceAmount - $totalPaymentAmount, 2);
+
+        return view('super-admin.syarikat.account', compact(
+            'company', 'accountInvoices', 'accountPayments', 'totalInvoiceAmount', 'totalPaymentAmount', 'accountBalance'
+        ));
+    }
+
+    public function storeManualInvoice(Request $request, Company $company)
+    {
+        $data = $request->validate([
+            'description' => ['required', 'string', 'max:1000'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'due_date' => ['required', 'date'],
+        ]);
+
+        $number = 'MAN-' . now()->format('Ymd') . '-' . str_pad(
+            (string) (CompanyInvoice::whereDate('created_at', today())->count() + 1), 4, '0', STR_PAD_LEFT
+        );
+
+        $totalInvoiced = (float) $company->invoices()->sum('jumlah');
+        $totalPaid = (float) CompanyPayment::whereHas('invoice', fn ($query) => $query->where('company_id', $company->id))
+            ->where('status', 'success')
+            ->sum('jumlah');
+        $availableCredit = max(0, $totalPaid - $totalInvoiced);
+        $isCoveredByCredit = $availableCredit >= (float) $data['amount'];
+
+        CompanyInvoice::create([
+            'company_id' => $company->id,
+            'nomor_invoice' => $number,
+            'jumlah' => $data['amount'],
+            'status_bayaran' => $isCoveredByCredit ? 'paid' : 'upcoming',
+            'status' => 'inactive',
+            'tarikh_terbit' => today(),
+            'tarikh_tamat' => $data['due_date'],
+            'invoice_type' => 'manual',
+            'description' => $data['description'],
+        ]);
+
+        return back()->with('success', 'Invoice manual berjaya dibuat dan masuk ke Invoice History.');
+    }
+
+    public function storeManualPayment(Request $request, Company $company)
+    {
+        $data = $request->validate([
+            'company_invoice_id' => ['required', 'integer'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'payment_method' => ['required', 'in:transfer_bank,cash,cheque,other'],
+            'paid_at' => ['required', 'date'],
+            'reference_number' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $invoice = $company->invoices()->findOrFail($data['company_invoice_id']);
+
+        DB::transaction(function () use ($company, $invoice, $data) {
+            $totalInvoiceAmount = (float) $company->invoices()->sum('jumlah');
+            $totalPaymentBefore = (float) CompanyPayment::whereHas('invoice', fn ($query) => $query->where('company_id', $company->id))
+                ->where('status', 'success')
+                ->sum('jumlah');
+            $balanceAfter = round($totalInvoiceAmount - ($totalPaymentBefore + (float) $data['amount']), 2);
+
+            CompanyPayment::create([
+                'company_invoice_id' => $invoice->id,
+                'jumlah' => $data['amount'],
+                'status' => 'success',
+                'transaction_id' => $data['reference_number'] ?: 'PAY-' . now()->format('YmdHis'),
+                'reference_number' => $data['reference_number'],
+                'payment_method' => $data['payment_method'],
+                'notes' => $data['notes'],
+                'balance_after' => $balanceAfter,
+                'dibayar_pada' => $data['paid_at'],
+            ]);
+
+            $invoicePaid = (float) $invoice->payments()->where('status', 'success')->sum('jumlah') + (float) $data['amount'];
+            if ($invoicePaid >= (float) $invoice->jumlah) {
+                $invoice->update(['status_bayaran' => 'paid']);
+            }
+        });
+
+        return back()->with('success', 'Pembayaran manual berjaya direkodkan.');
     }
 
     public function edit(Company $company)
@@ -202,6 +310,72 @@ class CompanyController extends Controller
         $company->save();
 
         return redirect()->back()->with('success', 'Status syarikat berjaya dikemaskini.');
+    }
+
+    public function sendInvoiceReminder(Request $request, Company $company)
+    {
+        $data = $request->validate(['channel' => ['required', 'in:whatsapp,email']]);
+        $invoice = $company->invoices()
+            ->latest('tarikh_terbit')
+            ->latest('created_at')
+            ->first();
+
+        if (! $invoice) {
+            return back()->with('error', 'Tiada rekod invoice untuk syarikat ini.');
+        }
+
+        try {
+            if ($data['channel'] === 'email') {
+                $email = $company->user?->email ?: $company->pic_email ?: $company->email_syarikat;
+                if (! $email) {
+                    return back()->with('error', 'Email syarikat belum ditetapkan.');
+                }
+
+                Mail::to($email)->send(new CompanySubscriptionInvoiceMail($invoice));
+                logger()->info('Manual company invoice email sent.', [
+                    'company_id' => $company->id,
+                    'invoice_id' => $invoice->id,
+                    'recipient' => $email,
+                ]);
+            } else {
+                if (! $company->no_telefon) {
+                    return back()->with('error', 'Nombor WhatsApp syarikat belum ditetapkan.');
+                }
+
+                $message = "Makluman invoice langganan\n\n"
+                    . "Invoice: {$invoice->nomor_invoice}\n"
+                    . 'Jumlah: RM ' . number_format($invoice->jumlah, 2) . "\n"
+                    . 'Status: ' . ucfirst($invoice->status_bayaran)
+                    . ($invoice->payment_url ? "\nBayar di sini: {$invoice->payment_url}" : '');
+
+                $sent = app(WhatsAppNotificationService::class)->sendOnce(
+                    $company,
+                    'manual_company_invoice_reminder_' . $invoice->id . '_' . now()->format('YmdHisv'),
+                    $company->no_telefon,
+                    $message
+                );
+
+                if (! $sent) {
+                    return back()->with('error', 'Peringatan WhatsApp gagal dihantar. Semak nombor dan token Fonnte.');
+                }
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+            logger()->error('Manual company invoice reminder failed.', [
+                'company_id' => $company->id,
+                'invoice_id' => $invoice->id,
+                'channel' => $data['channel'],
+                'error' => $exception->getMessage(),
+            ]);
+
+            $message = $data['channel'] === 'email'
+                ? 'Email gagal dihantar. SMTP tidak dapat dihubungkan: ' . $exception->getMessage()
+                : 'Peringatan WhatsApp gagal dihantar. Semak nombor dan token Fonnte.';
+
+            return back()->with('error', $message);
+        }
+
+        return back()->with('success', 'Peringatan invoice berjaya dihantar melalui ' . strtoupper($data['channel']) . '.');
     }
 
     public function loginAs($id)

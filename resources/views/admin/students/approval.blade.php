@@ -127,8 +127,7 @@
                                     <option value="">{{ __('admin/students/approval.select_teacher_default') }}</option>
                                     @foreach($teachers as $teacher)
                                         <option value="{{ $teacher->id }}">
-                                            {{ $teacher->user->name }} — {{ __('admin/students/approval.rate') }}: RM{{ number_format($teacher->allowance_rate, 2) }}
-                                            — {{ $teacher->students_count }} {{ __('admin/students/approval.students') }}
+                                            {{ $teacher->user->name }} — {{ $teacher->students_count }} {{ __('admin/students/approval.students') }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -237,12 +236,12 @@
                     {{-- Allowance & Link Group Row --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('admin/students/approval.labels.allowance') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('admin/students/approval.labels.allowance') }} <span class="text-red-500">*</span></label>
                             <div class="flex space-x-2">
-                                <input type="number" step="0.01" name="allowance" value="{{ old('allowance') }}"
+                                <input type="number" step="0.01" min="0" name="allowance" value="{{ old('allowance') }}" required
                                     class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500" 
                                     placeholder="20.00">
-                                <select name="allowance_type" class="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                                <select name="allowance_type" required class="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                                     <option value="">{{ __('admin/students/approval.labels.select_type') }}</option>
                                     <option value="per_session">{{ __('admin/students/approval.allowance_types.per_session') }}</option>
                                     <option value="per_hour">{{ __('admin/students/approval.allowance_types.per_hour') }}</option>
