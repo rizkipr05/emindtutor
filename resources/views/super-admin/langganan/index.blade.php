@@ -14,26 +14,7 @@
                     <div class="w-16 sm:w-20 lg:w-24 h-1 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full"></div>
                 </div>
                 
-                @php
-                    $sub = \App\Models\SubAktif::find(1);
-                @endphp
-                <form action="{{ route('sub-aktif.toggle') }}" method="POST">
-                    @csrf
-                    <button type="submit" 
-                        class="inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 
-                            {{ $sub && $sub->pricing_per_student 
-                                ? 'bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600' 
-                                : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600' }} 
-                            text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 
-                            transition-all duration-300 font-semibold text-sm sm:text-base group">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:rotate-180 transition-transform duration-300" 
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                        </svg>
-                        {{ $sub && $sub->pricing_per_student ? 'Gunakan Harga Tetap' : 'Jadikan Per Student' }}
-                    </button>
-                </form>
+                <!-- Tombol 'Jadikan Per Student' dihapus sesuai permintaan -->
 
 
                 <a href="{{ route('subscription-packages.create') }}" 
