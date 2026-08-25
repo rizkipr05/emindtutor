@@ -106,12 +106,34 @@ class AttendanceController extends Controller
             ->get()
             ->groupBy('student_id');
 
+        $classStart = $scheduleDayToday?->jam_mulai
+            ? Carbon::parse($today->toDateString() . ' ' . $scheduleDayToday->jam_mulai, 'Asia/Kuala_Lumpur')
+            : null;
+        $attendanceSummary = [
+            'present' => 0,
+            'late' => 0,
+            'absent' => 0,
+        ];
+
+        foreach ($activeStudents as $student) {
+            $firstClockIn = ($existingAttendances->get($student->id) ?? collect())->min('clock_in_at');
+
+            if (! $firstClockIn) {
+                $attendanceSummary['absent']++;
+            } elseif ($classStart && Carbon::parse($firstClockIn)->greaterThan($classStart)) {
+                $attendanceSummary['late']++;
+            } else {
+                $attendanceSummary['present']++;
+            }
+        }
+
         return view('teacher.attendance.take', compact(
             'classSchedule',
             'activeStudents',
             'teacherAttendance',
             'existingAttendances',
             'scheduleDayToday',
+            'attendanceSummary',
             'status'
         ));
     }

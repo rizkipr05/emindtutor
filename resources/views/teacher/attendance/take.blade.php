@@ -7,9 +7,9 @@
     @php
         $isCheckedIn = (bool) $teacherAttendance?->check_in;
         $isCheckedOut = (bool) $teacherAttendance?->check_out;
-        $presentCount = $existingAttendances->where('status', 'present')->count();
-        $lateCount = $existingAttendances->where('status', 'late')->count();
-        $absentCount = $existingAttendances->where('status', 'absent')->count();
+        $presentCount = $attendanceSummary['present'];
+        $lateCount = $attendanceSummary['late'];
+        $absentCount = $attendanceSummary['absent'];
     @endphp
 
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -71,8 +71,10 @@
                         <p class="mt-1 text-sm text-slate-500">{{ app()->getLocale() === 'en' ? 'Click View to open student clocking records.' : 'Tekan Lihat untuk buka rekod clocking pelajar.' }}</p>
                     </div>
                     <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="search" x-model="search" placeholder="{{ app()->getLocale() === 'en' ? 'Search student name...' : 'Cari nama pelajar...' }}" class="w-full rounded-lg border-slate-300 py-2 pl-9 pr-3 text-sm sm:w-56">
+                        <svg aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.8-3.8"></path>
+                        </svg>
+                        <input type="search" x-model.debounce.150ms="search" aria-label="{{ app()->getLocale() === 'en' ? 'Search student name' : 'Cari nama pelajar' }}" placeholder="{{ app()->getLocale() === 'en' ? 'Search student name...' : 'Cari nama pelajar...' }}" class="w-full appearance-none rounded-lg border-slate-300 py-2 pl-10 pr-3 text-sm sm:w-56">
                     </div>
                 </div>
 
@@ -109,7 +111,7 @@
                                             $lastClockTime = '-';
                                         }
                                     @endphp
-                                    <tr x-show="'{{ strtolower(addslashes($student->user->name)) }}'.includes(search.toLowerCase())" class="hover:bg-slate-50">
+                                    <tr data-student-name="{{ $student->user->name }}" x-show="matchesSearch($el.dataset.studentName)" class="hover:bg-slate-50">
                                         <td class="px-4 py-4 text-slate-500">{{ $loop->iteration }}</td>
                                         <td class="px-4 py-4">
                                             <div class="flex items-center gap-3">
@@ -178,7 +180,9 @@
 
                     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                            <i class="fas fa-chart-pie mr-2 text-purple-600"></i>{{ __('teacher/attendance.summary') }}
+                            <svg aria-hidden="true" class="mr-2 inline-block h-5 w-5 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11 2.05A10 10 0 1 0 21.95 13H11V2.05Zm2 0V11h8.95A10.01 10.01 0 0 0 13 2.05Z"></path>
+                            </svg>{{ __('teacher/attendance.summary') }}
                         </h3>
                         
                         <div class="space-y-3 text-sm">
@@ -266,6 +270,10 @@ function attendanceManager() {
 
         get statusTitle() {
             return this.statusType === 'late' ? 'Tandai Late' : 'Tandai Absent';
+        },
+
+        matchesSearch(name) {
+            return name.toLocaleLowerCase().includes(this.search.trim().toLocaleLowerCase());
         },
 
         async teacherCheckIn() {
