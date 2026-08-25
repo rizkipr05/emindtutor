@@ -74,6 +74,11 @@ class ClassSchedule extends Model
         return $this->hasMany(StudentAttendance::class);
     }
 
+    public function studentClockingSessions()
+    {
+        return $this->hasMany(StudentClockingSession::class);
+    }
+
     public function classScheduleStudent()
     {
         return $this->hasMany(ClassScheduleStudent::class);

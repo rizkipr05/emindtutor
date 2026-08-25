@@ -7,7 +7,7 @@ return [
     'course_setting' => 'Course Setting',
     'teacher_management' => 'Teacher Management',
     'all_teacher' => 'All Teachers',
-    'allowance' => 'Allowance',
+    'payroll' => 'Payroll',
     'rules' => 'Rules',
     'student_management' => 'Student Management',
     'all_student' => 'All Students',

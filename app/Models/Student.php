@@ -61,6 +61,11 @@ class Student extends Model
         return $this->hasMany(TeachingReport::class);
     }
 
+    public function clockingSessions()
+    {
+        return $this->hasMany(StudentClockingSession::class);
+    }
+
     public function hasActiveCourseAccess(int $courseId, ?Carbon $date = null): bool
     {
         $date = $date ?: Carbon::now('Asia/Kuala_Lumpur');

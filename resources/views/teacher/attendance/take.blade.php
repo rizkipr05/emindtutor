@@ -3,19 +3,24 @@
 @section('title', __('teacher/attendance.take_title', ['class' => $classSchedule->course->localized_name]))
 
 @section('content')
-<div class="max-w-6xl mx-auto" x-data="attendanceManager()">
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800">{{ $classSchedule->course->localized_name }}</h1>
-                <p class="text-gray-600 mt-1">{{ __('teacher/attendance.attendance_date', ['date' => Carbon\Carbon::now()->locale(app()->getLocale() === 'en' ? 'en' : 'ms')->translatedFormat('d M Y')]) }}</p>
-            </div>
-            <a href="{{ route('teacher.attendance.index') }}" 
-               class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition duration-200">
-                <i class="fas fa-arrow-left mr-2"></i>{{ __('teacher/attendance.back') }}
-            </a>
+<div class="w-full" x-data="attendanceManager()">
+    @php
+        $isCheckedIn = (bool) $teacherAttendance?->check_in;
+        $isCheckedOut = (bool) $teacherAttendance?->check_out;
+        $presentCount = $existingAttendances->where('status', 'present')->count();
+        $lateCount = $existingAttendances->where('status', 'late')->count();
+        $absentCount = $existingAttendances->where('status', 'absent')->count();
+    @endphp
+
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+            <p class="mb-1 text-sm font-semibold uppercase tracking-wide text-teal-600">{{ __('teacher/attendance.attendance_date', ['date' => Carbon\Carbon::now('Asia/Kuala_Lumpur')->locale(app()->getLocale() === 'en' ? 'en' : 'ms')->translatedFormat('d M Y')]) }}</p>
+            <h1 class="text-3xl font-bold text-slate-900">{{ $classSchedule->nama_kelas }}</h1>
+            <p class="mt-1 text-sm text-slate-500">{{ $classSchedule->course?->localized_name }}</p>
         </div>
+        <a href="{{ route('teacher.attendance.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+            <i class="fas fa-arrow-left mr-2"></i>{{ __('teacher/attendance.back') }}
+        </a>
     </div>
 
     @if(session('success'))
@@ -30,68 +35,109 @@
         </div>
     @endif
 
-    <!-- Main Content -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Student Attendance Form -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-4">
-                        <i class="fas fa-users mr-2 text-blue-600"></i>{{ __('teacher/attendance.students_list_title') }}
-                    </h2>
+    <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full {{ $isCheckedOut ? 'bg-slate-100 text-slate-600' : ($isCheckedIn ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600') }}"><i class="fas {{ $isCheckedOut ? 'fa-flag-checkered' : ($isCheckedIn ? 'fa-check-circle' : 'fa-clock') }} text-xl"></i></div>
+                <div>
+                    <h2 class="font-bold text-slate-900">{{ __('teacher/attendance.teacher_status_title') }}</h2>
+                    <p class="text-sm text-slate-500">
+                        @if($isCheckedOut) Clock out {{ $teacherAttendance->check_out->format('H:i') }}
+                        @elseif($isCheckedIn) Clock in {{ $teacherAttendance->check_in->format('H:i') }}
+                        @else {{ __('teacher/attendance.not_checked_in') }}
+                        @endif
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                @if(! $isCheckedIn)
+                    <button @click="teacherCheckIn()" :disabled="teacherBusy" class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:bg-slate-400"><i class="fas fa-sign-in-alt mr-2"></i><span x-text="teacherBusy ? 'Memproses…' : '{{ __('teacher/attendance.check_in_button') }}'"></span></button>
+                @elseif(! $isCheckedOut)
+                    <button @click="openTeacherCheckout()" class="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700"><i class="fas fa-sign-out-alt mr-2"></i>{{ __('teacher/attendance.check_out_button') }}</button>
+                @else
+                    <span class="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-600"><i class="fas fa-check mr-2"></i>{{ __('teacher/attendance.class_finished') }}</span>
+                @endif
+            </div>
+        </div>
+        <p x-show="teacherError" x-text="teacherError" class="mt-3 text-sm text-red-600"></p>
+    </section>
 
-                    @if($activeStudents->count() > 0)
-                        <p class="mb-5 text-sm text-slate-500">Gunakan Foto & Clock untuk pelajar hadir. Gunakan Late atau Absent dan nyatakan sebab untuk rekod yang memerlukan penjelasan.</p>
-                        <div class="space-y-4">
+    <div class="attendance-content-grid">
+        <div class="min-w-0">
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">{{ app()->getLocale() === 'en' ? 'Student List' : 'Senarai Pelajar' }}</h2>
+                        <p class="mt-1 text-sm text-slate-500">{{ app()->getLocale() === 'en' ? 'Click View to open student clocking records.' : 'Tekan Lihat untuk buka rekod clocking pelajar.' }}</p>
+                    </div>
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="search" x-model="search" placeholder="{{ app()->getLocale() === 'en' ? 'Search student name...' : 'Cari nama pelajar...' }}" class="w-full rounded-lg border-slate-300 py-2 pl-9 pr-3 text-sm sm:w-56">
+                    </div>
+                </div>
+
+                @if($activeStudents->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <tr>
+                                    <th class="w-12 px-4 py-3">#</th>
+                                    <th class="px-4 py-3">{{ app()->getLocale() === 'en' ? 'Student Name' : 'Nama Pelajar' }}</th>
+                                    <th class="px-4 py-3">{{ app()->getLocale() === 'en' ? 'Today\'s Status' : 'Status Hari Ini' }}</th>
+                                    <th class="px-4 py-3">Last Clocking</th>
+                                    <th class="px-4 py-3 text-right">{{ app()->getLocale() === 'en' ? 'Action' : 'Tindakan' }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
                                 @foreach($activeStudents as $student)
                                     @php
-                                        $existingAttendance = $existingAttendances[$student->user_id] ?? null;
+                                        $studentSessions = $existingAttendances->get($student->id) ?? collect();
+                                        $openSession = $studentSessions->first(fn ($s) => ! $s->clock_out_at);
+                                        $lastSession = $studentSessions->sortByDesc('clock_in_at')->first();
+                                        
+                                        if ($openSession) {
+                                            $statusText = 'Clocked In';
+                                            $statusClass = 'bg-emerald-100 text-emerald-800';
+                                            $lastClockTime = $openSession->clock_in_at->format('h:i A') . ' (IN)';
+                                        } elseif ($lastSession) {
+                                            $statusText = 'Clocked Out';
+                                            $statusClass = 'bg-rose-100 text-rose-800';
+                                            $lastClockTime = $lastSession->clock_out_at ? $lastSession->clock_out_at->format('h:i A') . ' (OUT)' : '-';
+                                        } else {
+                                            $statusText = app()->getLocale() === 'en' ? 'No Record' : 'Belum Rekod';
+                                            $statusClass = 'bg-slate-100 text-slate-600';
+                                            $lastClockTime = '-';
+                                        }
                                     @endphp
-                                    
-                                    <div class="border rounded-lg p-4 {{ $existingAttendance ? 'bg-gray-50' : 'bg-white' }}">
-                                        <div class="flex items-center justify-between flex-wrap gap-4">
-                                            <div class="flex items-center">
-                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($student->user->name) }}&background=3B82F6&color=ffffff" 
-                                                     alt="{{ $student->user->name }}" 
-                                                     class="w-12 h-12 rounded-full mr-4">
+                                    <tr x-show="'{{ strtolower(addslashes($student->user->name)) }}'.includes(search.toLowerCase())" class="hover:bg-slate-50">
+                                        <td class="px-4 py-4 text-slate-500">{{ $loop->iteration }}</td>
+                                        <td class="px-4 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <img src="https://ui-avatars.com/api/?name={{ urlencode($student->user->name) }}&background=3B82F6&color=ffffff" alt="{{ $student->user->name }}" class="h-9 w-9 rounded-full">
                                                 <div>
-                                                    <h3 class="font-medium text-gray-800">{{ $student->user->name }}</h3>
-                                                    <p class="text-sm text-gray-600">{{ $student->user->email }}</p>
-                                                    @if($student->ic_number)
-                                                        <p class="text-xs text-gray-500">{{ __('teacher/attendance.ic_label') }}: {{ $student->ic_number }}</p>
-                                                    @endif
+                                                    <p class="font-semibold text-slate-800">{{ $student->user->name }}</p>
+                                                    <p class="text-xs text-slate-500">{{ $student->ic_number ?: $student->user->email }}</p>
                                                 </div>
                                             </div>
-
-                                            <div class="flex flex-wrap items-center gap-2">
-                                                <button @click="openCamera('{{ route('teacher.attendance.student.clock', [$classSchedule, $student]) }}', '{{ $existingAttendance ? 'Clock out' : 'Clock in' }}')" {{ $existingAttendance && ($existingAttendance->check_out_time || in_array($existingAttendance->status, ['late', 'absent'])) ? 'disabled' : '' }} class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium {{ $existingAttendance ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }} disabled:bg-slate-300 text-white">
-                                                    <i class="fas fa-camera mr-2"></i>{{ $existingAttendance ? 'Foto & Clock out' : 'Foto & Clock in' }}
-                                                </button>
-                                                <button @click="openStatusModal('{{ route('teacher.attendance.student.status', [$classSchedule, $student]) }}', 'late', '{{ addslashes($student->user->name) }}')" {{ $existingAttendance && $existingAttendance->check_out_time ? 'disabled' : '' }} class="inline-flex items-center rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:bg-slate-300">
-                                                    <i class="fas fa-clock mr-1"></i>Late
-                                                </button>
-                                                <button @click="openStatusModal('{{ route('teacher.attendance.student.status', [$classSchedule, $student]) }}', 'absent', '{{ addslashes($student->user->name) }}')" {{ $existingAttendance && $existingAttendance->check_out_time ? 'disabled' : '' }} class="inline-flex items-center rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-slate-300">
-                                                    <i class="fas fa-user-times mr-1"></i>Absent
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        @if($existingAttendance)
-                                            <div class="mt-3 pt-3 border-t border-gray-200">
-                                                <span class="text-xs text-gray-500">
-                                                    <span class="mr-2 rounded-full px-2 py-1 font-semibold {{ $existingAttendance->status === 'late' ? 'bg-amber-100 text-amber-800' : ($existingAttendance->status === 'absent' ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800') }}">{{ ucfirst($existingAttendance->status) }}</span>
-                                                    Clock in: {{ \Carbon\Carbon::parse($existingAttendance->attendance_time)->format('H:i') }} · {{ \Carbon\Carbon::parse($existingAttendance->attendance_date)->format('d M Y') }}
-                                                    @if($existingAttendance->check_out_time) · Clock out: {{ \Carbon\Carbon::parse($existingAttendance->check_out_time)->format('H:i') }} @endif
-                                                </span>
-                                                @if($existingAttendance->note)
-                                                    <p class="mt-2 text-sm text-slate-600"><span class="font-semibold">Sebab:</span> {{ $existingAttendance->note }}</p>
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </div>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">
+                                                {{ $statusText }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-4 text-slate-600">{{ $lastClockTime }}</td>
+                                        <td class="px-4 py-4 text-right">
+                                            <a href="{{ route('teacher.attendance.student.clocking', [$classSchedule, $student]) }}" class="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">
+                                                <i class="fas fa-eye mr-1"></i>{{ app()->getLocale() === 'en' ? 'View' : 'Lihat' }}
+                                            </a>
+                                        </td>
+                                    </tr>
                                 @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-12">
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="p-12 text-center">
                             <div class="text-gray-400 text-4xl mb-4">
                                 <i class="fas fa-user-slash"></i>
                             </div>
@@ -102,20 +148,18 @@
                 </div>
             </div>
 
-            <!-- Sidebar Info -->
-            <div class="space-y-6">
-                <!-- Class Info Card -->
-                <div class="bg-white rounded-lg shadow-md p-6">
+        <aside class="min-w-0 space-y-6">
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">
                             <i class="fas fa-info-circle mr-2 text-blue-600"></i>{{ __('teacher/attendance.class_info_title') }}
                         </h3>
                     
                     <div class="space-y-3 text-sm">
-                        <div class="flex justify-between">
+                        <div class="flex justify-between gap-4">
                             <span class="text-gray-600">{{ __('teacher/attendance.class_type') }}:</span>
                             <span class="font-medium">{{ ucfirst($classSchedule->course->jenis) }}</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between gap-4">
                             <span class="text-gray-600">{{ __('teacher/attendance.duration') }}:</span>
                             <span class="font-medium">
                                 @if(isset($scheduleDayToday) && $scheduleDayToday)
@@ -125,25 +169,17 @@
                                 @endif
                             </span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex justify-between gap-4">
                             <span class="text-gray-600">{{ __('teacher/attendance.student_amount') }}:</span>
                             <span class="font-medium">{{ __('teacher/attendance.student_count', ['count' => $activeStudents->count()]) }}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Attendance Summary -->
-                @if($existingAttendances->count() > 0)
-                    <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">
                             <i class="fas fa-chart-pie mr-2 text-purple-600"></i>{{ __('teacher/attendance.summary') }}
                         </h3>
-                        
-                        @php
-                            $presentCount = $existingAttendances->where('status', 'present')->count();
-                            $lateCount = $existingAttendances->where('status', 'late')->count();
-                            $absentCount = $existingAttendances->where('status', 'absent')->count();
-                        @endphp
                         
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between items-center">
@@ -169,9 +205,19 @@
                             </div>
                         </div>
                     </div>
-                @endif
-            </div>
+        </aside>
         </div>
+
+    <div x-show="showTeacherCheckout" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
+            <div class="flex items-center justify-between"><h3 class="text-lg font-bold text-slate-900">{{ __('teacher/attendance.check_out_button') }}</h3><button @click="showTeacherCheckout = false" class="text-slate-500 hover:text-slate-800">✕</button></div>
+            <p class="mt-1 text-sm text-slate-500">Muat naik foto dokumentasi kelas sebelum clock out.</p>
+            <input x-ref="classPhoto" type="file" accept="image/jpeg,image/png,image/webp" class="mt-4 block w-full text-sm" @change="teacherPhotoError = ''">
+            <textarea x-model="teacherNote" rows="3" maxlength="2000" class="mt-4 w-full rounded-lg border-slate-300" placeholder="{{ __('teacher/attendance.teacher_note_placeholder') }}"></textarea>
+            <p x-show="teacherPhotoError" x-text="teacherPhotoError" class="mt-2 text-sm text-red-600"></p>
+            <div class="mt-5 flex justify-end gap-3"><button @click="showTeacherCheckout = false" class="rounded-lg border px-4 py-2">{{ __('teacher/attendance.cancel') }}</button><button @click="teacherCheckOut()" :disabled="teacherBusy" class="rounded-lg bg-rose-600 px-4 py-2 font-medium text-white disabled:bg-slate-400"><span x-text="teacherBusy ? '{{ __('teacher/attendance.processing') }}' : '{{ __('teacher/attendance.check_out_button') }}'"></span></button></div>
+        </div>
+    </div>
 
     <div x-show="showCamera" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
         <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
@@ -198,6 +244,12 @@
 function attendanceManager() {
     return {
         loading: false,
+        search: '',
+        teacherBusy: false,
+        teacherError: '',
+        teacherPhotoError: '',
+        showTeacherCheckout: false,
+        teacherNote: '',
         showCamera: false,
         cameraAction: '',
         cameraUrl: '',
@@ -214,6 +266,64 @@ function attendanceManager() {
 
         get statusTitle() {
             return this.statusType === 'late' ? 'Tandai Late' : 'Tandai Absent';
+        },
+
+        async teacherCheckIn() {
+            this.teacherBusy = true;
+            this.teacherError = '';
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+
+            try {
+                const response = await fetch('{{ route('teacher.attendance.checkin', $classSchedule) }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { Accept: 'application/json' },
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Gagal clock in.');
+                location.reload();
+            } catch (error) {
+                this.teacherError = error.message;
+            } finally {
+                this.teacherBusy = false;
+            }
+        },
+
+        openTeacherCheckout() {
+            this.teacherNote = '';
+            this.teacherPhotoError = '';
+            this.showTeacherCheckout = true;
+        },
+
+        async teacherCheckOut() {
+            const photo = this.$refs.classPhoto.files[0];
+            if (!photo) {
+                this.teacherPhotoError = 'Sila muat naik foto kelas sebelum clock out.';
+                return;
+            }
+
+            this.teacherBusy = true;
+            this.teacherPhotoError = '';
+            const formData = new FormData();
+            formData.append('class_photo', photo);
+            formData.append('teacher_note', this.teacherNote.trim());
+            formData.append('_token', '{{ csrf_token() }}');
+
+            try {
+                const response = await fetch('{{ route('teacher.attendance.checkout', $classSchedule) }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { Accept: 'application/json' },
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Gagal clock out.');
+                location.reload();
+            } catch (error) {
+                this.teacherPhotoError = error.message;
+            } finally {
+                this.teacherBusy = false;
+            }
         },
 
         async openCamera(url, action) {
@@ -299,5 +409,17 @@ function attendanceManager() {
 <style>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
 [x-cloak] { display: none !important; }
+
+.attendance-content-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    .attendance-content-grid {
+        grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+    }
+}
 </style>
 @endsection

@@ -136,7 +136,7 @@
                 <a href="{{ route('a.dashboard.index') }}" class="block p-2 rounded {{ request()->routeIs('a.dashboard.index') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.dashboard") }}</a>
 
                 <!-- Charts & analytics -->
-                <div x-data="{ open: false }" class="space-y-1">
+                <div x-data="{ open: {{ request()->routeIs('analytics.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open" class="flex justify-between items-center w-full p-2  {{ request()->routeIs('analytics.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">
                         <span>Charts & analytics</span>
                         <svg x-bind:class="{ 'rotate-180': open }" class="w-4 h-4 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,16 +144,16 @@
                         </svg>
                     </button>
                     <div x-show="open" x-transition class="ml-4 space-y-1">
-                        <a href="{{ route('analytics.new-students') }}" class="block p-2 hover:bg-gray-100 rounded">New students</a>
-                        <a href="{{ route('analytics.invoices-payments') }}" class="block p-2 hover:bg-gray-100 rounded">Invoices vs Payments</a>
-                        <a href="{{ route('analytics.sales') }}" class="block p-2 hover:bg-gray-100 rounded">Sales</a>
+                        <a href="{{ route('analytics.new-students') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('analytics.new-students') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">New students</a>
+                        <a href="{{ route('analytics.invoices-payments') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('analytics.invoices-payments') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">Invoices vs Payments</a>
+                        <a href="{{ route('analytics.sales') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('analytics.sales') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">Sales</a>
                     </div>
                 </div>
 
                 <a href="{{ route('admin.courses.index') }}" class="block p-2 rounded {{ request()->routeIs('admin.courses.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.course_setting") }}</a>
                 
                 <!-- Pengurusan Guru -->
-                <div x-data="{ open: false }" class="space-y-1">
+                <div x-data="{ open: {{ request()->routeIs('admin.teachers.*') ? 'true' : 'false' }} }" class="space-y-1">
                     <button @click="open = !open" class="flex justify-between items-center w-full p-2  {{ request()->routeIs('admin.teachers.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">
                         <span>{{ __("layouts/admin.teacher_management") }}</span>
                         <svg x-bind:class="{ 'rotate-180': open }" class="w-4 h-4 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,36 +161,38 @@
                         </svg>
                     </button>
                     <div x-show="open" x-transition class="ml-4 space-y-1">
-                        <a href="{{ route('admin.teachers.index') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.all_teacher") }}</a>
-                        <a href="{{ route('admin.teachers.sallaries.index') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.allowance") }}</a>
-                        <a href="{{ route('admin.teachers.rules.index') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.rules") }}</a>
+                        <a href="{{ route('admin.teachers.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.teachers.index', 'admin.teachers.create', 'admin.teachers.store', 'admin.teachers.edit', 'admin.teachers.update', 'admin.teachers.show') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.all_teacher") }}</a>
+                        <a href="{{ route('admin.teachers.sallaries.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.teachers.sallaries.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.payroll") }}</a>
+                        <a href="{{ route('admin.teachers.rules.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.teachers.rules.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.rules") }}</a>
                     </div>
                 </div>
 
                 <!-- Pengurusan Pelajar -->
-                <div x-data="{ open: false }" class="space-y-1">
-                    <button @click="open = !open" class="flex justify-between items-center w-full p-2 {{ request()->routeIs('admin.students.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">
+                <div x-data="{ open: {{ request()->routeIs('admin.students.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" class="flex justify-between items-center w-full p-2 {{ request()->routeIs('admin.students.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">
                         <span>{{ __("layouts/admin.student_management") }}</span>
                         <svg x-bind:class="{ 'rotate-180': open }" class="w-4 h-4 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
                     <div x-show="open" x-transition class="ml-4 space-y-1">
-                        <a href="{{ route('admin.students.index') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.all_student") }}</a>
-                        <a href="{{ route('admin.students.pending') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.new_student") }}</a>
-                        <a href="{{ route('admin.students.create') }}" class="block p-2 hover:bg-gray-100 rounded">{{ __("layouts/admin.import_student") }}</a>
+                        <a href="{{ route('admin.students.index') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('admin.students.index', 'admin.students.show') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">{{ __("layouts/admin.all_student") }}</a>
+                        <a href="{{ route('admin.students.pending') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('admin.students.pending') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">{{ __("layouts/admin.new_student") }}</a>
+                        <a href="{{ route('admin.students.create') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('admin.students.create') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">{{ __("layouts/admin.import_student") }}</a>
                     </div>
                 </div>
 
-                <div x-data="{ open: {{ request()->routeIs('admin.reports.*', 'admin.monthly-reports.*') ? 'true' : 'false' }} }" class="space-y-1">
-                    <button @click="open = !open" class="flex w-full items-center justify-between rounded p-2 {{ request()->routeIs('admin.reports.*', 'admin.monthly-reports.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">
-                        <span>{{ __("layouts/admin.attendance_report") }}</span>
-                        <svg x-bind:class="{ 'rotate-180': open }" class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <div x-data="{ open: {{ request()->routeIs('admin.reports.*', 'admin.monthly-reports.*', 'admin.student-attendances.*') ? 'true' : 'false' }} }" class="space-y-1">
+                    <button @click="open = !open" class="flex justify-between items-center w-full p-2 {{ request()->routeIs('admin.reports.*', 'admin.monthly-reports.*', 'admin.student-attendances.*') ? 'bg-teal-100 text-teal-700 font-semibold' : 'hover:bg-gray-100' }} rounded">
+                        <span class="text-left">{{ __("layouts/admin.attendance_report") }}</span>
+                        <svg x-bind:class="{ 'rotate-180': open }" class="w-4 h-4 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
                     <div x-show="open" x-transition class="ml-4 space-y-1">
-                        <a href="{{ route('admin.reports.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __("layouts/admin.daily_attendance_report") }}</a>
-                        <a href="{{ route('admin.student-attendances.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.student-attendances.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">Student Attendance</a>
-                        <a href="{{ route('admin.monthly-reports.index') }}" class="block rounded p-2 {{ request()->routeIs('admin.monthly-reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : 'hover:bg-gray-100' }}">{{ __('reports.monthly.menu') }}</a>
+                        <a href="{{ route('admin.reports.index') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('admin.reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">{{ __("layouts/admin.daily_attendance_report") }}</a>
+                        <a href="{{ route('admin.student-attendances.index') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('admin.student-attendances.*') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">Student Attendance</a>
+                        <a href="{{ route('admin.monthly-reports.index') }}" class="block p-2 hover:bg-gray-100 rounded {{ request()->routeIs('admin.monthly-reports.*') ? 'bg-teal-50 text-teal-700 font-semibold' : '' }}">{{ __('reports.monthly.menu') }}</a>
                     </div>
                 </div>
                 <!-- Payment & Fee -->

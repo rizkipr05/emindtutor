@@ -436,6 +436,11 @@ Route::prefix('teacher')->middleware(['auth', 'teacher', 'localization'])->group
         Route::post('/{classSchedule}/store', 'storeAttendance')->name('store');
         Route::post('/{classSchedule}/students/{student}/clock', 'clockStudent')->name('student.clock');
         Route::post('/{classSchedule}/students/{student}/status', 'setStudentStatus')->name('student.status');
+        Route::get('/{classSchedule}/students/{student}', 'studentClocking')->name('student.clocking');
+        Route::post('/{classSchedule}/students/{student}/clocking/start', 'startStudentClocking')->name('student.clocking.start');
+        Route::post('/clocking/{clockingSession}/end', 'endStudentClocking')->name('student.clocking.end');
+        Route::put('/clocking/{clockingSession}', 'updateStudentClocking')->name('student.clocking.update');
+        Route::delete('/clocking/{clockingSession}', 'destroyStudentClocking')->name('student.clocking.destroy');
     });
 
     Route::controller(TeachingReportController::class)->prefix('teaching-reports')->name('teacher.teaching-reports.')->group(function () {

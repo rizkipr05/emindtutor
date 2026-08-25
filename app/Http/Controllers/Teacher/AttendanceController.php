@@ -11,6 +11,7 @@ use App\Models\ClassScheduleSession;
 use App\Models\Teacher;
 use App\Models\TeacherAttendance;
 use App\Models\StudentAttendance;
+use App\Models\StudentClockingSession;
 use App\Models\Student;
 use App\Models\Sallary;
 use Carbon\Carbon;
@@ -77,6 +78,7 @@ class AttendanceController extends Controller
         }
 
         $classSchedule = ClassSchedule::with(['course', 'classScheduleDays'])
+            ->where('teacher_id', $teacher->id)
             ->findOrFail($classScheduleId);
 
         if ($this->isClassCancelledToday($classSchedule->id)) {
@@ -84,8 +86,9 @@ class AttendanceController extends Controller
                 ->with('error', 'Kelas ini dibatalkan untuk hari ini.');
         }
 
-        // Check if class is currently ongoing
         $status = $this->getClassStatus($classSchedule);
+        $scheduleDayToday = $classSchedule->classScheduleDays
+            ->firstWhere('hari', Carbon::now('Asia/Kuala_Lumpur')->format('l'));
 
         // Get or create teacher attendance for today
         $today = Carbon::today('Asia/Kuala_Lumpur');
@@ -97,17 +100,19 @@ class AttendanceController extends Controller
         // Get active students for this class
         $activeStudents = $this->getActiveStudents($classSchedule);
 
-        // Get existing student attendances for today
-        $existingAttendances = StudentAttendance::where('class_schedule_id', $classSchedule->id)
-            ->whereDate('attendance_date', $today)
+        // Get existing student clocking sessions for today
+        $existingAttendances = StudentClockingSession::where('class_schedule_id', $classSchedule->id)
+            ->whereDate('clock_date', $today)
             ->get()
-            ->keyBy('user_id');
+            ->groupBy('student_id');
 
         return view('teacher.attendance.take', compact(
-            'classSchedule', 
-            'activeStudents', 
+            'classSchedule',
+            'activeStudents',
             'teacherAttendance',
-            'existingAttendances'
+            'existingAttendances',
+            'scheduleDayToday',
+            'status'
         ));
     }
 
@@ -180,12 +185,12 @@ class AttendanceController extends Controller
             'teacher_note' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $today = Carbon::today();
+        $today = Carbon::today('Asia/Kuala_Lumpur');
         // dd($classScheduleId);
         
         $teacherAttendance = TeacherAttendance::where('teacher_id', $teacher->id)
             ->where('class_schedule_id', $classScheduleId)
-            ->whereDate('created_at', $today)
+            ->whereDate('check_in', $today)
             ->first();
 
         if (!$teacherAttendance || !$teacherAttendance->check_in) {
@@ -373,6 +378,20 @@ class AttendanceController extends Controller
 
         abort_unless($classSchedule->students()->whereKey($student->id)->exists(), 404);
 
+        if ($this->isClassCancelledToday($classSchedule->id)) {
+            return back()->with('error', 'Kelas ini dibatalkan untuk hari ini.');
+        }
+
+        $teacherCheckedIn = TeacherAttendance::where('teacher_id', $teacher->id)
+            ->where('class_schedule_id', $classSchedule->id)
+            ->whereDate('check_in', $today)
+            ->whereNotNull('check_in')
+            ->exists();
+
+        if (! $teacherCheckedIn) {
+            return back()->with('error', 'Anda perlu clock in sebelum merekod kehadiran pelajar.');
+        }
+
         $photoPath = $request->file('attendance_photo')->store('student_attendances', 'public');
 
         $attendance = StudentAttendance::firstOrCreate([
@@ -402,6 +421,109 @@ class AttendanceController extends Controller
         }
 
         return back()->with('error', $student->user->name . ' sudah clock in dan clock out untuk sesi hari ini.');
+    }
+
+    public function studentClocking(ClassSchedule $classSchedule, Student $student)
+    {
+        $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
+        abort_unless($classSchedule->teacher_id === $teacher->id, 403);
+        abort_unless($classSchedule->students()->whereKey($student->id)->exists(), 404);
+
+        $today = Carbon::today('Asia/Kuala_Lumpur');
+        $sessions = StudentClockingSession::where('student_id', $student->id)
+            ->where('class_schedule_id', $classSchedule->id)
+            ->whereDate('clock_date', $today)
+            ->latest('clock_in_at')
+            ->get();
+        $openSession = $sessions->first(fn ($session) => ! $session->clock_out_at);
+        $totalMinutes = $sessions->sum(fn ($session) => $session->clock_out_at
+            ? $session->clock_in_at->diffInMinutes($session->clock_out_at)
+            : 0);
+
+        return view('teacher.attendance.student-clocking', compact('classSchedule', 'student', 'sessions', 'openSession', 'totalMinutes'));
+    }
+
+    public function startStudentClocking(Request $request, ClassSchedule $classSchedule, Student $student)
+    {
+        $request->validate([
+            'clock_in_photo' => ['required', 'image', 'max:5120'],
+            'planned_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:480'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+        ]);
+
+        $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
+        abort_unless($classSchedule->teacher_id === $teacher->id, 403);
+        abort_unless($classSchedule->students()->whereKey($student->id)->exists(), 404);
+        $today = Carbon::today('Asia/Kuala_Lumpur');
+
+        if (StudentClockingSession::where('student_id', $student->id)->where('class_schedule_id', $classSchedule->id)->whereDate('clock_date', $today)->whereNull('clock_out_at')->exists()) {
+            return back()->with('error', 'Pelajar masih mempunyai rekod clock in yang belum clock out.');
+        }
+
+        StudentClockingSession::create([
+            'student_id' => $student->id,
+            'class_schedule_id' => $classSchedule->id,
+            'teacher_id' => $teacher->id,
+            'clock_date' => $today,
+            'clock_in_at' => Carbon::now('Asia/Kuala_Lumpur'),
+            'planned_duration_minutes' => $request->integer('planned_duration_minutes'),
+            'clock_in_photo' => $request->file('clock_in_photo')->store('student_clocking', 'public'),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
+        ]);
+
+        return back()->with('success', 'Clock in pelajar berjaya direkodkan.');
+    }
+
+    public function endStudentClocking(Request $request, StudentClockingSession $clockingSession)
+    {
+        $request->validate([
+            'class_document' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'class_report' => ['required', 'string', 'max:3000'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+        ]);
+
+        $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
+        abort_unless($clockingSession->teacher_id === $teacher->id, 403);
+        abort_if($clockingSession->clock_out_at, 422, 'Rekod ini telah clock out.');
+
+        $clockingSession->update([
+            'clock_out_at' => Carbon::now('Asia/Kuala_Lumpur'),
+            'class_document' => $request->hasFile('class_document') ? $request->file('class_document')->store('class_documents', 'public') : null,
+            'class_report' => (string) $request->string('class_report')->trim(),
+            'latitude' => $request->input('latitude') ?? $clockingSession->latitude,
+            'longitude' => $request->input('longitude') ?? $clockingSession->longitude,
+        ]);
+
+        return back()->with('success', 'Clock out dan laporan kelas berjaya disimpan.');
+    }
+
+    public function updateStudentClocking(Request $request, StudentClockingSession $clockingSession)
+    {
+        $request->validate([
+            'class_report' => ['required', 'string', 'max:3000'],
+        ]);
+
+        $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
+        abort_unless($clockingSession->teacher_id === $teacher->id, 403);
+
+        $clockingSession->update([
+            'class_report' => (string) $request->string('class_report')->trim(),
+        ]);
+
+        return back()->with('success', 'Laporan kelas berjaya dikemas kini.');
+    }
+
+    public function destroyStudentClocking(StudentClockingSession $clockingSession)
+    {
+        $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
+        abort_unless($clockingSession->teacher_id === $teacher->id, 403);
+
+        $clockingSession->delete();
+
+        return back()->with('success', 'Rekod clocking berjaya dipadam.');
     }
 
     public function setStudentStatus(Request $request, $classScheduleId, Student $student)

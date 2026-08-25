@@ -7,7 +7,7 @@ return [
     'course_setting' => 'Kos Setting',
     'teacher_management' => 'Pengurusan Guru',
     'all_teacher' => 'Semua Guru',
-    'allowance' => 'Elaun',
+    'payroll' => 'Payroll',
     'rules' => 'Peraturan',
     'student_management' => 'Pengurusan Pelajar',
     'all_student' => 'Semua Pelajar',

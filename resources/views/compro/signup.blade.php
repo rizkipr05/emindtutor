@@ -56,7 +56,13 @@
                     @endif
                     <span class="block font-bold text-gray-900">{{ $package->nama_pakej }}</span>
                     <span class="mt-1 block text-xl font-bold text-blue-800">RM {{ number_format($package->harga, 2) }}</span>
-                    <span class="mt-1 block text-sm text-gray-500">{{ $package->duration_days }} hari · Maks. {{ $package->maks_pelajar }} pelajar</span>
+                    <span class="mt-1 block text-sm text-gray-500">
+                      @if($package->pricing_per_student)
+                        {{ $package->duration_days }} hari · Harga per student aktif
+                      @else
+                        {{ $package->duration_days }} hari · Maks. {{ $package->maks_pelajar }} pelajar
+                      @endif
+                    </span>
                   </span>
                 </label>
               @endforeach
@@ -128,9 +134,9 @@
           <!-- Nomor telefon Wakil Syarikat -->
           <div>
             <label for="pic_telefon" class="block text-sm font-medium text-gray-700">Nomor Telefon Wakil Syarikat</label>
-            <input type="tel" name="pic_telefon" id="pic_telefon" required value="{{ old('pic_telefon', '62') }}" inputmode="numeric" pattern="62[0-9]{8,13}" title="Gunakan format nomor Indonesia, contoh 628123456789"
+            <input type="tel" name="pic_telefon" id="pic_telefon" required value="{{ old('pic_telefon', '60') }}" inputmode="numeric" pattern="60[0-9]{7,11}" title="Gunakan format nomor Malaysia, contoh 60123456789"
               class="mt-2 w-full rounded-xl border-gray-300 focus:ring-blue-900 focus:border-blue-900 px-4 py-3 shadow-sm">
-            <p class="text-xs text-gray-500 mt-1">Gunakan awalan 62, contoh: 628123456789.</p>
+            <p class="text-xs text-gray-500 mt-1">Gunakan awalan 60, contoh: 60123456789.</p>
             @error('pic_telefon')
               <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -142,17 +148,6 @@
             <textarea name="alamat" id="alamat" rows="3" required
               class="mt-2 w-full rounded-xl border-gray-300 focus:ring-blue-900 focus:border-blue-900 px-4 py-3 shadow-sm"></textarea>
             @error('alamat')
-              <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-            @enderror
-          </div>
-
-          <!-- No Telefon -->
-          <div>
-            <label for="no_telefon" class="block text-sm font-medium text-gray-700">{{ __('compro/auth.phone') }}</label>
-            <input type="tel" name="no_telefon" id="no_telefon" required value="{{ old('no_telefon', '62') }}" inputmode="numeric" pattern="62[0-9]{8,13}" title="Gunakan format nomor Indonesia, contoh 628123456789"
-              class="mt-2 w-full rounded-xl border-gray-300 focus:ring-blue-900 focus:border-blue-900 px-4 py-3 shadow-sm">
-            <p class="text-xs text-gray-500 mt-1">Gunakan awalan 62, contoh: 628123456789.</p>
-            @error('no_telefon')
               <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
             @enderror
           </div>

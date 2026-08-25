@@ -204,10 +204,10 @@ class CompanyController extends Controller
                 'company_invoice_id' => $invoice->id,
                 'jumlah' => $data['amount'],
                 'status' => 'success',
-                'transaction_id' => $data['reference_number'] ?: 'PAY-' . now()->format('YmdHis'),
-                'reference_number' => $data['reference_number'],
+                'transaction_id' => ($data['reference_number'] ?? null) ?: 'PAY-' . now()->format('YmdHis'),
+                'reference_number' => $data['reference_number'] ?? null,
                 'payment_method' => $data['payment_method'],
-                'notes' => $data['notes'],
+                'notes' => $data['notes'] ?? null,
                 'balance_after' => $balanceAfter,
                 'dibayar_pada' => $data['paid_at'],
             ]);

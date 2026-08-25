@@ -18,7 +18,7 @@ use App\Services\ToyyibPayService;
 use App\Models\PaymentGateway;
 use App\Models\PendingCompanyRegistration;
 use App\Models\SubscriptionPackage;
-use App\Support\IndonesianPhone;
+use App\Support\MalaysianPhone;
 use App\Models\CompanyInvoice;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\DB;
@@ -160,16 +160,15 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'nama_wakil_syarikat' => 'required|string|max:255',
-            'pic_telefon' => ['required', 'string', 'max:20', 'regex:/^62\d{8,13}$/'],
+            'pic_telefon' => ['required', 'string', 'max:20', 'regex:/^60\d{7,11}$/'],
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'no_telefon' => ['required', 'string', 'max:20', 'regex:/^62\d{8,13}$/'],
             'package_id' => 'required|exists:subscription_packages,id',
         ]);
 
         $request->merge([
-            'pic_telefon' => IndonesianPhone::normalize($request->pic_telefon),
-            'no_telefon' => IndonesianPhone::normalize($request->no_telefon),
+            'pic_telefon' => MalaysianPhone::normalize($request->pic_telefon),
+            'no_telefon' => MalaysianPhone::normalize($request->pic_telefon),
         ]);
 
         $package = SubscriptionPackage::where('status', 'aktif')->find($request->integer('package_id'));

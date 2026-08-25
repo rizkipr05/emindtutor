@@ -331,8 +331,6 @@ class SettingsController extends Controller
                 'features' => [
                     ['label' => __('super_admin/settings.actions.manage_billing.title'), 'desc' => __('super_admin/settings.actions.manage_billing.desc'), 'url' => route('invoices.index')],
                     ['label' => __('super_admin/settings.actions.subscription_list.title'), 'desc' => __('super_admin/settings.actions.subscription_list.desc'), 'url' => route('langganan.index')],
-                    ['label' => __('super_admin/settings.actions.export_pdf.title'), 'desc' => __('super_admin/settings.actions.export_pdf.desc'), 'url' => route('superadmin.stats.export-pdf')],
-                    ['label' => __('super_admin/settings.actions.export_excel.title'), 'desc' => __('super_admin/settings.actions.export_excel.desc'), 'url' => route('superadmin.stats.export-excel')],
                 ],
             ],
             'invoice_pdf' => [
