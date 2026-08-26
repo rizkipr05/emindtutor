@@ -176,8 +176,10 @@ class AuthController extends Controller
             return back()->withErrors(['package_id' => 'Paket yang dipilih tidak tersedia.'])->withInput();
         }
 
-        // A paid subscription must be confirmed before any user/company is created.
-        if (! $package->is_trial) {
+        // Fixed-price paid packages must be confirmed before any user/company is created.
+        // Per-student packages are activated with no upfront charge; their first bill is
+        // generated after the current billing period from the actual active-student count.
+        if (! $package->is_trial && ! $package->pricing_per_student) {
             $gateway = PaymentGateway::superAdmin();
             if (! $gateway) {
                 return back()->withErrors(['email' => 'Payment Gateway belum dikonfigurasi.']);
@@ -263,20 +265,27 @@ class AuthController extends Controller
             'nombor_pendaftaran_syarikat' => $nomorPendaftar,
         ]);
 
-        // Paket percubaan tidak melalui payment gateway, tetapi langganan tetap
-        // diaktifkan supaya had fitur syarikat berlaku sejak akaun dibuat.
-        if ($package->is_trial) {
+        // Trial and per-student packages are activated immediately. Per-student billing
+        // starts on the next monthly cycle using the active-student total at that time.
+        if ($package->is_trial || $package->pricing_per_student) {
             $start = Carbon::today();
-            $end = $start->copy()->addDays($package->duration_days);
+            $end = $package->pricing_per_student
+                ? $start->copy()->endOfMonth()
+                : $start->copy()->addDays($package->duration_days);
 
             CompanyInvoice::create([
                 'company_id' => $company->id,
                 'package_id' => $package->id,
-                'nomor_invoice' => 'TRIAL-' . $company->id,
+                'nomor_invoice' => ($package->pricing_per_student ? 'PER-STUDENT-' : 'TRIAL-') . $company->id,
                 'jumlah' => 0,
                 'status_bayaran' => 'paid',
+                'status' => 'active',
                 'tarikh_terbit' => $start,
                 'tarikh_tamat' => $end,
+                // This is an access-grant record, not a monthly billing invoice.
+                'billing_period_start' => null,
+                'billing_period_end' => null,
+                'active_student_count' => $package->pricing_per_student ? 0 : null,
             ]);
 
             Subscription::create([
@@ -286,6 +295,10 @@ class AuthController extends Controller
                 'end_date' => $end,
                 'status' => 'active',
             ]);
+
+            if ($package->pricing_per_student) {
+                $company->update(['status' => true]);
+            }
         }
 
         // Kirim Email

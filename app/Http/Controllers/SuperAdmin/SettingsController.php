@@ -263,6 +263,30 @@ class SettingsController extends Controller
                     ['label' => __('layouts/superadmin.invoices'), 'desc' => __('super_admin/settings.actions.manage_billing.desc'), 'url' => route('invoices.index')],
                 ],
             ],
+            'attendance' => [
+                'title' => 'Attendance Settings',
+                'subtitle' => 'Configure whether photo or GPS is required for student clocking.',
+                'badge' => 'Attendance',
+                'fields' => [
+                    [
+                        'name' => 'attendance_require_photo',
+                        'label' => 'Require Photo for Attendance',
+                        'type' => 'toggle',
+                        'default' => '1',
+                        'help' => 'When enabled, teachers must attach a photo when clocking students.',
+                    ],
+                    [
+                        'name' => 'attendance_require_gps',
+                        'label' => 'Require GPS Location for Attendance',
+                        'type' => 'toggle',
+                        'default' => '0',
+                        'help' => 'When enabled, teacher device must provide GPS coordinates for clocking.',
+                    ],
+                ],
+                'features' => [
+                    ['label' => 'View Clocking', 'desc' => 'Open the teacher clocking UI to verify behavior.', 'url' => route('teacher.attendance.index')],
+                ],
+            ],
             'companies' => [
                 'title' => __('super_admin/settings.sections.companies.title'),
                 'subtitle' => __('super_admin/settings.sections.companies.subtitle'),

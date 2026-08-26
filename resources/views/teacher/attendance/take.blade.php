@@ -215,7 +215,7 @@
     <div x-show="showTeacherCheckout" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
         <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl">
             <div class="flex items-center justify-between"><h3 class="text-lg font-bold text-slate-900">{{ __('teacher/attendance.check_out_button') }}</h3><button @click="showTeacherCheckout = false" class="text-slate-500 hover:text-slate-800">✕</button></div>
-            <p class="mt-1 text-sm text-slate-500">Muat naik foto dokumentasi kelas sebelum clock out.</p>
+            <p class="mt-1 text-sm text-slate-500">Foto dokumentasi kelas adalah pilihan.</p>
             <input x-ref="classPhoto" type="file" accept="image/jpeg,image/png,image/webp" class="mt-4 block w-full text-sm" @change="teacherPhotoError = ''">
             <textarea x-model="teacherNote" rows="3" maxlength="2000" class="mt-4 w-full rounded-lg border-slate-300" placeholder="{{ __('teacher/attendance.teacher_note_placeholder') }}"></textarea>
             <p x-show="teacherPhotoError" x-text="teacherPhotoError" class="mt-2 text-sm text-red-600"></p>
@@ -306,15 +306,10 @@ function attendanceManager() {
 
         async teacherCheckOut() {
             const photo = this.$refs.classPhoto.files[0];
-            if (!photo) {
-                this.teacherPhotoError = 'Sila muat naik foto kelas sebelum clock out.';
-                return;
-            }
-
             this.teacherBusy = true;
             this.teacherPhotoError = '';
             const formData = new FormData();
-            formData.append('class_photo', photo);
+            if (photo) formData.append('class_photo', photo);
             formData.append('teacher_note', this.teacherNote.trim());
             formData.append('_token', '{{ csrf_token() }}');
 

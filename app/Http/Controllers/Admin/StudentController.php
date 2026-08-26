@@ -30,6 +30,7 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\HeadingRowFormatter;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StudentController extends Controller
 {
@@ -282,8 +283,62 @@ public function approved(Request $request)
 
     public function show($id)
     {
-        $student = Student::with('user')->findOrFail($id);
-        return view('admin.students.show', compact('student'));
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
+
+        $student = Student::with(['user', 'invoices.course'])
+            ->where('company_id', $companyId)
+            ->findOrFail($id);
+        $courses = Course::where('company_id', $companyId)->orderBy('nama_kos')->get();
+
+        return view('admin.students.show', compact('student', 'courses'));
+    }
+
+    public function storeManualInvoice(Request $request, Student $student)
+    {
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId && $student->company_id === $companyId, 403);
+
+        $data = $request->validate([
+            'course_id' => ['required', 'integer', 'exists:courses,id'],
+            'jumlah' => ['required', 'numeric', 'min:0'],
+            'tarikh_terbit' => ['required', 'date'],
+            'tarikh_tamat' => ['required', 'date', 'after_or_equal:tarikh_terbit'],
+            'status_bayaran' => ['required', 'in:paid,upcoming'],
+        ]);
+
+        abort_unless(Course::where('company_id', $companyId)->whereKey($data['course_id'])->exists(), 404);
+
+        $sequence = str_pad((string) (StudentInvoice::whereDate('created_at', today())->count() + 1), 4, '0', STR_PAD_LEFT);
+        StudentInvoice::create([
+            'student_id' => $student->id,
+            'course_id' => $data['course_id'],
+            'nomor_invoice' => 'STU-' . now('Asia/Kuala_Lumpur')->format('Ymd') . '-' . $sequence,
+            'jumlah' => $data['jumlah'],
+            'status_bayaran' => $data['status_bayaran'],
+            'tarikh_terbit' => $data['tarikh_terbit'],
+            'tarikh_tamat' => $data['tarikh_tamat'],
+        ]);
+
+        return back()->with('success', 'Invoice manual pelajar berjaya dibuat.');
+    }
+
+    public function invoiceReceipt($studentId, $invoiceId)
+    {
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
+
+        $invoice = StudentInvoice::with(['student.user', 'student.company', 'course', 'payment'])
+            ->whereKey($invoiceId)
+            ->whereHas('student', function ($q) use ($companyId) {
+                $q->where('company_id', $companyId);
+            })
+            ->firstOrFail();
+
+        $pdf = Pdf::loadView('student.payments.receipt', compact('invoice'));
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->download("resit-{$invoice->nomor_invoice}.pdf");
     }
 
     public function enroll($id)

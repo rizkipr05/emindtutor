@@ -30,7 +30,7 @@
 
         <fieldset>
           <legend class="text-lg font-bold text-blue-900">Pilih Paket Langganan</legend>
-          <p class="mt-1 text-sm text-gray-500">Pilih paket terlebih dahulu. Setelah data diisi, paket berbayar akan diarahkan ke pembayaran ToyyibPay.</p>
+          <p class="mt-1 text-sm text-gray-500">Pilih paket terlebih dahulu. Pakej harga tetap berbayar akan diarahkan ke ToyyibPay. Pakej per pelajar boleh terus digunakan; invois bulanan dikira daripada jumlah pelajar aktif pada akhir tempoh bil.</p>
 
           @if($packages->isEmpty())
             <div class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -55,10 +55,16 @@
                       <span class="mb-2 inline-block rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">Percubaan</span>
                     @endif
                     <span class="block font-bold text-gray-900">{{ $package->nama_pakej }}</span>
-                    <span class="mt-1 block text-xl font-bold text-blue-800">RM {{ number_format($package->harga, 2) }}</span>
+                    <span class="mt-1 block text-xl font-bold text-blue-800">
+                      @if($package->pricing_per_student)
+                        RM {{ number_format($package->harga_per_pelajar, 2) }} <span class="text-sm font-medium">/ pelajar aktif</span>
+                      @else
+                        RM {{ number_format($package->harga, 2) }}
+                      @endif
+                    </span>
                     <span class="mt-1 block text-sm text-gray-500">
                       @if($package->pricing_per_student)
-                        {{ $package->duration_days }} hari · Harga per student aktif
+                        {{ $package->duration_days }} hari · Harga per student aktif, dicaj melalui invois bulanan
                       @else
                         {{ $package->duration_days }} hari · Maks. {{ $package->maks_pelajar }} pelajar
                       @endif

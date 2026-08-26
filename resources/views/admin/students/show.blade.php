@@ -246,6 +246,37 @@
 
                     <!-- Invoice Tab  -->
                     <div id="reviews-content" class="tab-pane hidden">
+                        @if(session('success'))
+                            <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('success') }}</div>
+                        @endif
+                        @if($errors->any())
+                            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ $errors->first() }}</div>
+                        @endif
+                        <div class="mb-4 rounded-2xl border border-sky-100 bg-sky-50 p-4 text-left">
+                            <h3 class="font-bold text-slate-800">Buat Invoice Manual</h3>
+                            <p class="mt-1 text-sm text-slate-600">Cipta invoice secara manual untuk pelajar ini.</p>
+                            <form method="POST" action="{{ route('admin.students.invoices.store', $student) }}" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                                @csrf
+                                <label class="text-sm font-medium text-slate-700">Kursus
+                                    <select name="course_id" required class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
+                                        <option value="">Pilih kursus</option>
+                                        @foreach($courses as $course)<option value="{{ $course->id }}" data-fee="{{ $course->fee }}">{{ $course->localized_name }}</option>@endforeach
+                                    </select>
+                                </label>
+                                <label class="text-sm font-medium text-slate-700">Jumlah (RM)
+                                    <input type="number" name="jumlah" min="0" step="0.01" required class="mt-1 block w-full rounded-lg border-slate-300 text-sm" placeholder="0.00">
+                                </label>
+                                <label class="text-sm font-medium text-slate-700">Tarikh mula
+                                    <input type="date" name="tarikh_terbit" value="{{ now('Asia/Kuala_Lumpur')->toDateString() }}" required class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
+                                </label>
+                                <label class="text-sm font-medium text-slate-700">Tarikh tamat
+                                    <input type="date" name="tarikh_tamat" value="{{ now('Asia/Kuala_Lumpur')->addMonth()->toDateString() }}" required class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
+                                </label>
+                                <div class="flex items-end gap-2"><label class="min-w-0 flex-1 text-sm font-medium text-slate-700">Status
+                                    <select name="status_bayaran" class="mt-1 block w-full rounded-lg border-slate-300 text-sm"><option value="upcoming">Belum bayar</option><option value="paid">Sudah bayar</option></select>
+                                </label><button class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">Buat</button></div>
+                            </form>
+                        </div>
                         <div class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-4 border border-yellow-100 text-center">
                             <div class="space-y-2">
                                 @forelse($student->invoices->sortByDesc('created_at') as $invoice)
@@ -255,6 +286,14 @@
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-sm">
                                                     <span class="font-semibold text-gray-800">#{{ $invoice->nomor_invoice }}</span>
+                                                    <a href="{{ route('admin.students.invoices.receipt', [$student->id, $invoice->id]) }}" target="_blank" class="inline-flex items-center ml-2 px-3 py-1 rounded-md bg-red-600 text-white text-xs font-semibold shadow hover:bg-red-700 transition-colors" aria-label="Download PDF Invoice">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                            <polyline points="7 10 12 15 17 10" />
+                                                            <line x1="12" y1="15" x2="12" y2="3" />
+                                                        </svg>
+                                                        PDF
+                                                    </a>
                                                     <span class="text-gray-600">{{ $invoice->course->nama_kos }}</span>
                                                     <span class="font-medium text-gray-900">RM {{ number_format($invoice->jumlah, 0, '.', ',') }}</span>
                                                     <span class="text-gray-500">

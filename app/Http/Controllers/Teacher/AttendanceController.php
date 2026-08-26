@@ -17,6 +17,7 @@ use App\Models\Sallary;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\SystemSetting;
 
 class AttendanceController extends Controller
 {
@@ -203,7 +204,7 @@ class AttendanceController extends Controller
         }
 
         $request->validate([
-            'class_photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+              'class_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'teacher_note' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -341,11 +342,13 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', 'Anda harus check-in terlebih dahulu sebelum mengambil kehadiran siswa.');
         }
 
-        $request->validate([
-            'attendances' => 'required|array',
-            'attendances.*' => 'required|in:present,absent,late',
-            'attendance_photo' => 'nullable|image|max:5120',
-        ]);
+                $requiresPhoto = $this->attendanceRequiresPhoto();
+
+                $request->validate(array_filter([
+                            'attendances' => 'required|array',
+                        'attendances.*' => 'required|in:present,absent,late',
+                            'attendance_photo' => $requiresPhoto ? 'required|image|max:5120' : 'nullable|image|max:5120',
+                ]));
 
         $existingPhotoPath = StudentAttendance::where('class_schedule_id', $classScheduleId)
             ->whereDate('attendance_date', $today)
@@ -390,7 +393,11 @@ class AttendanceController extends Controller
 
     public function clockStudent(Request $request, $classScheduleId, Student $student)
     {
-        $request->validate(['attendance_photo' => ['required', 'image', 'max:5120']]);
+        $requiresPhoto = $this->attendanceRequiresPhoto();
+
+        $request->validate([
+            'attendance_photo' => $requiresPhoto ? ['required', 'image', 'max:5120'] : ['nullable', 'image', 'max:5120'],
+        ]);
 
         $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
         $classSchedule = ClassSchedule::where('id', $classScheduleId)
@@ -467,12 +474,15 @@ class AttendanceController extends Controller
 
     public function startStudentClocking(Request $request, ClassSchedule $classSchedule, Student $student)
     {
-        $request->validate([
-            'clock_in_photo' => ['required', 'image', 'max:5120'],
-            'planned_duration_minutes' => ['nullable', 'integer', 'min:1', 'max:480'],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-        ]);
+        $requiresPhoto = $this->attendanceRequiresPhoto();
+        $requiresGps = $this->attendanceRequiresGps();
+
+        $request->validate(array_filter([
+            'clock_in_photo' => $requiresPhoto ? ['required', 'image', 'max:5120'] : ['nullable', 'image', 'max:5120'],
+            'planned_duration_minutes' => ['required', 'integer', 'min:1', 'max:480'],
+            'latitude' => $requiresGps ? ['required', 'numeric', 'between:-90,90'] : ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => $requiresGps ? ['required', 'numeric', 'between:-180,180'] : ['nullable', 'numeric', 'between:-180,180'],
+        ]));
 
         $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
         abort_unless($classSchedule->teacher_id === $teacher->id, 403);
@@ -490,22 +500,28 @@ class AttendanceController extends Controller
             'clock_date' => $today,
             'clock_in_at' => Carbon::now('Asia/Kuala_Lumpur'),
             'planned_duration_minutes' => $request->integer('planned_duration_minutes'),
-            'clock_in_photo' => $request->file('clock_in_photo')->store('student_clocking', 'public'),
+            'clock_in_photo' => $request->hasFile('clock_in_photo')
+                ? $request->file('clock_in_photo')->store('student_clocking', 'public')
+                : null,
             'latitude' => $request->input('latitude'),
             'longitude' => $request->input('longitude'),
         ]);
+
+        $this->syncClockingAttendance($student, $classSchedule, $today);
 
         return back()->with('success', 'Clock in pelajar berjaya direkodkan.');
     }
 
     public function endStudentClocking(Request $request, StudentClockingSession $clockingSession)
     {
-        $request->validate([
+        $requiresGps = $this->attendanceRequiresGps();
+
+        $request->validate(array_filter([
             'class_document' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'class_report' => ['required', 'string', 'max:3000'],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-        ]);
+            'latitude' => $requiresGps ? ['required', 'numeric', 'between:-90,90'] : ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => $requiresGps ? ['required', 'numeric', 'between:-180,180'] : ['nullable', 'numeric', 'between:-180,180'],
+        ]));
 
         $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
         abort_unless($clockingSession->teacher_id === $teacher->id, 403);
@@ -518,6 +534,12 @@ class AttendanceController extends Controller
             'latitude' => $request->input('latitude') ?? $clockingSession->latitude,
             'longitude' => $request->input('longitude') ?? $clockingSession->longitude,
         ]);
+
+        $this->syncClockingAttendance(
+            $clockingSession->student,
+            $clockingSession->classSchedule,
+            $clockingSession->clock_date
+        );
 
         return back()->with('success', 'Clock out dan laporan kelas berjaya disimpan.');
     }
@@ -543,7 +565,13 @@ class AttendanceController extends Controller
         $teacher = Teacher::where('user_id', Auth::id())->firstOrFail();
         abort_unless($clockingSession->teacher_id === $teacher->id, 403);
 
+        $student = $clockingSession->student;
+        $classSchedule = $clockingSession->classSchedule;
+        $clockDate = $clockingSession->clock_date;
+
         $clockingSession->delete();
+
+        $this->syncClockingAttendance($student, $classSchedule, $clockDate);
 
         return back()->with('success', 'Rekod clocking berjaya dipadam.');
     }
@@ -599,6 +627,46 @@ class AttendanceController extends Controller
         $label = $validated['status'] === 'late' ? 'Late' : 'Absent';
 
         return back()->with('success', $student->user->name . ' telah ditandai ' . $label . '.');
+    }
+
+    private function syncClockingAttendance(Student $student, ClassSchedule $classSchedule, Carbon $clockDate): void
+    {
+        $clockDate = $clockDate->copy()->timezone('Asia/Kuala_Lumpur')->startOfDay();
+        $sessions = StudentClockingSession::where('student_id', $student->id)
+            ->where('class_schedule_id', $classSchedule->id)
+            ->whereDate('clock_date', $clockDate)
+            ->orderBy('clock_in_at')
+            ->get();
+
+        $attendanceQuery = StudentAttendance::where('user_id', $student->user_id)
+            ->where('class_schedule_id', $classSchedule->id)
+            ->whereDate('attendance_date', $clockDate);
+
+        if ($sessions->isEmpty()) {
+            $attendanceQuery->whereIn('status', ['present', 'late'])->delete();
+            return;
+        }
+
+        $firstSession = $sessions->first();
+        $lastCompletedSession = $sessions->whereNotNull('clock_out_at')->last();
+        $scheduleDay = $classSchedule->classScheduleDays()
+            ->where('hari', $clockDate->format('l'))
+            ->first();
+        $classStart = $scheduleDay?->jam_mulai
+            ? Carbon::parse($clockDate->toDateString() . ' ' . $scheduleDay->jam_mulai, 'Asia/Kuala_Lumpur')
+            : null;
+        $status = $classStart && $firstSession->clock_in_at->greaterThan($classStart) ? 'late' : 'present';
+
+        StudentAttendance::updateOrCreate([
+            'user_id' => $student->user_id,
+            'class_schedule_id' => $classSchedule->id,
+            'attendance_date' => $clockDate->toDateString(),
+        ], [
+            'status' => $status,
+            'attendance_time' => $firstSession->clock_in_at->format('H:i:s'),
+            'check_out_time' => $lastCompletedSession?->clock_out_at?->format('H:i:s'),
+            'attendance_photo' => $firstSession->clock_in_photo,
+        ]);
     }
 
     private function getClassStatus($classSchedule)
@@ -696,5 +764,55 @@ class AttendanceController extends Controller
         }
         
         return collect($activeStudents);
+    }
+
+    private function attendanceRequiresPhoto(): bool
+    {
+        $companyId = null;
+        $routeCs = request()->route('classSchedule');
+        if ($routeCs) {
+            if (is_object($routeCs)) {
+                $companyId = $routeCs->company_id ?? $routeCs->company?->id ?? null;
+            } else {
+                $cs = \App\Models\ClassSchedule::find($routeCs);
+                $companyId = $cs?->company_id ?? null;
+            }
+        }
+
+        if ($companyId) {
+            $key = "company_{$companyId}_attendance_require_photo";
+            $val = \App\Models\SystemSetting::value($key, null);
+            if ($val !== null && $val !== '') {
+                return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+            }
+        }
+
+        $val = SystemSetting::value('attendance_require_photo', '1');
+        return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? true;
+    }
+
+    private function attendanceRequiresGps(): bool
+    {
+        $companyId = null;
+        $routeCs = request()->route('classSchedule');
+        if ($routeCs) {
+            if (is_object($routeCs)) {
+                $companyId = $routeCs->company_id ?? $routeCs->company?->id ?? null;
+            } else {
+                $cs = \App\Models\ClassSchedule::find($routeCs);
+                $companyId = $cs?->company_id ?? null;
+            }
+        }
+
+        if ($companyId) {
+            $key = "company_{$companyId}_attendance_require_gps";
+            $val = \App\Models\SystemSetting::value($key, null);
+            if ($val !== null && $val !== '') {
+                return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+            }
+        }
+
+        $val = SystemSetting::value('attendance_require_gps', '0');
+        return filter_var($val, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 }

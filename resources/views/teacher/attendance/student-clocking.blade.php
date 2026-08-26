@@ -14,6 +14,16 @@
     $watch('openEnd', value => { if (value && latitude && longitude) initMap('map-end'); });
 ">
     @php
+        $companyId = $classSchedule->company_id ?? ($classSchedule->company->id ?? null);
+        if ($companyId) {
+            $requiresPhoto = filter_var(\App\Models\SystemSetting::value("company_{$companyId}_attendance_require_photo", null) ?? \App\Models\SystemSetting::value('attendance_require_photo', '1'), FILTER_VALIDATE_BOOLEAN);
+            $requiresGps = filter_var(\App\Models\SystemSetting::value("company_{$companyId}_attendance_require_gps", null) ?? \App\Models\SystemSetting::value('attendance_require_gps', '0'), FILTER_VALIDATE_BOOLEAN);
+        } else {
+            $requiresPhoto = filter_var(\App\Models\SystemSetting::value('attendance_require_photo', '1'), FILTER_VALIDATE_BOOLEAN);
+            $requiresGps = filter_var(\App\Models\SystemSetting::value('attendance_require_gps', '0'), FILTER_VALIDATE_BOOLEAN);
+        }
+    @endphp
+    @php
         $totalHours = intdiv($totalMinutes, 60);
         $totalRemainder = $totalMinutes % 60;
     @endphp
@@ -67,7 +77,13 @@
                             @if($hasCompletedSessionToday)
                                 <span class="rounded-full bg-slate-100 px-5 py-3 text-sm font-bold text-slate-500"><i class="fas fa-check-double mr-1"></i> {{ app()->getLocale() === 'en' ? 'Completed Today' : 'Selesai Hari Ini' }}</span>
                             @else
-                                <button @click="openClockIn()" class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700"><i class="fas fa-sign-in-alt"></i> CLOCK IN</button>
+                                <form id="quickClockInForm" class="hidden" method="POST" action="{{ route('teacher.attendance.student.clocking.start', [$classSchedule, $student]) }}">
+                                    @csrf
+                                    <input type="hidden" name="planned_duration_minutes" value="60">
+                                    <input type="hidden" name="latitude" x-model="latitude">
+                                    <input type="hidden" name="longitude" x-model="longitude">
+                                </form>
+                                <button @click="quickClockIn()" class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-700"><i class="fas fa-sign-in-alt"></i> CLOCK IN</button>
                             @endif
                         @endif
                         @if($openSession)
@@ -117,8 +133,8 @@
 
     <div x-show="openStart" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4"><div class="mx-auto my-8 max-w-4xl rounded-2xl bg-white shadow-xl"><div class="flex items-center justify-between border-b p-5"><h2 class="text-lg font-bold">Buat Clock In</h2><button @click="closeClockIn()">✕</button></div><form method="POST" enctype="multipart/form-data" action="{{ route('teacher.attendance.student.clocking.start', [$classSchedule, $student]) }}" class="p-5">@csrf
         <input type="hidden" name="latitude" x-model="latitude"><input type="hidden" name="longitude" x-model="longitude">
-        <p class="mb-4 text-sm text-slate-500">Pastikan kamera dan lokasi diaktifkan.</p><div class="grid gap-5 md:grid-cols-2"><div class="rounded-xl border p-4"><h3 class="font-semibold">Tangkap Gambar</h3><div class="relative mt-3 aspect-video overflow-hidden rounded-lg bg-slate-900"><video x-ref="startVideo" x-show="!capturedPhoto" autoplay playsinline muted class="h-full w-full object-cover"></video><img x-show="capturedPhoto" :src="capturedPhoto" alt="Foto clock in" class="h-full w-full object-cover"><div x-show="cameraError" x-text="cameraError" class="absolute inset-x-3 bottom-3 rounded bg-red-600/90 px-3 py-2 text-xs text-white"></div></div><canvas x-ref="startCanvas" class="hidden"></canvas><input x-ref="startPhoto" type="file" name="clock_in_photo" accept="image/*" capture="user" class="mt-3 block w-full text-sm" required @change="previewSelectedPhoto($event)"><div class="mt-3 flex gap-2"><button type="button" @click="startCamera()" class="rounded-lg border px-3 py-2 text-sm bg-white text-slate-700 hover:bg-slate-50 border-slate-300">Buka Kamera</button><button type="button" @click="captureStart()" x-show="cameraReady" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Ambil Foto</button><button type="button" @click="startCamera()" x-show="capturedPhoto" class="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-900">Ambil Semula</button></div></div><div class="rounded-xl border p-4"><h3 class="font-semibold">Lokasi (GPS)</h3><div class="mt-3 aspect-video rounded-lg bg-slate-100 relative overflow-hidden border border-slate-200"><div id="map-start" class="h-full w-full"></div><div x-show="!latitude || !longitude" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-emerald-50 text-center text-sm text-emerald-700 p-4"><i class="fas fa-map-marker-alt mb-2 text-2xl animate-bounce"></i><span x-text="locationText"></span></div></div><button type="button" @click="getLocation()" class="mt-3 rounded-lg border px-3 py-2 text-sm bg-white text-slate-700 hover:bg-slate-50 border-slate-300">Muat Semula GPS</button></div></div>
-        <label class="mt-5 block text-sm font-semibold">Tempoh Kelas (minit)<select name="planned_duration_minutes" class="mt-2 block w-full rounded-lg border-slate-300"><option value="">Pilih tempoh</option><option value="30">30 minit</option><option value="60">1 jam</option><option value="90">1 jam 30 minit</option><option value="120">2 jam</option></select></label><div class="mt-6 flex justify-end gap-3"><button type="button" @click="closeClockIn()" class="rounded-lg border px-4 py-2">Batal</button><button @click.prevent="submitClockIn($event)" class="rounded-lg bg-emerald-600 px-5 py-2 font-semibold text-white">Sahkan Clock In</button></div>
+        <p class="mb-4 text-sm text-slate-500">Foto dan lokasi GPS adalah pilihan. Anda boleh teruskan clock in tanpa kedua-duanya.</p><div class="grid gap-5 md:grid-cols-2"><div class="rounded-xl border p-4"><h3 class="font-semibold">Tangkap Gambar <span class="text-xs font-normal text-slate-500">(Pilihan)</span></h3><div class="relative mt-3 aspect-video overflow-hidden rounded-lg bg-slate-900"><video x-ref="startVideo" x-show="!capturedPhoto" autoplay playsinline muted class="h-full w-full object-cover"></video><img x-show="capturedPhoto" :src="capturedPhoto" alt="Foto clock in" class="h-full w-full object-cover"><div x-show="cameraError" x-text="cameraError" class="absolute inset-x-3 bottom-3 rounded bg-red-600/90 px-3 py-2 text-xs text-white"></div></div><canvas x-ref="startCanvas" class="hidden"></canvas><input x-ref="startPhoto" type="file" name="clock_in_photo" accept="image/*" capture="user" class="mt-3 block w-full text-sm" @change="previewSelectedPhoto($event)"><div class="mt-3 flex gap-2"><button type="button" @click="startCamera()" class="rounded-lg border px-3 py-2 text-sm bg-white text-slate-700 hover:bg-slate-50 border-slate-300">Buka Kamera</button><button type="button" @click="captureStart()" x-show="cameraReady" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Ambil Foto</button><button type="button" @click="startCamera()" x-show="capturedPhoto" class="rounded-lg bg-slate-800 px-3 py-2 text-sm text-white hover:bg-slate-900">Ambil Semula</button></div></div><div class="rounded-xl border p-4"><h3 class="font-semibold">Lokasi (GPS) <span class="text-xs font-normal text-slate-500">(Pilihan)</span></h3><div class="mt-3 aspect-video rounded-lg bg-slate-100 relative overflow-hidden border border-slate-200"><div id="map-start" class="h-full w-full"></div><div x-show="!latitude || !longitude" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-emerald-50 text-center text-sm text-emerald-700 p-4"><i class="fas fa-map-marker-alt mb-2 text-2xl animate-bounce"></i><span x-text="locationText"></span></div></div><button type="button" @click="getLocation()" class="mt-3 rounded-lg border px-3 py-2 text-sm bg-white text-slate-700 hover:bg-slate-50 border-slate-300">Muat Semula GPS</button></div></div>
+        <label class="mt-5 block text-sm font-semibold">Tempoh Kelas (minit)<input type="number" name="planned_duration_minutes" min="1" max="480" step="1" inputmode="numeric" placeholder="Contoh: 15 atau 20" class="mt-2 block w-full rounded-lg border-slate-300" required><span class="mt-1 block text-xs font-normal text-slate-500">Masukkan tempoh sebenar kelas dalam minit.</span></label><div class="mt-6 flex justify-end gap-3"><button type="button" @click="closeClockIn()" class="rounded-lg border px-4 py-2">Batal</button><button @click.prevent="submitClockIn($event)" class="rounded-lg bg-emerald-600 px-5 py-2 font-semibold text-white">Sahkan Clock In</button></div>
     </form></div></div>
 
     @if($openSession)
@@ -293,6 +309,8 @@
 <script>
 function studentClocking() {
     return {
+        requiresPhoto: @json($requiresPhoto),
+        requiresGps: @json($requiresGps),
         openStart: false,
         openEnd: false,
         openEdit: false,
@@ -304,6 +322,20 @@ function studentClocking() {
         cameraReady: false,
         capturedPhoto: '',
         cameraError: '',
+
+        init() {
+            document.addEventListener('submit', (e) => {
+                const form = e.target;
+                // If this is the clock-out form (contains class_report textarea), validate GPS if required
+                if (form.querySelector && form.querySelector('textarea[name="class_report"]')) {
+                    if (this.requiresGps && (!this.latitude || !this.longitude)) {
+                        e.preventDefault();
+                        alert('Lokasi GPS diperlukan untuk clock out. Sila hidupkan lokasi dan benarkan akses.');
+                        return false;
+                    }
+                }
+            });
+        },
 
         async getLocation() {
             if (!navigator.geolocation) {
@@ -339,7 +371,57 @@ function studentClocking() {
                 if (this.latitude && this.longitude) {
                     this.initMap('map-start');
                 }
+                // Update modal labels to reflect requirements
+                const modal = document.querySelector('[x-show="openStart"]');
+                if (modal) {
+                    const infoP = modal.querySelector('p.mb-4.text-sm.text-slate-500');
+                    if (infoP) {
+                        infoP.innerHTML = `Foto: <strong>${this.requiresPhoto ? 'Wajib' : 'Pilihan'}</strong> · GPS: <strong>${this.requiresGps ? 'Wajib' : 'Pilihan'}</strong>.`;
+                    }
+                    const spans = modal.querySelectorAll('h3 > span.text-xs.font-normal.text-slate-500');
+                    if (spans && spans.length) {
+                        if (spans[0]) spans[0].innerText = this.requiresPhoto ? 'Wajib' : 'Pilihan';
+                        if (spans[1]) spans[1].innerText = this.requiresGps ? 'Wajib' : 'Pilihan';
+                    }
+                }
             });
+        },
+
+        async quickClockIn() {
+            // Attempt quick POST; if server requires evidence (validation error), open modal.
+            const form = document.getElementById('quickClockInForm');
+            if (!form) return;
+
+            const url = form.action;
+            const data = new FormData(form);
+
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: data,
+                    credentials: 'same-origin'
+                });
+
+                // If server returns 422 (validation), open modal so teacher can provide evidence
+                if (resp.status === 422) {
+                    this.openClockIn();
+                    return;
+                }
+
+                // For other non-ok statuses, open modal as fallback
+                if (!resp.ok) {
+                    this.openClockIn();
+                    return;
+                }
+
+                // Success — reload to show new session and flash message
+                window.location.reload();
+            } catch (err) {
+                // Network or unexpected error — open modal so teacher can still try
+                console.error(err);
+                this.openClockIn();
+            }
         },
 
         openEditModal(data) {
@@ -447,9 +529,19 @@ function studentClocking() {
         },
 
         submitClockIn(event) {
-            if (!this.$refs.startPhoto.files.length) {
-                this.cameraError = 'Sila ambil atau pilih foto untuk clock in.';
-                return;
+            // Client-side validation to match server rules
+            if (this.requiresPhoto) {
+                const hasFile = this.$refs.startPhoto && this.$refs.startPhoto.files && this.$refs.startPhoto.files.length > 0;
+                if (!hasFile && !this.capturedPhoto) {
+                    alert('Foto diperlukan untuk clock in. Sila ambil atau pilih foto.');
+                    return;
+                }
+            }
+            if (this.requiresGps) {
+                if (!this.latitude || !this.longitude) {
+                    alert('Lokasi GPS diperlukan. Sila hidupkan lokasi pada peranti anda dan benarkan akses.');
+                    return;
+                }
             }
             event.target.closest('form').submit();
         },

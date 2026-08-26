@@ -337,6 +337,8 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
         // Route::post('/{id}/approve', 'approve')->name('approve');
         Route::post('/{student}/approve/{invoice}', 'approve')->name('approve');
         Route::post('/{student}/subscription-notifications/{invoice}', 'sendSubscriptionNotification')->name('subscription-notifications.send');
+        Route::get('/{student}/invoices/{invoice}/receipt', 'invoiceReceipt')->name('invoices.receipt');
+        Route::post('/{student}/invoices', 'storeManualInvoice')->name('invoices.store');
     });
 
     Route::controller(StaffController::class)->prefix('staff')->name('admin.staff.')->group(function () {

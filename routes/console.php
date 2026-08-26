@@ -16,6 +16,9 @@ use App\Services\MonthlyStudentReportCollector;
 use App\Mail\CompanyInvoiceExpiredMail;
 use App\Mail\InvoiceTagihanMail;
 use App\Mail\CompanySubscriptionInvoiceMail;
+use App\Services\ToyyibPayService;
+use App\Models\PaymentGateway;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -28,11 +31,16 @@ Schedule::dailyAt('00:10')->call(function () {
     app(MonthlyStudentReportCollector::class)->collectDueReports();
 });
 
-// Pakej harga per pelajar: bulan pertama percuma. Pada 1 haribulan,
-// keluarkan invoice bagi bulan lepas berdasarkan pelajar yang masih aktif.
-Schedule::monthlyOn(1, '00:15')->call(function () {
-    $previousMonthStart = now()->subMonthNoOverflow()->startOfMonth()->toDateString();
-    $previousMonthEnd = now()->subMonthNoOverflow()->endOfMonth()->toDateString();
+// Pakej harga per pelajar: kira bilangan pelajar aktif pada penghujung bulan
+// dan hasilkan invois untuk tempoh bil semasa. Tiada kiraan dibuat ketika signup.
+Schedule::dailyAt('23:55')->call(function () {
+    $billingDate = now('Asia/Kuala_Lumpur');
+    if (! $billingDate->isLastOfMonth()) {
+        return;
+    }
+
+    $billingPeriodStart = $billingDate->copy()->startOfMonth()->toDateString();
+    $billingPeriodEnd = $billingDate->copy()->endOfMonth()->toDateString();
     $dueDate = now()->addDays(7)->toDateString();
 
     Company::with(['invoices' => fn ($query) => $query->with('package')->latest()])
@@ -41,7 +49,7 @@ Schedule::monthlyOn(1, '00:15')->call(function () {
             $latestInvoice = $company->invoices->first();
 
             if (! $latestInvoice?->package?->pricing_per_student || CompanyInvoice::where('company_id', $company->id)
-                ->whereDate('billing_period_start', $previousMonthStart)
+                ->whereDate('billing_period_start', $billingPeriodStart)
                 ->exists()) {
                 return;
             }
@@ -49,17 +57,20 @@ Schedule::monthlyOn(1, '00:15')->call(function () {
             $activeStudents = $company->students()->where('status', 'active')->count();
             $amount = round($activeStudents * (float) $latestInvoice->package->harga_per_pelajar, 2);
             $sequence = str_pad((string) (CompanyInvoice::whereDate('created_at', today())->count() + 1), 4, '0', STR_PAD_LEFT);
+            $externalId = 'EMT-STU-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+
             $invoice = CompanyInvoice::create([
                 'company_id' => $company->id,
                 'package_id' => $latestInvoice->package_id,
                 'nomor_invoice' => 'INV-' . now()->format('Ymd') . '-' . $sequence . '-STUDENT',
+                'external_id' => $externalId,
                 'jumlah' => $amount,
                 'status_bayaran' => $activeStudents === 0 ? 'paid' : 'upcoming',
                 'status' => $activeStudents === 0 ? 'active' : 'inactive',
                 'tarikh_terbit' => today(),
                 'tarikh_tamat' => $activeStudents === 0 ? now()->endOfMonth() : $dueDate,
-                'billing_period_start' => $previousMonthStart,
-                'billing_period_end' => $previousMonthEnd,
+                'billing_period_start' => $billingPeriodStart,
+                'billing_period_end' => $billingPeriodEnd,
                 'active_student_count' => $activeStudents,
             ]);
 
@@ -75,12 +86,37 @@ Schedule::monthlyOn(1, '00:15')->call(function () {
                 return;
             }
 
+            // Attempt to generate a payment link via configured super-admin gateway.
+            try {
+                $gateway = PaymentGateway::superAdmin();
+                if ($gateway && (float) $invoice->jumlah > 0) {
+                    $bill = app(ToyyibPayService::class)->createBill([
+                        'name' => 'eMindTutor Invoice ' . $invoice->nomor_invoice,
+                        'description' => 'Subscription for ' . ($company->nama_syarikat ?? $company->user?->name ?? 'Company'),
+                        'amount' => (float) $invoice->jumlah,
+                        'reference' => $invoice->external_id ?? $externalId,
+                        'return_url' => route('success', $invoice->id),
+                        'callback_url' => route('payment.webhook'),
+                        'payer_name' => $company->user?->name ?? $company->nama_wakil_syarikat,
+                        'payer_email' => $company->user?->email ?? $company->pic_email,
+                        'payer_phone' => $company->no_telefon ?? $company->pic_telefon,
+                    ], $gateway);
+
+                    $invoice->update([
+                        'toyyibpay_bill_code' => $bill['bill_code'] ?? null,
+                        'payment_url' => $bill['payment_url'] ?? null,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to generate payment link for company invoice: ' . $e->getMessage(), ['company_id' => $company->id, 'invoice_id' => $invoice->id ?? null]);
+            }
+
             $recipient = $company->user?->email ?? $company->pic_email ?? $company->email_syarikat;
             if ($recipient) {
                 Mail::to($recipient)->send(new CompanySubscriptionInvoiceMail($invoice));
             }
         });
-})->name('Generate per-student subscription invoices');
+})->name('Generate end-of-month per-student subscription invoices');
 
 
 Schedule::daily()->call(function () {

@@ -65,6 +65,7 @@ class SettingsController extends Controller
             'bank_details'    => ['label' => __('admin/settings.bank_details.label'), 'caption' => __('admin/settings.bank_details.caption'), 'icon' => 'M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z'],
             'payment_gateway' => ['label' => __('admin/settings.payment_gateway.label'), 'caption' => __('admin/settings.payment_gateway.caption'), 'icon' => 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z'],
             'security'        => ['label' => __('admin/settings.security.label'), 'caption' => __('admin/settings.security.caption'), 'icon' => 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z'],
+            // 'attendance' section removed by request
         ];
     }
 
@@ -212,6 +213,36 @@ class SettingsController extends Controller
                 $user->update(['password' => Hash::make($validated['password'])]);
                 return redirect()->route('admin.settings.index', ['section' => 'security'])
                     ->with('success', __('admin/settings.password_updated'));
+
+            case 'attendance':
+                $validated = $request->validate([
+                    'attendance_require_photo' => 'nullable|boolean',
+                    'attendance_require_gps' => 'nullable|boolean',
+                ]);
+
+                $photo = $request->boolean('attendance_require_photo') ? '1' : '0';
+                $gps = $request->boolean('attendance_require_gps') ? '1' : '0';
+
+                \App\Models\SystemSetting::updateOrCreate([
+                    'setting_key' => "company_{$company->id}_attendance_require_photo",
+                ], [
+                    'setting_group' => 'attendance',
+                    'setting_label' => 'Require Photo for Attendance (Company)',
+                    'setting_type' => 'toggle',
+                    'setting_value' => $photo,
+                ]);
+
+                \App\Models\SystemSetting::updateOrCreate([
+                    'setting_key' => "company_{$company->id}_attendance_require_gps",
+                ], [
+                    'setting_group' => 'attendance',
+                    'setting_label' => 'Require GPS for Attendance (Company)',
+                    'setting_type' => 'toggle',
+                    'setting_value' => $gps,
+                ]);
+
+                return redirect()->route('admin.settings.index', ['section' => 'attendance'])
+                    ->with('success', 'Attendance settings saved.');
 
             default:
                 return redirect()->route('admin.settings.index', ['section' => $section]);
