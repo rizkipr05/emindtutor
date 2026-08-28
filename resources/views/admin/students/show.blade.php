@@ -25,14 +25,19 @@
             
             <!-- Header with gradient -->
             <div class="bg-gradient-to-r from-sky-600 via-cyan-600 to-sky-600 p-6 text-white">
-                <h1 class="text-2xl font-bold flex items-center">
-                    <div class="p-2 bg-white/20 rounded-lg mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                    </div>
-                    {{ __('admin/students/show.header.title') }}
-                </h1>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h1 class="text-2xl font-bold flex items-center">
+                        <div class="p-2 bg-white/20 rounded-lg mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        {{ __('admin/students/show.header.title') }}
+                    </h1>
+                    <a href="{{ route('admin.students.account', $student) }}" class="inline-flex items-center rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/40 hover:bg-white/25">
+                        Rekod Akaun
+                    </a>
+                </div>
             </div>
 
             <div class="p-4">

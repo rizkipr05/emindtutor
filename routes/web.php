@@ -328,6 +328,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'localization'])->group(fun
         Route::post('/import', 'import')->name('import');
         Route::get('/pending', 'pending')->name('pending');
         Route::get('/approved', 'approved')->name('approved');
+        Route::get('/{student}/account', 'account')->name('account');
         Route::get('/{id}', 'show')->name('show');
         Route::get('/{id}/enroll', 'enroll')->name('enrollments');
         Route::get('/{id}/edit', 'edit')->name('edit');

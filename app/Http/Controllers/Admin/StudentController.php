@@ -294,6 +294,27 @@ public function approved(Request $request)
         return view('admin.students.show', compact('student', 'courses'));
     }
 
+    public function account(Student $student)
+    {
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId && $student->company_id === $companyId, 403);
+
+        $student->load(['user', 'invoices.course', 'invoices.payment']);
+
+        $accountInvoices = $student->invoices
+            ->sortByDesc(fn (StudentInvoice $invoice) => $invoice->tarikh_terbit ?? $invoice->created_at)
+            ->values();
+        $totalInvoiceAmount = (float) $accountInvoices->sum('jumlah');
+        $totalPaymentAmount = (float) $accountInvoices
+            ->where('status_bayaran', 'paid')
+            ->sum('jumlah');
+        $accountBalance = round($totalInvoiceAmount - $totalPaymentAmount, 2);
+
+        return view('admin.students.account', compact(
+            'student', 'accountInvoices', 'totalInvoiceAmount', 'totalPaymentAmount', 'accountBalance'
+        ));
+    }
+
     public function storeManualInvoice(Request $request, Student $student)
     {
         $companyId = Auth::user()->company?->id;
