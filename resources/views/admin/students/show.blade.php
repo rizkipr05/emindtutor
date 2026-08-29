@@ -291,7 +291,8 @@
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-sm">
                                                     <span class="font-semibold text-gray-800">#{{ $invoice->nomor_invoice }}</span>
-                                                    <a href="{{ route('admin.students.invoices.receipt', [$student->id, $invoice->id]) }}" target="_blank" class="inline-flex items-center ml-2 px-3 py-1 rounded-md bg-red-600 text-white text-xs font-semibold shadow hover:bg-red-700 transition-colors" aria-label="Download PDF Invoice">
+                                                    @if($invoice->status_bayaran === 'paid')
+                                                    <a href="{{ route('admin.students.invoices.receipt', [$student->id, $invoice->id]) }}" target="_blank" class="inline-flex items-center ml-2 px-3 py-1 rounded-md bg-red-600 text-white text-xs font-semibold shadow hover:bg-red-700 transition-colors" aria-label="Download Payment Receipt PDF">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                                             <polyline points="7 10 12 15 17 10" />
@@ -299,6 +300,7 @@
                                                         </svg>
                                                         PDF
                                                     </a>
+                                                    @endif
                                                     <span class="text-gray-600">{{ $invoice->course->nama_kos }}</span>
                                                     <span class="font-medium text-gray-900">RM {{ number_format($invoice->jumlah, 0, '.', ',') }}</span>
                                                     <span class="text-gray-500">
@@ -321,14 +323,15 @@
                                             <!-- Right Section - Status -->
                                             <div class="flex-shrink-0">
                                                 @php
-                                                    $isOverdue = $invoice->status_bayaran == 'pending' && now()->diffInDays($invoice->created_at) > 7;
                                                     $statusConfig = [
                                                         'paid' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'label' => 'Paid'],
                                                         'overdue' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Overdue'],
-                                                        'pending' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-700', 'label' => 'Pending']
+                                                        'upcoming' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-700', 'label' => 'Upcoming']
                                                     ];
                                                     
-                                                    $currentStatus = $invoice->status_bayaran == 'paid' ? 'paid' : ($isOverdue ? 'overdue' : 'pending');
+                                                    $currentStatus = in_array($invoice->status_bayaran, ['paid', 'overdue', 'upcoming'], true)
+                                                        ? $invoice->status_bayaran
+                                                        : 'upcoming';
                                                     $config = $statusConfig[$currentStatus];
                                                 @endphp
                                                 

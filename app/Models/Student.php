@@ -72,10 +72,12 @@ class Student extends Model
         $dateString = $date->toDateString();
 
         $paidInvoices = $this->relationLoaded('invoices')
-            ? $this->invoices->where('course_id', $courseId)->where('status_bayaran', 'paid')
+            ? $this->invoices->where('course_id', $courseId)->where('status_bayaran', 'paid')->filter(fn ($invoice) => $invoice->activated_at && $invoice->class_schedule_id)
             : StudentInvoice::where('student_id', $this->id)
                 ->where('course_id', $courseId)
                 ->where('status_bayaran', 'paid')
+                ->whereNotNull('activated_at')
+                ->whereNotNull('class_schedule_id')
                 ->get();
 
         $hasActiveInvoice = $paidInvoices->contains(function ($invoice) use ($dateString) {
@@ -87,26 +89,6 @@ class Student extends Model
                 && $invoice->tarikh_tamat >= $dateString;
         });
 
-        if ($hasActiveInvoice) {
-            return true;
-        }
-
-        if ($this->status !== 'active') {
-            return false;
-        }
-
-        if (!$this->sub_start && !$this->sub_end) {
-            return true;
-        }
-
-        if ($this->sub_start && $this->sub_start > $dateString) {
-            return false;
-        }
-
-        if ($this->sub_end && $this->sub_end < $dateString) {
-            return false;
-        }
-
-        return true;
+        return $hasActiveInvoice;
     }
 }

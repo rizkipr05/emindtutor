@@ -115,10 +115,11 @@ class StudentController extends Controller
                     $q->where('created_at', '>=', now()->subDays(7));
                 }
             ])
-            ->where('status_bayaran', 'upcoming')
+            ->where('status_bayaran', 'paid')
+            ->whereNotNull('payment_verified_at')
+            ->whereNull('activated_at')
             ->whereHas('student', function ($q) use ($companyId) {
-                $q->where('company_id', $companyId)
-                ->where('is_approved', 'no');
+                $q->where('company_id', $companyId);
             });
         // dd($invoiceQuery);
 
@@ -501,34 +502,17 @@ public function approved(Request $request)
 
     public function showApprovalForm($id)
     {
-        $invoice = StudentInvoice::with('payment')
-                    ->where('id', $id)
-                    ->latest()
-                    ->first();
-
-        if (!$invoice) {
-            $invoice = StudentInvoice::with('payment')
-                        ->where('student_id', $id)
-                        ->latest()
-                        ->first();
-        }
-
-        if (!$invoice) {
-            return redirect()->back()->with('error', 'Maklumat invoice atau pelajar tidak dijumpai.');
-        }
-
-        $student = Student::with('user')->find($invoice->student_id);
-        if (!$student) {
-            $student = Student::with('user')->findOrFail($id);
-        }
-
         $companyId = Auth::user()->company->id;
+        $invoice = StudentInvoice::with(['payment', 'student.user', 'course'])
+            ->whereKey($id)
+            ->where('status_bayaran', 'paid')
+            ->whereNotNull('payment_verified_at')
+            ->whereNull('activated_at')
+            ->whereHas('student', fn ($query) => $query->where('company_id', $companyId))
+            ->firstOrFail();
+        $student = $invoice->student;
 
-        // // Ambil course terkait
-        $course = Course::find($invoice->course_id);
-        if (!$course) {
-            return redirect()->back()->with('error', 'Course tidak ditemukan.');
-        }
+        $course = $invoice->course;
 
         $maxStudent = $course->max_student;
         // dd($course);
@@ -542,7 +526,8 @@ public function approved(Request $request)
             //     ->groupBy('class_schedules.id') // Primary key biasanya cukup di versi MySQL terbaru
             //     ->havingRaw('total_students < ?', [$course->max_student])
             //     ->get();
-            $semuaJadwal = ClassSchedule::where('course_id', $course->id)
+            $semuaJadwal = ClassSchedule::where('company_id', $companyId)
+                ->where('course_id', $course->id)
                 ->whereIn('id', function($query) use ($course) {
                     $query->select('class_schedule_id')
                         ->from('class_schedule_student')
@@ -657,35 +642,37 @@ public function approved(Request $request)
 
     public function approve(Request $request, $studentId, $invoiceId)
     {
-        DB::transaction(function () use ($request, $studentId, $invoiceId) {
-            $paidInvoice = StudentInvoice::where('id', $invoiceId)
-                ->latest()
-                ->first();
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
 
-            $student = Student::with('user')->findOrFail($studentId);
+        DB::transaction(function () use ($request, $studentId, $invoiceId, $companyId) {
+            $paidInvoice = StudentInvoice::with(['payment', 'student', 'course'])
+                ->lockForUpdate()
+                ->whereKey($invoiceId)
+                ->where('student_id', $studentId)
+                ->where('status_bayaran', 'paid')
+                ->whereNotNull('payment_verified_at')
+                ->whereNull('activated_at')
+                ->whereHas('student', fn ($query) => $query->where('company_id', $companyId))
+                ->firstOrFail();
 
-            $course = Course::find($paidInvoice->course_id);
-            if (!$course) {
-                throw new \Exception('Course tidak ditemukan.');
-            }
+            abort_unless($paidInvoice->payment?->status === 'success', 422, 'Pembayaran belum disahkan.');
 
-            $companyId = Auth::user()->company->id;
+            $student = $paidInvoice->student;
+            $course = $paidInvoice->course;
             $today = Carbon::now();
-
-            // Update invoice
-            $paidInvoice->status_bayaran = 'paid';
-            $paidInvoice->tarikh_terbit = $today;
-            $paidInvoice->tarikh_tamat = $today->copy()->addDays(30);
-            $paidInvoice->save();
 
             // Jika admin pilih kelas yang sudah ada
             if ($request->filled('class_id')) {
-                $class = ClassSchedule::findOrFail($request->class_id);
+                $class = ClassSchedule::whereKey($request->class_id)
+                    ->where('company_id', $companyId)
+                    ->where('course_id', $course->id)
+                    ->firstOrFail();
             } else {
                 // Validasi input kelas baru
                 $request->validate([
                     'nama_kelas' => 'required|string|max:255',
-                    'teacher_id' => 'required|exists:teachers,id',
+                    'teacher_id' => ['required', 'exists:teachers,id'],
                     'allowance_type' => 'required|in:per_month,per_session,per_hour',
                     'allowance' => 'required|numeric|min:0',
                     'link_group' => 'nullable|url',
@@ -695,6 +682,8 @@ public function approved(Request $request)
                     'days.*.jam_mulai' => 'required',
                     'days.*.durasi_menit' => 'required|integer',
                 ]);
+
+                abort_unless(Teacher::whereKey($request->teacher_id)->where('company_id', $companyId)->where('status', 'active')->exists(), 422, 'Guru tidak sah.');
 
                 // Buat class baru
                 $class = ClassSchedule::create([
@@ -728,18 +717,22 @@ public function approved(Request $request)
             $student->sub_end = $today->copy()->addDays(30)->toDateString();
             $student->save();
 
-            // Masukkan student ke kelas
-            ClassScheduleStudent::create([
+            ClassScheduleStudent::firstOrCreate([
                 'student_id' => $student->id,
                 'class_schedule_id' => $class->id,
-                'created_at' => now(),
-                'updated_at' => now(),
+            ]);
+
+            $paidInvoice->update([
+                'activated_at' => now(),
+                'class_schedule_id' => $class->id,
+                'tarikh_terbit' => $today,
+                'tarikh_tamat' => $today->copy()->addDays(30),
             ]);
         });
 
         return redirect()
             ->route('admin.students.pending')
-            ->with('success', 'Pelajar telah diluluskan dan dimasukkan ke kelas.');
+            ->with('success', 'Kursus pelajar telah diaktifkan dan pelajar dimasukkan ke kelas.');
     }
 
 

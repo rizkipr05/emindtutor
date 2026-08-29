@@ -7,20 +7,27 @@ use Illuminate\Http\Request;
 use App\Models\StudentInvoice;
 use App\Models\StudentPayment;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BayaranController extends Controller
 {
     public function index()
     {
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
+
         // Invoice sudah dibayar
         $paidInvoices = StudentInvoice::with(['student', 'course', 'payment'])
             ->where('status_bayaran', 'paid')
+            ->whereHas('student', fn ($query) => $query->where('company_id', $companyId))
             ->get();
 
         // Menunggu pembayaran
         $upcomingInvoices = StudentInvoice::with(['student', 'course', 'payment'])
             ->where('status_bayaran', 'upcoming')
             ->whereDoesntHave('payment') // belum ada payment
+            ->whereHas('student', fn ($query) => $query->where('company_id', $companyId))
             ->where('created_at', '>=', now()->subDays(7))
             ->orderBy('created_at', 'asc')
             ->get();
@@ -31,6 +38,7 @@ class BayaranController extends Controller
             ->whereHas('payment', function ($q) {
                 $q->where('status', 'pending');
             })
+            ->whereHas('student', fn ($query) => $query->where('company_id', $companyId))
             ->get();
 
         return view('admin.bayaran.index', compact(
@@ -43,28 +51,36 @@ class BayaranController extends Controller
 
     public function verifyForm($id)
     {
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
+
         $payment = StudentPayment::with('studentInvoice.course', 'studentInvoice.student')
-                    ->findOrFail($id);
+            ->whereHas('studentInvoice.student', fn ($query) => $query->where('company_id', $companyId))
+            ->findOrFail($id);
 
         return view('admin.bayaran.verify', compact('payment'));
     }
 
     public function verify($id)
     {
-        $payment = StudentPayment::with('studentInvoice')->findOrFail($id);
+        $companyId = Auth::user()->company?->id;
+        abort_unless($companyId, 403);
 
-        // Update status payment
-        $payment->update([
-            'status' => 'success',
-        ]);
+        DB::transaction(function () use ($id, $companyId) {
+            $payment = StudentPayment::with('studentInvoice.student')
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        // Update status invoice
-        $payment->studentInvoice->update([
-            'status_bayaran' => 'paid',
-            'tarikh_terbit' => Carbon::today(),
-            'tarikh_tamat'  => Carbon::today()->addDays(30),
-        ]);
+            abort_unless($payment->studentInvoice?->student?->company_id === $companyId, 403);
+            abort_unless($payment->status === 'pending', 422, 'Pembayaran ini telah diproses.');
 
-        return redirect()->route('admin.bayaran.index')->with('success', 'Pembayaran berhasil diverifikasi.');
+            $payment->update(['status' => 'success']);
+            $payment->studentInvoice->update([
+                'status_bayaran' => 'paid',
+                'payment_verified_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.students.pending')->with('success', 'Pembayaran berjaya disahkan. Sila assign dan aktifkan kursus pelajar.');
     }
 }

@@ -518,6 +518,7 @@ Route::prefix('student')->middleware(['auth', 'student', 'localization'])->group
     });
 
     Route::get('/pay/{id}', [InvoiceController::class, 'pay'])->name('student.pay');
+    Route::get('/payments/toyyibpay/return/{invoice}', [InvoiceController::class, 'paymentReturn'])->name('student.payment.return');
 });
 
 Route::get('/reports/public/{token}', [MonthlyReportController::class, 'publicDownload'])->name('reports.public.download');

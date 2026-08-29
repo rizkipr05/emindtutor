@@ -12,10 +12,21 @@ class StudentInvoice extends Model
         'nomor_invoice',
         'jumlah',
         'status_bayaran',
+        'payment_verified_at',
+        'activated_at',
+        'class_schedule_id',
         'tarikh_terbit',
         'tarikh_tamat',
         'external_id',
+        'toyyibpay_bill_code',
         'payment_url',
+    ];
+
+    protected $casts = [
+        'payment_verified_at' => 'datetime',
+        'activated_at' => 'datetime',
+        'tarikh_terbit' => 'date',
+        'tarikh_tamat' => 'date',
     ];
 
     public function student()
@@ -31,6 +42,11 @@ class StudentInvoice extends Model
     public function payment()
     {
         return $this->hasOne(StudentPayment::class, 'student_invoice_id');
+    }
+
+    public function classSchedule()
+    {
+        return $this->belongsTo(ClassSchedule::class);
     }
 
     public function review()

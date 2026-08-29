@@ -9,6 +9,8 @@ class StudentPayment extends Model
     protected $fillable = [
         'student_invoice_id',
         'status', // pending, success, failed
+        'provider',
+        'gateway_refno',
         'dibayar_pada', 
         'bukti_bayar', 
     ];

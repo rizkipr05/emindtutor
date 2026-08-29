@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\SubscriptionPackage;
 use App\Models\CompanyInvoice;
 use App\Models\StudentInvoice;
+use App\Models\StudentPayment;
 use App\Models\CompanyPayment;
 use App\Models\Subscription;
 use App\Models\Discount;
@@ -19,6 +20,7 @@ use App\Mail\CompanyReceiptMail;
 use App\Mail\CompanySubscriptionInvoiceMail;
 use App\Services\ToyyibPayService;
 use App\Models\PaymentGateway;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -259,15 +261,39 @@ class PaymentController extends Controller
             if ($studentInvoice && $studentInvoice->status_bayaran !== 'paid') {
                 $paidAt = isset($data['transaction_time']) ? Carbon::parse($data['transaction_time']) : Carbon::now();
 
-                $studentInvoice->update([
-                    'status_bayaran' => 'paid',
-                    'tarikh_terbit' => $paidAt->toDateString(),
-                    'tarikh_tamat' => $paidAt->copy()->addDays(30)->toDateString(),
-                ]);
+                DB::transaction(function () use ($studentInvoice, $data, $paidAt) {
+                    $invoice = StudentInvoice::lockForUpdate()->findOrFail($studentInvoice->id);
 
-                $studentInvoice->student?->update([
-                    'status' => 'active',
-                ]);
+                    if ($invoice->status_bayaran === 'paid') {
+                        return;
+                    }
+
+                    $payment = StudentPayment::where('student_invoice_id', $invoice->id)->lockForUpdate()->first();
+
+                    if ($payment && $payment->status !== 'success') {
+                        Log::warning('ToyyibPay callback ignored because a manual payment awaits verification.', [
+                            'student_invoice_id' => $invoice->id,
+                        ]);
+
+                        return;
+                    }
+
+                    StudentPayment::updateOrCreate(
+                        ['student_invoice_id' => $invoice->id],
+                        [
+                            'status' => 'success',
+                            'provider' => 'toyyibpay',
+                            'gateway_refno' => (string) $data['refno'],
+                            'dibayar_pada' => $paidAt,
+                            'bukti_bayar' => null,
+                        ]
+                    );
+
+                    $invoice->update([
+                        'status_bayaran' => 'paid',
+                        'payment_verified_at' => $paidAt,
+                    ]);
+                });
             }
         }
 

@@ -40,6 +40,7 @@ return [
         'status' => [
             'paid' => 'Paid',
             'pending' => 'Pending',
+            'upcoming' => 'Upcoming',
             'overdue' => 'Overdue',
         ],
     ],

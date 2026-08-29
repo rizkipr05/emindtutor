@@ -28,7 +28,11 @@ class DashboardController extends Controller
             $courses = collect();
         } else {
             $courses = $student->invoices()
-                ->where('status_bayaran', 'paid') // Only show courses from paid invoices
+                ->where('status_bayaran', 'paid')
+                ->whereNotNull('activated_at')
+                ->whereNotNull('class_schedule_id')
+                ->whereDate('tarikh_terbit', '<=', today())
+                ->whereDate('tarikh_tamat', '>=', today())
                 ->with('course')
                 ->get()
                 ->pluck('course')
@@ -47,7 +51,7 @@ class DashboardController extends Controller
             'announcements' => $announcements->count(),
             'courses' => $courses->count(),
             'payments' => $student ? $student->invoices()->where('status_bayaran', 'paid')->count() : 0,
-            'paidAccess' => $student ? $student->invoices()->where('status_bayaran', 'paid')->whereNotNull('course_id')->count() : 0,
+            'paidAccess' => $student ? $student->invoices()->where('status_bayaran', 'paid')->whereNotNull('activated_at')->whereNotNull('course_id')->count() : 0,
         ];
 
         return view('student.dashboard.index', compact('student', 'courses', 'announcements', 'profileMissing', 'overview'));
@@ -61,6 +65,10 @@ class DashboardController extends Controller
             $student->invoices()
                 ->where('course_id', $course->id)
                 ->where('status_bayaran', 'paid')
+                ->whereNotNull('activated_at')
+                ->whereNotNull('class_schedule_id')
+                ->whereDate('tarikh_terbit', '<=', today())
+                ->whereDate('tarikh_tamat', '>=', today())
                 ->exists(),
             404
         );

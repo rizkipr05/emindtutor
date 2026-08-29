@@ -40,6 +40,7 @@ return [
         'status' => [
             'paid' => 'Dibayar',
             'pending' => 'Belum Dibayar',
+            'upcoming' => 'Akan Datang',
             'overdue' => 'Terlambat',
         ],
     ],
