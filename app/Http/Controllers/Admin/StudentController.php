@@ -309,9 +309,10 @@ public function approved(Request $request)
             ->where('status_bayaran', 'paid')
             ->sum('jumlah');
         $accountBalance = round($totalInvoiceAmount - $totalPaymentAmount, 2);
+        $courses = Course::where('company_id', $companyId)->orderBy('nama_kos')->get();
 
         return view('admin.students.account', compact(
-            'student', 'accountInvoices', 'totalInvoiceAmount', 'totalPaymentAmount', 'accountBalance'
+            'student', 'courses', 'accountInvoices', 'totalInvoiceAmount', 'totalPaymentAmount', 'accountBalance'
         ));
     }
 
@@ -325,7 +326,7 @@ public function approved(Request $request)
             'jumlah' => ['required', 'numeric', 'min:0'],
             'tarikh_terbit' => ['required', 'date'],
             'tarikh_tamat' => ['required', 'date', 'after_or_equal:tarikh_terbit'],
-            'status_bayaran' => ['required', 'in:paid,upcoming'],
+            'status_bayaran' => ['required', 'in:paid,upcoming,overdue'],
         ]);
 
         abort_unless(Course::where('company_id', $companyId)->whereKey($data['course_id'])->exists(), 404);
@@ -341,7 +342,7 @@ public function approved(Request $request)
             'tarikh_tamat' => $data['tarikh_tamat'],
         ]);
 
-        return back()->with('success', 'Invoice manual pelajar berjaya dibuat.');
+        return back()->with('success', __('admin/students/account.messages.manual_invoice_created'));
     }
 
     public function invoiceReceipt($studentId, $invoiceId)
@@ -351,6 +352,7 @@ public function approved(Request $request)
 
         $invoice = StudentInvoice::with(['student.user', 'student.company', 'course', 'payment'])
             ->whereKey($invoiceId)
+            ->where('status_bayaran', 'paid')
             ->whereHas('student', function ($q) use ($companyId) {
                 $q->where('company_id', $companyId);
             })
